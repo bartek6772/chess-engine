@@ -26,3 +26,10 @@ AllowShortCaseLabelsOnASingleLine: true
 
 # Optional: If you use braces in cases, this allows them on one line too
 AllowShortBlocksOnASingleLine: Always
+
+# Indents the 'case' inside the 'switch'
+IndentCaseLabels: true
+
+# Allows 'if(a) { return; }' on one line
+# Options: Never, WithoutElse, Always, OnlyIfLoops, AllIfsAndElse
+AllowShortIfStatementsOnASingleLine: WithoutElse

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <ostream>
 #include <vector>
 
 void printBitboard(unsigned long long moves) {
@@ -53,24 +54,20 @@ auto main() -> int {
 
     std::cout << "Hello World from Ubuntu!" << std::endl;
 
-    board.addPiece(9, Pieces::WhiteQueen);
-    std::vector<Move> moves = moveGenerator.generateMoves(board);
-    printMoves(moves);
-    std::cout << std::endl;
-
-    board.removePiece(9);
-    board.addPiece(30, Pieces::WhiteRook);
-    moves = moveGenerator.generateMoves(board);
-    printMoves(moves);
-    std::cout << std::endl;
-
-    board.addPiece(25, Pieces::BlackPawn);
-    board.addPiece(31, Pieces::WhitePawn);
-    moves = moveGenerator.generateMoves(board);
-    printMoves(moves);
-    std::cout << std::endl;
+    bool success = board.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    if (!success) std::cout << "error while loading" << std::endl;
 
     printBoard(board);
+
+    std::vector<Move> moves = moveGenerator.generateMoves(board);
+    std::cout << "Moves count " << moves.size() << std::endl;
+
+    // for (auto [f, t, s] : moves) {
+    //     std::cout << f << ' ' << t << '\n';
+    // }
+
+    // printBitboard(precomputed.knightMoves[1] & ~board.white_pieces);
+    // std::cout << std::endl;
 
     return 0;
 }
