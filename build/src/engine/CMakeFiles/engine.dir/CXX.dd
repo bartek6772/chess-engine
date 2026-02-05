@@ -1,0 +1,9 @@
+ninja_dyndep_version = 1.0
+build src/engine/CMakeFiles/engine.dir/board.cpp.o: dyndep
+
+build src/engine/CMakeFiles/engine.dir/piece_list.cpp.o: dyndep
+
+build src/engine/CMakeFiles/engine.dir/precomputed.cpp.o: dyndep
+
+build src/engine/CMakeFiles/engine.dir/move_generator.cpp.o: dyndep
+

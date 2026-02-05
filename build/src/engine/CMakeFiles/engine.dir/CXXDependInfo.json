@@ -1,0 +1,21 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "GNU",
+	"compiler-id" : "Clang",
+	"compiler-simulate-id" : "",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"dir-cur-bld" : "/home/bartek/chess-engine/build/src/engine",
+	"dir-cur-src" : "/home/bartek/chess-engine/src/engine",
+	"dir-top-bld" : "/home/bartek/chess-engine/build",
+	"dir-top-src" : "/home/bartek/chess-engine",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : 
+	[
+		"/home/bartek/chess-engine/include"
+	],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "/home/bartek/chess-engine/build/src/engine/CMakeFiles/engine.dir"
+}

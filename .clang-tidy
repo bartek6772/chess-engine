@@ -1,0 +1,20 @@
+# Enable these groups of checks
+Checks: >
+  -*,
+  bugprone-*,
+  performance-*,
+  modernize-*,
+  readability-*,
+  -readability-braces-around-statements,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  clang-analyzer-*,
+  llvm-include-order
+  -Wsign-conversion
+# -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+#  -modernize-use-trailing-return-type
+
+# Checks: 'bugprone-argument-comment,bugprone-suspicious-missing-comma'
+
+# Treat these specific warnings as errors (prevents compiling bad code)
+WarningsAsErrors: 'bugprone-*,performance-*'
