@@ -1,8 +1,0 @@
-/home/bartek/chess-engine/build/CMakeFiles/edit_cache.dir
-/home/bartek/chess-engine/build/CMakeFiles/rebuild_cache.dir
-/home/bartek/chess-engine/build/src/engine/CMakeFiles/engine.dir
-/home/bartek/chess-engine/build/src/engine/CMakeFiles/edit_cache.dir
-/home/bartek/chess-engine/build/src/engine/CMakeFiles/rebuild_cache.dir
-/home/bartek/chess-engine/build/src/cli/CMakeFiles/cli.dir
-/home/bartek/chess-engine/build/src/cli/CMakeFiles/edit_cache.dir
-/home/bartek/chess-engine/build/src/cli/CMakeFiles/rebuild_cache.dir
