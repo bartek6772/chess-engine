@@ -2,34 +2,25 @@
 BasedOnStyle: LLVM
 
 # Language: Cpp
-
 IndentWidth: 4
 ColumnLimit: 100
 PointerAlignment: Left
 
-# Fix the Vector/Array wrap issue
-AlignAfterOpenBracket: DontAlign
-ContinuationIndentWidth: 4
-BinPackArguments: false
-Cpp11BracedListStyle: false
-
-# 0 means the modifier aligns with the contents of the class
-# -2 (LLVM default) would shift it left by 2 spaces
+# Classes
 AccessModifierOffset: -4
 
-# Options: None, Manual, InlineOnly, Inline, All
-# Setting it to None forces every function to wrap
-# AllowShortFunctionsOnASingleLine: None
-
-# Allows 'case Pieces::Pawn: symbol = 'P'; break;' on one line
+# Switch
 AllowShortCaseLabelsOnASingleLine: true
-
-# Optional: If you use braces in cases, this allows them on one line too
 AllowShortBlocksOnASingleLine: Always
-
-# Indents the 'case' inside the 'switch'
 IndentCaseLabels: true
 
-# Allows 'if(a) { return; }' on one line
-# Options: Never, WithoutElse, Always, OnlyIfLoops, AllIfsAndElse
-AllowShortIfStatementsOnASingleLine: WithoutElse
+# Lambdas
+AllowShortLambdasOnASingleLine: Empty
+AlignAfterOpenBracket: DontAlign
+
+# Functions
+AllowShortFunctionsOnASingleLine: None
+AlwaysBreakTemplateDeclarations: Yes
+
+# Misc
+Cpp11BracedListStyle: false

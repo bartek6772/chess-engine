@@ -13,9 +13,11 @@ private:
     void generateRookMoves(const Board& board, std::vector<Move>& moves);
     void generateBishopMoves(const Board& board, std::vector<Move>& moves);
     void generateQueenMoves(const Board& board, std::vector<Move>& moves);
+    void generatePawnMoves(const Board& board, std::vector<Move>& moves);
 
 public:
     auto generateMoves(const Board& board) -> std::vector<Move>;
 
-    MoveGenerator(Precomputed precomputed) : precomputed(precomputed) {}
+    MoveGenerator(Precomputed precomputed) : precomputed(precomputed) {
+    }
 };

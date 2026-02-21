@@ -27,4 +27,6 @@ void precomputeKnightMoves(std::array<bitmask, BoardSize>& knightMoves) {
     }
 }
 
-void Precomputed::initialize() { precomputeKnightMoves(knightMoves); }
+void Precomputed::initialize() {
+    precomputeKnightMoves(knightMoves);
+}

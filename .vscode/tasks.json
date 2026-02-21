@@ -1,0 +1,34 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "CMake: build",
+			"command": "build",
+			"targets": [
+				"all"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"detail": "CMake template build task from tasks.json"
+		},
+		{
+			"label": "CMake: build and run",
+			"type": "shell",
+			"command": "${workspaceFolder}/build/src/cli/cli",
+			"dependsOn": [
+				"CMake: build"
+			],
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"problemMatcher": [],
+			"detail": "Build and run the chess engine"
+		}
+	]
+}

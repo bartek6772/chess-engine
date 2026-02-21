@@ -14,6 +14,7 @@ struct Board {
     bitmask black_pieces{};
 
     bool white_to_move = true;
+    int enpassant_square = -1;
 
     void addPiece(int square, int piece);
     void removePiece(int square);

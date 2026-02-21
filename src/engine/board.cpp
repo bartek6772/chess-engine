@@ -43,7 +43,9 @@ auto Board::loadFEN(const std::string& fen) -> bool {
         parts.push_back(str);
     }
 
-    if (parts.size() > 6) { return false; }
+    if (parts.size() > 6) {
+        return false;
+    }
 
     { // 1. Position part
         int row = BoardLength - 1;

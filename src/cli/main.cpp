@@ -13,7 +13,7 @@
 void printBitboard(unsigned long long moves) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
-            int bit = row * 8 + col;
+            int bit = row * BoardLength + col;
             std::cout << std::setw(2) << (moves & (1LL << bit) ? "1" : "0");
         }
         std::cout << std::endl;
@@ -23,7 +23,7 @@ void printBitboard(unsigned long long moves) {
 void printMoves(const std::vector<Move>& moves) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
-            int bit = row * 8 + col;
+            int bit = row * BoardLength + col;
 
             bool containing = std::find_if(moves.begin(), moves.end(), [bit](Move m) {
                 return m.to == bit;
@@ -38,7 +38,7 @@ void printMoves(const std::vector<Move>& moves) {
 void printBoard(const Board& board) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
-            int bit = row * 8 + col;
+            int bit = row * BoardLength + col;
             char symbol = Pieces::getSymbol(board.squares[bit]);
             std::cout << std::setw(2) << symbol;
         }
@@ -55,7 +55,8 @@ auto main() -> int {
     std::cout << "Hello World from Ubuntu!" << std::endl;
 
     bool success = board.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    if (!success) std::cout << "error while loading" << std::endl;
+    if (!success)
+        std::cout << "error while loading" << std::endl;
 
     printBoard(board);
 

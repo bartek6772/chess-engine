@@ -99,6 +99,70 @@ void MoveGenerator::generateQueenMoves(const Board& board, std::vector<Move>& mo
     }
 }
 
+void MoveGenerator::generatePawnMoves(const Board& board, std::vector<Move>& moves) {
+    int piece = board.white_to_move ? Pieces::WhitePawn : Pieces::BlackPawn;
+    int enemy_color = board.white_to_move ? Pieces::Black : Pieces::White;
+    int dir = board.white_to_move ? 1 : -1;
+    int base_row = board.white_to_move ? 1 : 6;
+    int promotion_row = board.white_to_move ? 7 : 0;
+
+    constexpr int left_attack = 7;
+    constexpr int right_attack = 9;
+    constexpr int double_push = 16;
+    constexpr int push = 8;
+
+    for (int from : board.pieceLists[piece]) {
+        int from_row = from / BoardLength;
+        int from_col = from % BoardLength;
+
+        if (from_col != 0) {
+            int target = from + left_attack * dir;
+            if (board.squares[target] != Pieces::None &&
+                Pieces::pieceColor(board.squares[target]) == enemy_color) {
+                moves.push_back({ from, target });
+            }
+
+            if (board.enpassant_square == target) {
+                moves.push_back({ from, target, MoveType::EnPassant });
+            }
+        }
+        if (from_col != BoardLength - 1) {
+            int target = from + right_attack * dir;
+            if (board.squares[target] != Pieces::None &&
+                Pieces::pieceColor(board.squares[target]) == enemy_color) {
+                moves.push_back({ from, target });
+            }
+
+            if (board.enpassant_square == target) {
+                moves.push_back({ from, target, MoveType::EnPassant });
+            }
+        }
+
+        int push1 = from + dir * push;
+        int push2 = from + dir * double_push;
+
+        bool empty1 = board.squares[push1] == Pieces::None;
+        bool empty2 = board.squares[push2] == Pieces::None;
+
+        if (empty1) {
+            if (push1 / BoardLength == promotion_row) {
+                moves.push_back({ from, push1, MoveType::PromotionBishop });
+                moves.push_back({ from, push1, MoveType::PromotionKnight });
+                moves.push_back({ from, push1, MoveType::PromotionQueen });
+                moves.push_back({ from, push1, MoveType::PromotionRook });
+            } else {
+                moves.push_back({ from, push1 });
+            }
+        }
+
+        if (from_row == base_row) {
+            if (empty1 && empty2) {
+                moves.push_back({ from, push2, MoveType::DoublePush });
+            }
+        }
+    }
+}
+
 auto MoveGenerator::generateMoves(const Board& board) -> std::vector<Move> {
     std::vector<Move> moves;
 
@@ -106,6 +170,7 @@ auto MoveGenerator::generateMoves(const Board& board) -> std::vector<Move> {
     generateRookMoves(board, moves);
     generateBishopMoves(board, moves);
     generateQueenMoves(board, moves);
+    generatePawnMoves(board, moves);
 
     return moves;
 }
