@@ -6,8 +6,11 @@
 #include "precomputed.hpp"
 #include <algorithm>
 #include <iomanip>
+#include <ios>
 #include <iostream>
 #include <ostream>
+#include <sstream>
+#include <string>
 #include <vector>
 
 void printBitboard(unsigned long long moves) {
@@ -46,22 +49,82 @@ void printBoard(const Board& board) {
     }
 }
 
+void handleInput(std::string& input, Board& board, MoveGenerator& move_generator) {
+    using namespace std;
+
+    std::stringstream stream(input);
+    std::string command;
+    stream >> command;
+
+    if (command == "uci") {
+        cout << "id name MyChessEngine v0.1" << endl;
+        cout << "id author Bartłomiej Borowski" << endl;
+        cout << "uciok" << endl;
+    } else if (command == "isready") {
+        cout << "readyok" << endl;
+    } else if (command == "position") {
+
+        string position{};
+        string sth;
+
+        while (stream >> sth) {
+            if (sth == "moves") {
+                break;
+            }
+
+            if (sth == "startpos") {
+                position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+                break;
+            }
+
+            position += sth;
+        }
+
+        bool success = board.loadFEN(position);
+        if (!success) {
+            cout << "failed" << endl;
+            return;
+        }
+
+        // read moves ...
+
+    } else if (command == "legalmoves") {
+        vector<Move> moves = move_generator.generateMoves(board);
+        for (Move move : moves) {
+            cout << move.toString() << endl;
+        }
+    } else if (command == "quit") {
+        exit(0);
+    }
+
+    else if (command == "d") {
+        printBoard(board);
+    }
+}
+
 auto main() -> int {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
 
     Board board;
     Precomputed precomputed;
     MoveGenerator moveGenerator(precomputed);
 
-    std::cout << "Hello World from Ubuntu!" << std::endl;
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        handleInput(line, board, moveGenerator);
+    }
 
-    bool success = board.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    if (!success)
-        std::cout << "error while loading" << std::endl;
+    // std::cout << "Hello World from Ubuntu!" << std::endl;
 
-    printBoard(board);
+    // bool success = board.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    // if (!success)
+    //     std::cout << "error while loading" << std::endl;
 
-    std::vector<Move> moves = moveGenerator.generateMoves(board);
-    std::cout << "Moves count " << moves.size() << std::endl;
+    // printBoard(board);
+
+    // std::vector<Move> moves = moveGenerator.generateMoves(board);
+    // std::cout << "Moves count " << moves.size() << std::endl;
 
     // for (auto [f, t, s] : moves) {
     //     std::cout << f << ' ' << t << '\n';
