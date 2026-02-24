@@ -19,7 +19,7 @@ struct Move {
     int to;
     MoveType type;
 
-    auto toString() -> std::string {
+    [[nodiscard]] auto toString() const -> std::string {
         std::string move{};
         int row = from / BoardLength;
         int col = from % BoardLength;
@@ -34,7 +34,12 @@ struct Move {
         return move;
     }
 
-    // auto operator<<(std::ostream& stream) -> std::ostream& {
-    //     return stream << toString();
-    // }
+    Move(int from, int to, MoveType type = MoveType::Normal) : from(from), to(to), type(type) {
+    }
+
+    Move(const std::string& move) {
+        from = (move[0] - 'a') + (move[1] - '1') * BoardLength;
+        to = (move[2] - 'a') + (move[3] - '1') * BoardLength;
+        type = MoveType::Normal;
+    }
 };

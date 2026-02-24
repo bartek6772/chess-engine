@@ -100,6 +100,17 @@ void handleInput(std::string& input, Board& board, MoveGenerator& move_generator
     else if (command == "d") {
         printBoard(board);
     }
+
+    // for debugging
+    else if (command == "move") {
+        string arg;
+        stream >> arg;
+        if (arg.size() < 4) {
+            return;
+        }
+        Move move(arg);
+        board.makeMove(move);
+    }
 }
 
 auto main() -> int {
@@ -114,24 +125,6 @@ auto main() -> int {
     while (std::getline(std::cin, line)) {
         handleInput(line, board, moveGenerator);
     }
-
-    // std::cout << "Hello World from Ubuntu!" << std::endl;
-
-    // bool success = board.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    // if (!success)
-    //     std::cout << "error while loading" << std::endl;
-
-    // printBoard(board);
-
-    // std::vector<Move> moves = moveGenerator.generateMoves(board);
-    // std::cout << "Moves count " << moves.size() << std::endl;
-
-    // for (auto [f, t, s] : moves) {
-    //     std::cout << f << ' ' << t << '\n';
-    // }
-
-    // printBitboard(precomputed.knightMoves[1] & ~board.white_pieces);
-    // std::cout << std::endl;
 
     return 0;
 }

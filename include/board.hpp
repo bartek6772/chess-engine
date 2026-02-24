@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include "move.hpp"
 #include "piece_list.hpp"
 #include <array>
 #include <string>
@@ -18,6 +19,9 @@ struct Board {
 
     void addPiece(int square, int piece);
     void removePiece(int square);
+    void movePiece(int from, int to);
 
     auto loadFEN(const std::string& fen) -> bool;
+
+    void makeMove(Move& move);
 };

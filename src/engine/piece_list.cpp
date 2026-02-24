@@ -15,3 +15,9 @@ void PieceList::removePiece(int square) {
 
     count--;
 }
+
+void PieceList::movePiece(int from, int to) {
+    int index = map[from];
+    map[to] = index;
+    list[index] = to;
+}

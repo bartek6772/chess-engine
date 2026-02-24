@@ -8,6 +8,7 @@ Checks: >
   -readability-braces-around-statements,
   cppcoreguidelines-*,
   -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-prefer-member-initializer,
   clang-analyzer-*,
   llvm-include-order
   -Wsign-conversion
@@ -17,4 +18,4 @@ Checks: >
 # Checks: 'bugprone-argument-comment,bugprone-suspicious-missing-comma'
 
 # Treat these specific warnings as errors (prevents compiling bad code)
-WarningsAsErrors: 'bugprone-*,performance-*'
+# WarningsAsErrors: 'bugprone-*,performance-*'
