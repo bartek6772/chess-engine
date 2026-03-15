@@ -33,10 +33,18 @@ inline constexpr int MaxPieceIndex = BlackKing;
 inline constexpr int TypeMask = 0b0111;
 inline constexpr int ColorMask = 0b1000;
 
-inline auto pieceType(const int piece) -> int { return piece & TypeMask; }
-inline auto pieceColor(const int piece) -> int { return piece & ColorMask; }
-inline auto isWhite(const int piece) -> bool { return pieceColor(piece) == White; }
-inline auto isBlack(const int piece) -> bool { return pieceColor(piece) == Black; }
+inline auto pieceType(const int piece) -> int {
+    return piece & TypeMask;
+}
+inline auto pieceColor(const int piece) -> int {
+    return piece & ColorMask;
+}
+inline auto isWhite(const int piece) -> bool {
+    return pieceColor(piece) == White;
+}
+inline auto isBlack(const int piece) -> bool {
+    return pieceColor(piece) == Black;
+}
 
 inline auto getSymbol(int piece) -> char {
     const char* piece_symbols = ".PRNBQK";

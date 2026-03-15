@@ -29,4 +29,8 @@ public:
     [[nodiscard]] auto end() const -> const int* {
         return list.begin() + count;
     }
+
+    auto operator[](int index) const -> int {
+        return list[index];
+    }
 };

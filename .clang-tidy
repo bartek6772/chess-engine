@@ -5,12 +5,12 @@ Checks: >
   performance-*,
   modernize-*,
   readability-*,
-  -readability-braces-around-statements,
   cppcoreguidelines-*,
-  -cppcoreguidelines-pro-bounds-constant-array-index,
-  -cppcoreguidelines-prefer-member-initializer,
   clang-analyzer-*,
   llvm-include-order
+  -readability-braces-around-statements,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-prefer-member-initializer,
   -Wsign-conversion
 # -cppcoreguidelines-pro-bounds-pointer-arithmetic,
 #  -modernize-use-trailing-return-type

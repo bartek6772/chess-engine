@@ -42,4 +42,12 @@ struct Move {
         to = (move[2] - 'a') + (move[3] - '1') * BoardLength;
         type = MoveType::Normal;
     }
+
+    auto operator==(Move& move) const -> bool {
+        return from == move.from && to == move.to && type == move.type;
+    }
+
+    auto operator!=(Move& move) const -> bool {
+        return from != move.from || to != move.to || type != move.type;
+    }
 };
