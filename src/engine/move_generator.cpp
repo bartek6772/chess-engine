@@ -187,7 +187,7 @@ auto MoveGenerator::generateLegalMoves(Board& board) const -> std::vector<Move> 
         bool legal_move = true;
 
         std::vector<Move> responses = generateMoves(board);
-        for (const Move& response : moves) {
+        for (const Move& response : responses) {
             if (response.to == king_position) {
                 legal_move = false;
                 break;
