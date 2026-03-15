@@ -11,7 +11,8 @@ Checks: >
   -readability-braces-around-statements,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-prefer-member-initializer,
-  -Wsign-conversion
+  -Wsign-conversion,
+  -cppcoreguidelines-pro-type-vararg
 # -cppcoreguidelines-pro-bounds-pointer-arithmetic,
 #  -modernize-use-trailing-return-type
 

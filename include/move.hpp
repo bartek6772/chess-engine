@@ -34,6 +34,9 @@ struct Move {
         return move;
     }
 
+    Move() : from(0), to(0), type(MoveType::Normal) {
+    }
+
     Move(int from, int to, MoveType type = MoveType::Normal) : from(from), to(to), type(type) {
     }
 
@@ -49,5 +52,9 @@ struct Move {
 
     auto operator!=(Move& move) const -> bool {
         return from != move.from || to != move.to || type != move.type;
+    }
+
+    bool isNull() {
+        return to == 0 && from == 0;
     }
 };

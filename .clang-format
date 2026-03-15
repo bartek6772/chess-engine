@@ -9,18 +9,22 @@ PointerAlignment: Left
 # Classes
 AccessModifierOffset: -4
 
+# Functions
+AllowShortFunctionsOnASingleLine: None
+AlwaysBreakTemplateDeclarations: Yes
+
 # Switch
 AllowShortCaseLabelsOnASingleLine: true
-AllowShortBlocksOnASingleLine: Always
 IndentCaseLabels: true
 
 # Lambdas
 AllowShortLambdasOnASingleLine: Empty
 AlignAfterOpenBracket: DontAlign
 
-# Functions
-AllowShortFunctionsOnASingleLine: None
-AlwaysBreakTemplateDeclarations: Yes
+# IFs
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortBlocksOnASingleLine: Never
+BreakBeforeBraces: Attach
 
 # Misc
 Cpp11BracedListStyle: false

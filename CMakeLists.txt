@@ -8,6 +8,7 @@ project(chess)
 
 add_subdirectory(src/engine)
 add_subdirectory(src/cli)
+add_subdirectory(src/gui)
 
 # Forces the final executable to be in the root of /build
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
