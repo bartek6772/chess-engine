@@ -7,12 +7,14 @@ Checks: >
   readability-*,
   cppcoreguidelines-*,
   clang-analyzer-*,
-  llvm-include-order
+  llvm-include-order,
   -readability-braces-around-statements,
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-prefer-member-initializer,
   -Wsign-conversion,
-  -cppcoreguidelines-pro-type-vararg
+  -cppcoreguidelines-pro-type-vararg,
+  -readability-else-after-return,
+  -modernize-use-nondiscard
 # -cppcoreguidelines-pro-bounds-pointer-arithmetic,
 #  -modernize-use-trailing-return-type
 

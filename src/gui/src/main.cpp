@@ -1,12 +1,8 @@
+#include "app.hpp"
 #include "board.hpp"
 #include "imgui.h"
-#include "move.hpp"
-#include "move_generator.hpp"
 #include "raylib.h"
 #include "rlImGui.h"
-#include "src/renderer.hpp"
-#include <array>
-#include <vector>
 
 int main() {
 
@@ -19,8 +15,8 @@ int main() {
 
     board.loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 
-    App renderer;
-    renderer.makeMoveMap(board);
+    App app;
+    app.makeMoveMap(board);
 
     while (!WindowShouldClose()) {
 
@@ -28,16 +24,23 @@ int main() {
 
         // --- Raylib ---
         ClearBackground(RAYWHITE);
-        renderer.update(board);
-        renderer.draw(board);
-        renderer.drawMoves();
-        renderer.drawDraggedPiece();
+        app.update(board);
+        app.draw(board);
+        app.drawMoves();
+        app.drawDraggedPiece();
 
         // --- ImGui ---
         rlImGuiBegin();
         ImGui::Begin("Engine debugger");
         ImGui::Text("Hello, Engine Developer!");
-        if (ImGui::Button("Reset Board")) {
+        if (ImGui::Button("None")) {
+            app.background_bitboard = App::BackgroundBitbord::None;
+        }
+        if (ImGui::Button("White Attacks")) {
+            app.background_bitboard = App::BackgroundBitbord::WhiteAttacks;
+        }
+        if (ImGui::Button("Black Attacks")) {
+            app.background_bitboard = App::BackgroundBitbord::BlackAttacks;
         }
         ImGui::End();
         rlImGuiEnd();

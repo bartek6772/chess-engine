@@ -1,4 +1,4 @@
-#include "renderer.hpp"
+#include "app.hpp"
 #include "board.hpp"
 #include "move_generator.hpp"
 #include "pieces.hpp"
@@ -23,6 +23,14 @@ Rectangle getSource(int piece) {
 }
 
 void App::draw(const Board& board) {
+
+    unsigned long long bitboard = 0;
+    switch (background_bitboard) {
+        case BackgroundBitbord::None: break;
+        case BackgroundBitbord::WhiteAttacks: bitboard = move_gen.getWhiteAttacks(); break;
+        case BackgroundBitbord::BlackAttacks: bitboard = move_gen.getBlackAttacks(); break;
+    }
+
     for (int row = 7; row >= 0; row--) {
         for (int col = 0; col < 8; col++) {
             Color color = (row + col) & 1 ? white_square : black_square;
@@ -37,6 +45,10 @@ void App::draw(const Board& board) {
             DrawRectanglePro(destination, { 0, 0 }, 0, color);
 
             int square = row * 8 + col;
+            if ((bitboard & (1LL << square)) != 0) {
+                DrawRectanglePro(destination, { 0, 0 }, 0, bitbord_overlay);
+            }
+
             if (board.squares[square] != Pieces::None && drag_start != square) {
                 Rectangle source = getSource(board.squares[square]);
                 DrawTexturePro(pieces_texture, source, destination, { 0, 0 }, 0, WHITE);
@@ -46,7 +58,8 @@ void App::draw(const Board& board) {
 }
 
 void App::makeMoveMap(Board& board) {
-    available_moves = move_gen.generateLegalMoves(board);
+    // available_moves = move_gen.generateLegalMoves(board);
+    available_moves = move_gen.generateMoves(board);
 
     for (auto& vec : move_map) {
         vec.clear();

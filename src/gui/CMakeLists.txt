@@ -5,7 +5,7 @@ set(RLIMGUI_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/rlImGui")
 
 set(GUI_SOURCES
     src/main.cpp
-    src/renderer.cpp
+    src/app.cpp
 
     # ImGui Core
     ${IMGUI_DIR}/imgui.cpp

@@ -6,8 +6,11 @@
 struct Precomputed {
 
     std::array<bitmask, BoardSize> knightMoves{};
+    std::array<bitmask, BoardSize> kingMoves{};
 
-    Precomputed() { initialize(); }
+    Precomputed() {
+        initialize();
+    }
 
 private:
     void initialize();

@@ -35,9 +35,10 @@ static void scanDir(const Board& board, std::vector<Move>& moves, const ScanData
     }
 }
 
-void MoveGenerator::generateKnightMoves(const Board& board, std::vector<Move>& moves) const {
-    int piece = board.white_to_move ? Pieces::WhiteKnight : Pieces::BlackKnight;
-    bitmask friendly_pieces = board.white_to_move ? board.white_pieces : board.black_pieces;
+void MoveGenerator::generateKnightMoves(
+    const Board& board, std::vector<Move>& moves, int color) const {
+    int piece = Pieces::Knight | color;
+    bitmask friendly_pieces = color == Pieces::White ? board.white_pieces : board.black_pieces;
     for (int from : board.pieceLists[piece]) {
         bitmask mask = precomputed.knightMoves[from] & ~friendly_pieces;
 
@@ -49,9 +50,10 @@ void MoveGenerator::generateKnightMoves(const Board& board, std::vector<Move>& m
     }
 }
 
-void MoveGenerator::generateRookMoves(const Board& board, std::vector<Move>& moves) const {
-    int piece = board.white_to_move ? Pieces::WhiteRook : Pieces::BlackRook;
-    int enemy_color = board.white_to_move ? Pieces::Black : Pieces::White;
+void MoveGenerator::generateRookMoves(
+    const Board& board, std::vector<Move>& moves, int color) const {
+    int piece = Pieces::Rook | color;
+    int enemy_color = color == Pieces::White ? Pieces::Black : Pieces::White;
 
     for (int from : board.pieceLists[piece]) {
         int row = from / BoardLength;
@@ -64,9 +66,10 @@ void MoveGenerator::generateRookMoves(const Board& board, std::vector<Move>& mov
     }
 }
 
-void MoveGenerator::generateBishopMoves(const Board& board, std::vector<Move>& moves) const {
-    int piece = board.white_to_move ? Pieces::WhiteBishop : Pieces::BlackBishop;
-    int enemy_color = board.white_to_move ? Pieces::Black : Pieces::White;
+void MoveGenerator::generateBishopMoves(
+    const Board& board, std::vector<Move>& moves, int color) const {
+    int piece = Pieces::Bishop | color;
+    int enemy_color = color == Pieces::White ? Pieces::Black : Pieces::White;
 
     for (int from : board.pieceLists[piece]) {
         int row = from / BoardLength;
@@ -79,9 +82,10 @@ void MoveGenerator::generateBishopMoves(const Board& board, std::vector<Move>& m
     }
 }
 
-void MoveGenerator::generateQueenMoves(const Board& board, std::vector<Move>& moves) const {
-    int piece = board.white_to_move ? Pieces::WhiteQueen : Pieces::BlackQueen;
-    int enemy_color = board.white_to_move ? Pieces::Black : Pieces::White;
+void MoveGenerator::generateQueenMoves(
+    const Board& board, std::vector<Move>& moves, int color) const {
+    int piece = Pieces::Queen | color;
+    int enemy_color = color == Pieces::White ? Pieces::Black : Pieces::White;
 
     for (int from : board.pieceLists[piece]) {
         int row = from / BoardLength;
@@ -99,15 +103,18 @@ void MoveGenerator::generateQueenMoves(const Board& board, std::vector<Move>& mo
     }
 }
 
-void MoveGenerator::generatePawnMoves(const Board& board, std::vector<Move>& moves) const {
-    int piece = board.white_to_move ? Pieces::WhitePawn : Pieces::BlackPawn;
-    int enemy_color = board.white_to_move ? Pieces::Black : Pieces::White;
-    int dir = board.white_to_move ? 1 : -1;
-    int base_row = board.white_to_move ? 1 : 6;
-    int promotion_row = board.white_to_move ? 7 : 0;
+void MoveGenerator::generatePawnMoves(
+    const Board& board, std::vector<Move>& moves, int color) const {
+    int piece = Pieces::Pawn | color;
+    int enemy_color = piece == Pieces::White ? Pieces::Black : Pieces::White;
 
-    int left_attack = board.white_to_move ? 7 : -9;
-    int right_attack = board.white_to_move ? 9 : -7;
+    bool white_to_move = color == Pieces::White;
+    int dir = white_to_move ? 1 : -1;
+    int base_row = white_to_move ? 1 : 6;
+    int promotion_row = white_to_move ? 7 : 0;
+
+    int left_attack = white_to_move ? 7 : -9;
+    int right_attack = white_to_move ? 9 : -7;
 
     constexpr int double_push = 16;
     constexpr int push = 8;
@@ -164,19 +171,78 @@ void MoveGenerator::generatePawnMoves(const Board& board, std::vector<Move>& mov
     }
 }
 
-auto MoveGenerator::generateMoves(const Board& board) const -> std::vector<Move> {
+void MoveGenerator::generateKingMoves(
+    const Board& board, std::vector<Move>& moves, int color) const {
+
+    // TODO: try to ignore attacked squares to avoid checking them later
+    int piece = Pieces::King | color;
+    bitmask friendly_pieces = color == Pieces::White ? board.white_pieces : board.black_pieces;
+    for (int from : board.pieceLists[piece]) {
+        bitmask mask = precomputed.kingMoves[from] & ~friendly_pieces;
+
+        while (mask > 0) {
+            int target = std::countr_zero(mask);
+            moves.emplace_back(from, target);
+            mask &= (mask - 1);
+        }
+    }
+
+    // TODO: implement castling
+}
+
+bool MoveGenerator::isSquareAttacked(const Board& board, int square) {
+    if (board.white_to_move) {
+        return (black_attacks & (1LL << square)) != 0;
+    } else {
+        return (white_attacks & (1LL << square)) != 0;
+    }
+}
+
+void MoveGenerator::generateAttacks(const Board& board) {
+    // TODO: Change later to bitbords
+
+    std::vector<Move> moves;
+    generateKnightMoves(board, moves, Pieces::Black);
+    generateRookMoves(board, moves, Pieces::Black);
+    generateBishopMoves(board, moves, Pieces::Black);
+    generateQueenMoves(board, moves, Pieces::Black);
+    generatePawnMoves(board, moves, Pieces::Black);
+    generateKingMoves(board, moves, Pieces::Black);
+
+    for (const Move& move : moves) {
+        black_attacks |= (1LL << move.to);
+    }
+    moves.clear();
+
+    generateKnightMoves(board, moves, Pieces::White);
+    generateRookMoves(board, moves, Pieces::White);
+    generateBishopMoves(board, moves, Pieces::White);
+    generateQueenMoves(board, moves, Pieces::White);
+    generatePawnMoves(board, moves, Pieces::White);
+    generateKingMoves(board, moves, Pieces::White);
+
+    for (const Move& move : moves) {
+        white_attacks |= (1LL << move.to);
+    }
+}
+
+auto MoveGenerator::generateMoves(const Board& board) -> std::vector<Move> {
     std::vector<Move> moves;
 
-    generateKnightMoves(board, moves);
-    generateRookMoves(board, moves);
-    generateBishopMoves(board, moves);
-    generateQueenMoves(board, moves);
-    generatePawnMoves(board, moves);
+    generateAttacks(board);
+
+    int color = board.white_to_move ? Pieces::White : Pieces::Black;
+    generateKnightMoves(board, moves, color);
+    generateRookMoves(board, moves, color);
+    generateBishopMoves(board, moves, color);
+    generateQueenMoves(board, moves, color);
+    generatePawnMoves(board, moves, color);
+    generateKingMoves(board, moves, color);
 
     return moves;
 }
 
-auto MoveGenerator::generateLegalMoves(Board& board) const -> std::vector<Move> {
+auto MoveGenerator::generateLegalMoves(Board& board) -> std::vector<Move> {
     std::vector<Move> legal_moves;
     int color = board.white_to_move ? Pieces::White : Pieces::Black;
 

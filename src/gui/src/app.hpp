@@ -9,6 +9,8 @@
 
 constexpr Color white_square = Color(238, 238, 210, 255);
 constexpr Color black_square = Color(118, 150, 86, 255);
+constexpr Color bitbord_overlay = Color(68, 111, 212, 200);
+
 constexpr int square_size = 70;
 
 class App {
@@ -23,6 +25,13 @@ public:
     void drawDraggedPiece();
 
     void makeMoveMap(Board& board);
+
+    enum class BackgroundBitbord {
+        None,
+        WhiteAttacks,
+        BlackAttacks,
+    };
+    BackgroundBitbord background_bitboard;
 
 private:
     Texture2D pieces_texture;
