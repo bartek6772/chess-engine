@@ -1,5 +1,6 @@
 #include "board.hpp"
 #include "constants.hpp"
+#include "magics.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
 #include "pieces.hpp"
@@ -114,6 +115,7 @@ void handleInput(std::string& input, Board& board, MoveGenerator& move_generator
                         return m;
                     }
                 }
+                return move;
             };
 
             Move sth_move(sth);
@@ -197,10 +199,15 @@ auto main() -> int {
     Precomputed precomputed;
     MoveGenerator moveGenerator(precomputed);
 
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        handleInput(line, board, moveGenerator);
-    }
+    // std::string line;
+    // while (std::getline(std::cin, line)) {
+    //     handleInput(line, board, moveGenerator);
+    // }
+
+    Magics magics;
+    // for (auto magic : magics.rook_magics) {
+    //     std::cout << magic << std::endl;
+    // }
 
     // board.loadFEN(START_POS);
     // board.makeMove(Move("a2a4"));

@@ -30,6 +30,8 @@ public:
         None,
         WhiteAttacks,
         BlackAttacks,
+        WhitePawns,
+        BlackPawns,
     };
     BackgroundBitbord background_bitboard;
 

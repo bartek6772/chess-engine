@@ -29,6 +29,8 @@ void App::draw(const Board& board) {
         case BackgroundBitbord::None: break;
         case BackgroundBitbord::WhiteAttacks: bitboard = move_gen.getWhiteAttacks(); break;
         case BackgroundBitbord::BlackAttacks: bitboard = move_gen.getBlackAttacks(); break;
+        case BackgroundBitbord::WhitePawns: bitboard = board.bitboards[Pieces::WhitePawn]; break;
+        case BackgroundBitbord::BlackPawns: bitboard = board.bitboards[Pieces::BlackPawn]; break;
     }
 
     for (int row = 7; row >= 0; row--) {
@@ -58,8 +60,8 @@ void App::draw(const Board& board) {
 }
 
 void App::makeMoveMap(Board& board) {
-    // available_moves = move_gen.generateLegalMoves(board);
-    available_moves = move_gen.generateMoves(board);
+    available_moves = move_gen.generateLegalMoves(board);
+    // available_moves = move_gen.generateMoves(board);
 
     for (auto& vec : move_map) {
         vec.clear();

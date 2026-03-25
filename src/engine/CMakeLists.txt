@@ -3,6 +3,7 @@ add_library(engine STATIC
     piece_list.cpp
     precomputed.cpp
     move_generator.cpp
+    magics.cpp
 )
 
 target_include_directories(engine 

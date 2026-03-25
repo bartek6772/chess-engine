@@ -31,7 +31,7 @@ int main() {
 
         // --- ImGui ---
         rlImGuiBegin();
-        ImGui::Begin("Engine debugger");
+        ImGui::Begin("Bitboards");
         ImGui::Text("Hello, Engine Developer!");
         if (ImGui::Button("None")) {
             app.background_bitboard = App::BackgroundBitbord::None;
@@ -41,6 +41,12 @@ int main() {
         }
         if (ImGui::Button("Black Attacks")) {
             app.background_bitboard = App::BackgroundBitbord::BlackAttacks;
+        }
+        if (ImGui::Button("White Pawns")) {
+            app.background_bitboard = App::BackgroundBitbord::WhitePawns;
+        }
+        if (ImGui::Button("Black Pawns")) {
+            app.background_bitboard = App::BackgroundBitbord::BlackPawns;
         }
         ImGui::End();
         rlImGuiEnd();

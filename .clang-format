@@ -26,5 +26,8 @@ AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortBlocksOnASingleLine: Never
 BreakBeforeBraces: Attach
 
+# Loops
+AllowShortLoopsOnASingleLine: true
+
 # Misc
 Cpp11BracedListStyle: false

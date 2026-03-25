@@ -52,4 +52,5 @@ void precomputeKingMoves(std::array<bitmask, BoardSize>& kingMoves) {
 
 void Precomputed::initialize() {
     precomputeKnightMoves(knightMoves);
+    precomputeKingMoves(kingMoves);
 }

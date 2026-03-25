@@ -14,11 +14,10 @@ Checks: >
   -Wsign-conversion,
   -cppcoreguidelines-pro-type-vararg,
   -readability-else-after-return,
-  -modernize-use-nondiscard
+  -modernize-use-nondiscard,
+  -modernize-use-trailing-return-type
+  
 # -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-#  -modernize-use-trailing-return-type
-
 # Checks: 'bugprone-argument-comment,bugprone-suspicious-missing-comma'
-
 # Treat these specific warnings as errors (prevents compiling bad code)
 # WarningsAsErrors: 'bugprone-*,performance-*'

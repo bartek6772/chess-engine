@@ -2,6 +2,7 @@
 
 #include "board.hpp"
 #include "constants.hpp"
+#include "magics.hpp"
 #include "move.hpp"
 #include "precomputed.hpp"
 #include <vector>
@@ -11,10 +12,13 @@
 class MoveGenerator {
 private:
     Precomputed precomputed;
+    Magics magics;
+
     bitmask white_attacks;
     bitmask black_attacks;
 
     void generateAttacks(const Board& board);
+    bitmask generateSideAttacks(const Board& board, int color);
     bool isSquareAttacked(const Board& board, int square);
 
     void generateKnightMoves(const Board& board, std::vector<Move>& moves, int color) const;

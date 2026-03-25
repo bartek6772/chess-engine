@@ -43,7 +43,7 @@ void Board::movePiece(int from, int to) {
     squares[from] = Pieces::None;
     squares[to] = piece;
 
-    bitboards[piece] ^= (1 << from) | (1 << to);
+    bitboards[piece] ^= (1LL << from) | (1LL << to);
     pieceLists[piece].movePiece(from, to);
 
     if (Pieces::isWhite(piece)) {
