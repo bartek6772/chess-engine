@@ -31,6 +31,9 @@ void App::draw(const Board& board) {
         case BackgroundBitbord::BlackAttacks: bitboard = move_gen.getBlackAttacks(); break;
         case BackgroundBitbord::WhitePawns: bitboard = board.bitboards[Pieces::WhitePawn]; break;
         case BackgroundBitbord::BlackPawns: bitboard = board.bitboards[Pieces::BlackPawn]; break;
+        case BackgroundBitbord::Enpassant:
+            if (board.enpassant_square != -1) bitboard = (1ULL << board.enpassant_square);
+            break;
     }
 
     for (int row = 7; row >= 0; row--) {
@@ -47,7 +50,7 @@ void App::draw(const Board& board) {
             DrawRectanglePro(destination, { 0, 0 }, 0, color);
 
             int square = row * 8 + col;
-            if ((bitboard & (1LL << square)) != 0) {
+            if ((bitboard & (1ULL << square)) != 0) {
                 DrawRectanglePro(destination, { 0, 0 }, 0, bitbord_overlay);
             }
 

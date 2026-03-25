@@ -33,6 +33,7 @@ public:
         BlackAttacks,
         WhitePawns,
         BlackPawns,
+        Enpassant,
     };
     BackgroundBitbord background_bitboard;
 

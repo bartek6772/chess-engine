@@ -6,11 +6,11 @@
 
 // TODO: consider reusing in other places
 bitmask setBit(int rank, int file) {
-    return 1LL << (rank * BoardLength + file);
+    return 1ULL << (rank * BoardLength + file);
 }
 
 bitmask setBit(int square) {
-    return 1LL << (square);
+    return 1ULL << (square);
 }
 
 bitmask calculate_rook_mask(int square) {

@@ -24,7 +24,7 @@ void printBitboard(unsigned long long moves) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
             int bit = row * BoardLength + col;
-            std::cout << std::setw(2) << (moves & (1LL << bit) ? "1" : "0");
+            std::cout << std::setw(2) << (moves & (1ULL << bit) ? "1" : "0");
         }
         std::cout << std::endl;
     }
@@ -223,7 +223,7 @@ auto main() -> int {
 
     // printBoard(board);
     // std::cout << board.enpassant_square << "\n";
-    // printBitboard(1LL << board.enpassant_square);
+    // printBitboard(1ULL << board.enpassant_square);
 
     // board.loadFEN("position startpos moves a2a4 a7a6 a4a5 b7b5");
     // MoveList moves = moveGenerator.generateMoves(board);

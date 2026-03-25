@@ -48,6 +48,9 @@ int main() {
         if (ImGui::Button("Black Pawns")) {
             app.background_bitboard = App::BackgroundBitbord::BlackPawns;
         }
+        if (ImGui::Button("Enpassant")) {
+            app.background_bitboard = App::BackgroundBitbord::Enpassant;
+        }
         ImGui::End();
         rlImGuiEnd();
 

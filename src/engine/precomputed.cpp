@@ -16,7 +16,7 @@ void precomputeKnightMoves(std::array<bitmask, BoardSize>& knightMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= 1LL << (r * BoardLength + c);
+                    moves |= 1ULL << (r * BoardLength + c);
                 }
             }
 
@@ -40,7 +40,7 @@ void precomputeKingMoves(std::array<bitmask, BoardSize>& kingMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= 1LL << (r * BoardLength + c);
+                    moves |= 1ULL << (r * BoardLength + c);
                 }
             }
 

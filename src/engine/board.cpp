@@ -7,6 +7,10 @@
 #include <string>
 #include <vector>
 
+bitmask setBit(int square) {
+    return 1ULL << square;
+}
+
 Board::Board() {
     history.reserve(100);
 }
@@ -14,12 +18,12 @@ Board::Board() {
 void Board::addPiece(int square, int piece) {
     squares[square] = piece;
     pieceLists[piece].addPiece(square);
-    bitboards[piece] |= 1LL << square;
+    bitboards[piece] |= setBit(square);
 
     if (Pieces::isWhite(piece)) {
-        white_pieces |= 1LL << square;
+        white_pieces |= setBit(square);
     } else {
-        black_pieces |= 1LL << square;
+        black_pieces |= setBit(square);
     }
 }
 
@@ -27,12 +31,12 @@ void Board::removePiece(int square) {
     int piece = squares[square];
     squares[square] = Pieces::None;
     pieceLists[piece].removePiece(square);
-    bitboards[piece] ^= 1LL << square;
+    bitboards[piece] ^= setBit(square);
 
     if (Pieces::isWhite(piece)) {
-        white_pieces ^= 1LL << square;
+        white_pieces ^= setBit(square);
     } else {
-        black_pieces ^= 1LL << square;
+        black_pieces ^= setBit(square);
     }
 }
 
@@ -43,13 +47,13 @@ void Board::movePiece(int from, int to) {
     squares[from] = Pieces::None;
     squares[to] = piece;
 
-    bitboards[piece] ^= (1LL << from) | (1LL << to);
+    bitboards[piece] ^= (setBit(from)) | (setBit(to));
     pieceLists[piece].movePiece(from, to);
 
     if (Pieces::isWhite(piece)) {
-        white_pieces ^= (1LL << from) | (1LL << to);
+        white_pieces ^= (setBit(from)) | (setBit(to));
     } else {
-        black_pieces ^= (1LL << from) | (1LL << to);
+        black_pieces ^= (setBit(from)) | (setBit(to));
     }
 }
 
