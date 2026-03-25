@@ -1,5 +1,6 @@
 #include "board.hpp"
 #include "constants.hpp"
+#include "diagnostics.hpp"
 #include "magics.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
@@ -199,15 +200,19 @@ auto main() -> int {
     Precomputed precomputed;
     MoveGenerator moveGenerator(precomputed);
 
+    board.loadFEN(START_POS);
+
     // std::string line;
     // while (std::getline(std::cin, line)) {
     //     handleInput(line, board, moveGenerator);
     // }
 
-    Magics magics;
+    // Magics magics;
     // for (auto magic : magics.rook_magics) {
     //     std::cout << magic << std::endl;
     // }
+
+    // std::cout << Diagnostics::runPerft(board, moveGenerator, 2) << std::endl;
 
     // board.loadFEN(START_POS);
     // board.makeMove(Move("a2a4"));

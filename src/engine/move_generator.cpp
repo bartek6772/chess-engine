@@ -188,11 +188,8 @@ void MoveGenerator::generateKingMoves(
     int piece = Pieces::King | color;
     bitmask friendly_pieces = color == Pieces::White ? board.white_pieces : board.black_pieces;
 
-    // TODO: try to ignore attacked squares to avoid checking them later
-    bitmask attacked = (color == Pieces::White) ? black_attacks : white_attacks;
-
     for (int from : board.pieceLists[piece]) {
-        bitmask mask = precomputed.kingMoves[from] & ~friendly_pieces & ~attacked;
+        bitmask mask = precomputed.kingMoves[from] & ~friendly_pieces;
 
         while (mask > 0) {
             int target = std::countr_zero(mask);
@@ -204,53 +201,78 @@ void MoveGenerator::generateKingMoves(
     // TODO: implement castling
 }
 
-bool MoveGenerator::isSquareAttacked(const Board& board, int square) {
-    if (board.white_to_move) {
-        return (black_attacks & (1LL << square)) != 0;
-    } else {
-        return (white_attacks & (1LL << square)) != 0;
+bool MoveGenerator::isSquareAttacked(const Board& board, int square, int attacker_color) {
+
+    if (precomputed.knightMoves[square] & board.bitboards[Pieces::Knight | attacker_color]) {
+        return true;
     }
+
+    // TODO: VERY IMPORTANT CHECK IF USING 1LL is ENOUGHT MAYBE IT SHOULD BE 1ULL
+    bitmask pawn_attacks = getPawnsAttacks(board, attacker_color);
+    if (pawn_attacks & (1LL << square)) {
+        return true;
+    }
+
+    bitmask rook_rays = getRookAttack(board, magics, square);
+    bitmask bishop_rays = getBishopAttack(board, magics, square);
+
+    bitmask rooks_and_queens = board.bitboards[Pieces::Rook | attacker_color] |
+                               board.bitboards[Pieces::Queen | attacker_color];
+
+    bitmask bishops_and_queens = board.bitboards[Pieces::Bishop | attacker_color] |
+                                 board.bitboards[Pieces::Queen | attacker_color];
+
+    if ((rook_rays & rooks_and_queens) != 0) {
+        return true;
+    }
+
+    if ((bishop_rays & bishops_and_queens) != 0) {
+        return true;
+    }
+
+    if (precomputed.kingMoves[square] & board.bitboards[Pieces::King | attacker_color]) {
+        return true;
+    }
+
+    return false;
 }
 
-bitmask MoveGenerator::generateSideAttacks(const Board& board, int color) {
-    bitmask attacks = 0;
+// bitmask MoveGenerator::generateSideAttacks(const Board& board, int color) {
+//     bitmask attacks = 0;
 
-    for (int from : board.pieceLists[Pieces::Rook | color]) {
-        attacks |= getRookAttack(board, magics, from);
-    }
+//     for (int from : board.pieceLists[Pieces::Rook | color]) {
+//         attacks |= getRookAttack(board, magics, from);
+//     }
 
-    for (int from : board.pieceLists[Pieces::Bishop | color]) {
-        attacks |= getBishopAttack(board, magics, from);
-    }
+//     for (int from : board.pieceLists[Pieces::Bishop | color]) {
+//         attacks |= getBishopAttack(board, magics, from);
+//     }
 
-    for (int from : board.pieceLists[Pieces::Queen | color]) {
-        attacks |= getRookAttack(board, magics, from);
-        attacks |= getBishopAttack(board, magics, from);
-    }
+//     for (int from : board.pieceLists[Pieces::Queen | color]) {
+//         attacks |= getRookAttack(board, magics, from);
+//         attacks |= getBishopAttack(board, magics, from);
+//     }
 
-    for (int from : board.pieceLists[Pieces::Knight | color]) {
-        attacks |= precomputed.knightMoves[from];
-    }
+//     for (int from : board.pieceLists[Pieces::Knight | color]) {
+//         attacks |= precomputed.knightMoves[from];
+//     }
 
-    for (int from : board.pieceLists[Pieces::King | color]) {
-        attacks |= precomputed.kingMoves[from];
-    }
+//     for (int from : board.pieceLists[Pieces::King | color]) {
+//         attacks |= precomputed.kingMoves[from];
+//     }
 
-    attacks |= getPawnsAttacks(board, color);
+//     attacks |= getPawnsAttacks(board, color);
 
-    return attacks;
-}
+//     return attacks;
+// }
 
-void MoveGenerator::generateAttacks(const Board& board) {
-    white_attacks = generateSideAttacks(board, Pieces::White);
-    black_attacks = generateSideAttacks(board, Pieces::Black);
-}
+// void MoveGenerator::generateAttacks(const Board& board) {
+//     white_attacks = generateSideAttacks(board, Pieces::White);
+//     black_attacks = generateSideAttacks(board, Pieces::Black);
+// }
 
 auto MoveGenerator::generateMoves(const Board& board) -> std::vector<Move> {
     std::vector<Move> moves;
-
-    // This line is currently only needed to cache attacks for gui (and for king moves optimization)
-    generateAttacks(board);
 
     int color = board.white_to_move ? Pieces::White : Pieces::Black;
     generateKnightMoves(board, moves, color);
@@ -274,8 +296,8 @@ auto MoveGenerator::generateLegalMoves(Board& board) -> std::vector<Move> {
         board.makeMove(move);
         int king_position = board.pieceLists[Pieces::King | color][0];
 
-        bitmask attacks = generateSideAttacks(board, response_color);
-        if ((attacks & (1LL << king_position)) == 0) {
+        // bitmask attacks = generateSideAttacks(board, response_color);
+        if (!isSquareAttacked(board, king_position, response_color)) {
             legal_moves.push_back(move);
         }
 

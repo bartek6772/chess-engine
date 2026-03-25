@@ -17,9 +17,9 @@ private:
     bitmask white_attacks;
     bitmask black_attacks;
 
-    void generateAttacks(const Board& board);
-    bitmask generateSideAttacks(const Board& board, int color);
-    bool isSquareAttacked(const Board& board, int square);
+    // void generateAttacks(const Board& board);
+    // bitmask generateSideAttacks(const Board& board, int color);
+    bool isSquareAttacked(const Board& board, int square, int attacker_color);
 
     void generateKnightMoves(const Board& board, std::vector<Move>& moves, int color) const;
     void generateRookMoves(const Board& board, std::vector<Move>& moves, int color) const;

@@ -15,7 +15,8 @@ Checks: >
   -cppcoreguidelines-pro-type-vararg,
   -readability-else-after-return,
   -modernize-use-nondiscard,
-  -modernize-use-trailing-return-type
+  -modernize-use-trailing-return-type,
+  -readability-implicit-bool-conversion
   
 # -cppcoreguidelines-pro-bounds-pointer-arithmetic,
 # Checks: 'bugprone-argument-comment,bugprone-suspicious-missing-comma'
