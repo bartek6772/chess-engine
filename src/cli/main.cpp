@@ -30,7 +30,7 @@ void printBitboard(unsigned long long moves) {
     }
 }
 
-void printMoves(const std::vector<Move>& moves) {
+void printMoves(const MoveList& moves) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
             int bit = row * BoardLength + col;
@@ -109,7 +109,7 @@ void handleInput(std::string& input, Board& board, MoveGenerator& move_generator
 
             // cant make it this way because it loses flag, need to find move in generated
             auto find_move = [&](int from, int to) {
-                vector<Move> moves = move_generator.generateMoves(board);
+                MoveList moves = move_generator.generateMoves(board);
                 Move move(0, 0);
                 for (const Move& m : moves) {
                     if (m.from == from && m.to == to) {
@@ -141,7 +141,7 @@ void handleInput(std::string& input, Board& board, MoveGenerator& move_generator
 
     } else if (command == "legalmoves") {
         // change back to legal moves
-        vector<Move> moves = move_generator.generateMoves(board);
+        MoveList moves = move_generator.generateMoves(board);
         for (Move move : moves) {
             cout << move.toString() << endl;
         }
@@ -169,7 +169,7 @@ void handleInput(std::string& input, Board& board, MoveGenerator& move_generator
     //     printBoard(board);
 
     //     for (int i = 0; i < TEST_CASES; i++) {
-    //         vector<Move> moves = move_generator.generateLegalMoves(board);
+    //         MoveList moves = move_generator.generateLegalMoves(board);
     //         std::random_device dev;
     //         std::mt19937 rng(dev());
 
@@ -226,7 +226,7 @@ auto main() -> int {
     // printBitboard(1LL << board.enpassant_square);
 
     // board.loadFEN("position startpos moves a2a4 a7a6 a4a5 b7b5");
-    // std::vector<Move> moves = moveGenerator.generateMoves(board);
+    // MoveList moves = moveGenerator.generateMoves(board);
     // for (Move move : moves) {
     //     std::cout << move.toString() << std::endl;
     // }

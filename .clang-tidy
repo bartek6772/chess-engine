@@ -14,7 +14,7 @@ Checks: >
   -Wsign-conversion,
   -cppcoreguidelines-pro-type-vararg,
   -readability-else-after-return,
-  -modernize-use-nondiscard,
+  -modernize-use-nodiscard,
   -modernize-use-trailing-return-type,
   -readability-implicit-bool-conversion
   

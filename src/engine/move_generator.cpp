@@ -3,25 +3,11 @@
 #include "constants.hpp"
 #include "magics.hpp"
 #include "move.hpp"
+#include "move_list.hpp"
 #include "pieces.hpp"
 #include "precomputed.hpp"
 #include <bit>
 #include <vector>
-
-void MoveGenerator::generateKnightMoves(
-    const Board& board, std::vector<Move>& moves, int color) const {
-    int piece = Pieces::Knight | color;
-    bitmask friendly_pieces = color == Pieces::White ? board.white_pieces : board.black_pieces;
-    for (int from : board.pieceLists[piece]) {
-        bitmask mask = precomputed.knightMoves[from] & ~friendly_pieces;
-
-        while (mask > 0) {
-            int target = std::countr_zero(mask);
-            moves.emplace_back(from, target);
-            mask &= (mask - 1);
-        }
-    }
-}
 
 bitmask getRookAttack(const Board& board, const Magics& magics, int from) {
     int piece = board.squares[from];
@@ -62,8 +48,21 @@ bitmask getPawnsAttacks(const Board& board, int color) {
     return attacks;
 }
 
-void MoveGenerator::generateRookMoves(
-    const Board& board, std::vector<Move>& moves, int color) const {
+void MoveGenerator::generateKnightMoves(const Board& board, MoveList& moves, int color) const {
+    int piece = Pieces::Knight | color;
+    bitmask friendly_pieces = color == Pieces::White ? board.white_pieces : board.black_pieces;
+    for (int from : board.pieceLists[piece]) {
+        bitmask mask = precomputed.knightMoves[from] & ~friendly_pieces;
+
+        while (mask > 0) {
+            int target = std::countr_zero(mask);
+            moves.push({ from, target });
+            mask &= (mask - 1);
+        }
+    }
+}
+
+void MoveGenerator::generateRookMoves(const Board& board, MoveList& moves, int color) const {
 
     int piece = Pieces::Rook | color;
     bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
@@ -73,14 +72,13 @@ void MoveGenerator::generateRookMoves(
 
         while (targets > 0) {
             int target = std::countr_zero(targets);
-            moves.emplace_back(from, target);
+            moves.push({ from, target });
             targets &= (targets - 1);
         }
     }
 }
 
-void MoveGenerator::generateBishopMoves(
-    const Board& board, std::vector<Move>& moves, int color) const {
+void MoveGenerator::generateBishopMoves(const Board& board, MoveList& moves, int color) const {
 
     int piece = Pieces::Bishop | color;
     bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
@@ -89,14 +87,13 @@ void MoveGenerator::generateBishopMoves(
 
         while (targets > 0) {
             int target = std::countr_zero(targets);
-            moves.emplace_back(from, target);
+            moves.push({ from, target });
             targets &= (targets - 1);
         }
     }
 }
 
-void MoveGenerator::generateQueenMoves(
-    const Board& board, std::vector<Move>& moves, int color) const {
+void MoveGenerator::generateQueenMoves(const Board& board, MoveList& moves, int color) const {
 
     int piece = Pieces::Queen | color;
     bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
@@ -108,14 +105,13 @@ void MoveGenerator::generateQueenMoves(
 
         while (targets > 0) {
             int target = std::countr_zero(targets);
-            moves.emplace_back(from, target);
+            moves.push({ from, target });
             targets &= (targets - 1);
         }
     }
 }
 
-void MoveGenerator::generatePawnMoves(
-    const Board& board, std::vector<Move>& moves, int color) const {
+void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int color) const {
     int piece = Pieces::Pawn | color;
     bool white_to_move = color == Pieces::White;
 
@@ -138,22 +134,22 @@ void MoveGenerator::generatePawnMoves(
             int target = from + left_attack;
             if (board.squares[target] != Pieces::None &&
                 Pieces::pieceColor(board.squares[target]) == enemy_color) {
-                moves.emplace_back(from, target);
+                moves.push({ from, target });
             }
 
             if (board.enpassant_square == target) {
-                moves.emplace_back(from, target, MoveType::EnPassant);
+                moves.push({ from, target, MoveType::EnPassant });
             }
         }
         if (from_col != BoardLength - 1) {
             int target = from + right_attack;
             if (board.squares[target] != Pieces::None &&
                 Pieces::pieceColor(board.squares[target]) == enemy_color) {
-                moves.emplace_back(from, target);
+                moves.push({ from, target });
             }
 
             if (board.enpassant_square == target) {
-                moves.emplace_back(from, target, MoveType::EnPassant);
+                moves.push({ from, target, MoveType::EnPassant });
             }
         }
 
@@ -165,25 +161,24 @@ void MoveGenerator::generatePawnMoves(
 
         if (empty1) {
             if (push1 / BoardLength == promotion_row) {
-                moves.emplace_back(from, push1, MoveType::PromotionBishop);
-                moves.emplace_back(from, push1, MoveType::PromotionKnight);
-                moves.emplace_back(from, push1, MoveType::PromotionQueen);
-                moves.emplace_back(from, push1, MoveType::PromotionRook);
+                moves.push({ from, push1, MoveType::PromotionBishop });
+                moves.push({ from, push1, MoveType::PromotionKnight });
+                moves.push({ from, push1, MoveType::PromotionQueen });
+                moves.push({ from, push1, MoveType::PromotionRook });
             } else {
-                moves.emplace_back(from, push1);
+                moves.push({ from, push1 });
             }
         }
 
         if (from_row == base_row) {
             if (empty1 && empty2) {
-                moves.emplace_back(from, push2, MoveType::DoublePush);
+                moves.push({ from, push2, MoveType::DoublePush });
             }
         }
     }
 }
 
-void MoveGenerator::generateKingMoves(
-    const Board& board, std::vector<Move>& moves, int color) const {
+void MoveGenerator::generateKingMoves(const Board& board, MoveList& moves, int color) const {
 
     int piece = Pieces::King | color;
     bitmask friendly_pieces = color == Pieces::White ? board.white_pieces : board.black_pieces;
@@ -193,7 +188,7 @@ void MoveGenerator::generateKingMoves(
 
         while (mask > 0) {
             int target = std::countr_zero(mask);
-            moves.emplace_back(from, target);
+            moves.push({ from, target });
             mask &= (mask - 1);
         }
     }
@@ -271,8 +266,8 @@ bool MoveGenerator::isSquareAttacked(const Board& board, int square, int attacke
 //     black_attacks = generateSideAttacks(board, Pieces::Black);
 // }
 
-auto MoveGenerator::generateMoves(const Board& board) -> std::vector<Move> {
-    std::vector<Move> moves;
+auto MoveGenerator::generateMoves(const Board& board) -> MoveList {
+    MoveList moves;
 
     int color = board.white_to_move ? Pieces::White : Pieces::Black;
     generateKnightMoves(board, moves, color);
@@ -285,20 +280,19 @@ auto MoveGenerator::generateMoves(const Board& board) -> std::vector<Move> {
     return moves;
 }
 
-auto MoveGenerator::generateLegalMoves(Board& board) -> std::vector<Move> {
+auto MoveGenerator::generateLegalMoves(Board& board) -> MoveList {
 
-    std::vector<Move> legal_moves;
+    MoveList legal_moves;
     int color = board.white_to_move ? Pieces::White : Pieces::Black;
     int response_color = board.white_to_move ? Pieces::Black : Pieces::White;
 
-    std::vector<Move> moves = generateMoves(board);
+    MoveList moves = generateMoves(board);
     for (const Move& move : moves) {
         board.makeMove(move);
         int king_position = board.pieceLists[Pieces::King | color][0];
 
-        // bitmask attacks = generateSideAttacks(board, response_color);
         if (!isSquareAttacked(board, king_position, response_color)) {
-            legal_moves.push_back(move);
+            legal_moves.push(move);
         }
 
         board.unmakeMove();

@@ -2,6 +2,7 @@
 #include "board.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
+#include "move_list.hpp"
 #include "precomputed.hpp"
 #include <array>
 #include <raylib.h>
@@ -38,7 +39,7 @@ public:
 private:
     Texture2D pieces_texture;
     std::array<std::vector<int>, 64> move_map;
-    std::vector<Move> available_moves;
+    MoveList available_moves;
 
     Precomputed precomputed;
     MoveGenerator move_gen;

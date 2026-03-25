@@ -1,11 +1,11 @@
 #include "diagnostics.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
-#include <vector>
+#include "move_list.hpp"
 
 long long Diagnostics::runPerft(Board& board, MoveGenerator& move_gen, int depth) {
 
-    std::vector<Move> moves = move_gen.generateLegalMoves(board);
+    MoveList moves = move_gen.generateLegalMoves(board);
     if (depth == 1) {
         return (long long)moves.size();
     }
