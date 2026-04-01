@@ -16,7 +16,7 @@ private:
     bitmask white_attacks;
     bitmask black_attacks;
 
-    bool isSquareAttacked(const Board& board, int square, int attacker_color);
+    bool isSquareAttacked(const Board& board, int square, int attacker_color) const;
 
     void generateKnightMoves(const Board& board, MoveList& moves, int color) const;
     void generateRookMoves(const Board& board, MoveList& moves, int color) const;

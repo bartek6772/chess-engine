@@ -12,7 +12,8 @@ enable_testing()
 
 add_executable(
     engine_tests 
-    main.cpp
+    tests_fen.cpp
+    tests_move_gen.cpp
 )
 
 target_link_libraries(

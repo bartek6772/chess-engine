@@ -4,6 +4,14 @@
 
 namespace Diagnostics {
 
-long long runPerft(Board& board, MoveGenerator& move_gen, int depth);
+struct PerftResults {
+    long long total;
+    long long castles;
+    long long captures;
+    long long promotions;
+    long long enpassants;
+};
 
-}
+PerftResults runPerft(Board& board, MoveGenerator& move_gen, int depth);
+
+} // namespace Diagnostics

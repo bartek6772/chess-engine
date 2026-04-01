@@ -32,13 +32,17 @@ struct Board {
     void makeMove(const Move& move);
     void unmakeMove();
 
+    inline bool canCastle(int castle_type) const {
+        return (castling_rights & castle_type) != 0;
+    }
+
     struct HistoryState {
         Move move;
-        int capture;
+        int capture{};
 
         // State before that move
-        int enpassant_square;
-        int castling_rights;
+        int enpassant_square{};
+        int castling_rights{};
     };
 
     Board();

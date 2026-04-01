@@ -125,23 +125,32 @@ void MoveGenerator::generateQueenMoves(const Board& board, MoveList& moves, int 
 void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int color) const {
     int piece = Pieces::Pawn | color;
     bool white_to_move = color == Pieces::White;
-
-    int enemy_color = white_to_move ? Pieces::Black : Pieces::White;
     int dir = white_to_move ? 1 : -1;
 
     bitmask pawns = board.bitboards[piece];
     bitmask empty_squares = ~(board.white_pieces | board.black_pieces);
-
     bitmask enemies = white_to_move ? board.black_pieces : board.white_pieces;
+    bitmask promotion_rank = white_to_move ? RANK_8 : RANK_1;
+
     if (board.enpassant_square != -1) {
         enemies |= setBit(board.enpassant_square);
     }
 
-    bitmask promotion_pushes = 0;
-    bitmask normal_pushes = 0;
+    bitmask single_pushes = 0;
     bitmask double_pushes = 0;
     bitmask left_attacks = 0;
     bitmask right_attacks = 0;
+
+    auto movePawn = [&](int from, int to, MoveType type = MoveType::Normal) {
+        if ((setBit(to) & promotion_rank) != 0) {
+            moves.push({ from, to, MoveType::PromotionBishop });
+            moves.push({ from, to, MoveType::PromotionKnight });
+            moves.push({ from, to, MoveType::PromotionRook });
+            moves.push({ from, to, MoveType::PromotionQueen });
+        } else {
+            moves.push({ from, to, type });
+        }
+    };
 
     auto processAttacks = [&](bitmask attacks, int offset) {
         while (attacks) {
@@ -151,7 +160,7 @@ void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int c
             if (to == board.enpassant_square) {
                 moves.push({ from, to, MoveType::EnPassant });
             } else {
-                moves.push({ from, to });
+                movePawn(from, to);
             }
 
             attacks &= (attacks - 1);
@@ -159,11 +168,7 @@ void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int c
     };
 
     if (color == Pieces::White) {
-        bitmask single_pushes = (pawns << 8) & empty_squares;
-
-        promotion_pushes = single_pushes & RANK_8;
-        normal_pushes = single_pushes & ~RANK_8;
-
+        single_pushes = (pawns << 8) & empty_squares;
         double_pushes = (single_pushes << 8) & empty_squares & RANK_4;
 
         left_attacks = (pawns << 7) & ~FILE_H & enemies;
@@ -172,11 +177,7 @@ void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int c
         processAttacks(left_attacks, 7);
         processAttacks(right_attacks, 9);
     } else {
-        bitmask single_pushes = (pawns >> 8) & empty_squares;
-
-        promotion_pushes = single_pushes & RANK_1;
-        normal_pushes = single_pushes & ~RANK_1;
-
+        single_pushes = (pawns >> 8) & empty_squares;
         double_pushes = (single_pushes >> 8) & empty_squares & RANK_5;
 
         left_attacks = (pawns >> 9) & ~FILE_H & enemies;
@@ -186,21 +187,11 @@ void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int c
         processAttacks(right_attacks, -7);
     }
 
-    while (normal_pushes) {
-        int target = std::countr_zero(normal_pushes);
+    while (single_pushes) {
+        int target = std::countr_zero(single_pushes);
         int from = target - 8 * dir;
-        moves.push({ from, target });
-        normal_pushes &= (normal_pushes - 1);
-    }
-
-    while (promotion_pushes) {
-        int to = std::countr_zero(promotion_pushes);
-        int from = to - 8 * dir;
-        moves.push({ from, to, MoveType::PromotionBishop });
-        moves.push({ from, to, MoveType::PromotionKnight });
-        moves.push({ from, to, MoveType::PromotionRook });
-        moves.push({ from, to, MoveType::PromotionQueen });
-        promotion_pushes &= (promotion_pushes - 1);
+        movePawn(from, target);
+        single_pushes &= (single_pushes - 1);
     }
 
     while (double_pushes) {
@@ -217,27 +208,53 @@ void MoveGenerator::generateKingMoves(const Board& board, MoveList& moves, int c
     bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
 
     bitmask pieces = board.bitboards[piece];
-    while (pieces) {
-        int from = std::countr_zero(pieces);
-        pieces &= (pieces - 1);
+    int from = std::countr_zero(pieces);
+    pieces &= (pieces - 1);
 
-        bitmask targets = precomputed.kingMoves[from] & friends_free;
-        while (targets > 0) {
-            int target = std::countr_zero(targets);
-            moves.push({ from, target });
-            targets &= (targets - 1);
-        }
+    bitmask targets = precomputed.kingMoves[from] & friends_free;
+    while (targets > 0) {
+        int target = std::countr_zero(targets);
+        moves.push({ from, target });
+        targets &= (targets - 1);
     }
 
-    // TODO: implement castling
+    int enemy = (color == Pieces::White) ? Pieces::Black : Pieces::White;
+    auto checkSquares = [&](int sq1, int sq2) {
+        if (board.squares[sq1] != Pieces::None || isSquareAttacked(board, sq1, enemy)) return false;
+        if (board.squares[sq2] != Pieces::None || isSquareAttacked(board, sq2, enemy)) return false;
+        return true;
+    };
+
+    using namespace Squares;
+
+    if (color == Pieces::White) {
+        if (from != E1 || isSquareAttacked(board, E1, enemy)) return;
+        if (board.canCastle(Board::white_king_castle) && checkSquares(F1, G1)) {
+            moves.push({ E1, G1, MoveType::Castling });
+        }
+        if (board.canCastle(Board::white_queen_castle) && checkSquares(D1, C1) &&
+            board.squares[B1] == Pieces::None) {
+            moves.push({ E1, C1, MoveType::Castling });
+        }
+    } else {
+        if (from != E8 || isSquareAttacked(board, E8, enemy)) return;
+        if (board.canCastle(Board::black_king_castle) && checkSquares(F8, G8)) {
+            moves.push({ E8, G8, MoveType::Castling });
+        }
+        if (board.canCastle(Board::black_queen_castle) && checkSquares(D8, C8) &&
+            board.squares[B8] == Pieces::None) {
+            moves.push({ E8, C8, MoveType::Castling });
+        }
+    }
 }
 
-bool MoveGenerator::isSquareAttacked(const Board& board, int square, int attacker_color) {
+bool MoveGenerator::isSquareAttacked(const Board& board, int square, int attacker_color) const {
 
     if (precomputed.knightMoves[square] & board.bitboards[Pieces::Knight | attacker_color]) {
         return true;
     }
 
+    // int player_color = (attacker_color == Pieces::White) ? Pieces::Black : Pieces::White;
     bitmask pawn_attacks = getPawnsAttacks(board, attacker_color);
     if (pawn_attacks & setBit(square)) {
         return true;

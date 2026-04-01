@@ -106,6 +106,19 @@ auto Board::loadFEN(const std::string& fen) -> bool {
     }
 
     { // 3. Castling rights
+        if (parts.size() < 3) {
+            return false;
+        }
+
+        castling_rights = 0;
+        for (char c : parts[2]) {
+            switch (c) {
+                case 'K': castling_rights |= white_king_castle; break;
+                case 'k': castling_rights |= black_king_castle; break;
+                case 'Q': castling_rights |= white_queen_castle; break;
+                case 'q': castling_rights |= black_queen_castle; break;
+            }
+        }
     }
 
     { // 4. Enpassant
@@ -131,6 +144,28 @@ void Board::makeMove(const Move& move) {
         move.type == MoveType::PromotionQueen || move.type == MoveType::PromotionRook;
 
     int color = white_to_move ? Pieces::White : Pieces::Black;
+
+    switch (move.from) {
+        case Squares::E1: castling_rights &= ~(white_king_castle | white_queen_castle); break;
+        case Squares::E8: castling_rights &= ~(black_king_castle | black_queen_castle); break;
+        case Squares::A1: castling_rights &= ~white_queen_castle; break;
+        case Squares::H1: castling_rights &= ~white_king_castle; break;
+        case Squares::A8: castling_rights &= ~black_queen_castle; break;
+        case Squares::H8: castling_rights &= ~black_king_castle; break;
+    }
+
+    switch (move.to) {
+        case Squares::A1: castling_rights &= ~white_queen_castle; break;
+        case Squares::H1: castling_rights &= ~white_king_castle; break;
+        case Squares::A8: castling_rights &= ~black_queen_castle; break;
+        case Squares::H8: castling_rights &= ~black_king_castle; break;
+    }
+
+    int capture = squares[move.to];
+    if (capture != Pieces::None) {
+        removePiece(move.to);
+    }
+    new_state.capture = capture;
 
     if (is_promotion) {
         removePiece(move.from);
@@ -191,22 +226,6 @@ void Board::makeMove(const Move& move) {
             enpassant_square = -1;
         }
 
-        if (move.from == 0) {
-            castling_rights &= ~white_queen_castle;
-        } else if (move.from == 7) {
-            castling_rights &= ~white_king_castle;
-        } else if (move.from == 56) {
-            castling_rights &= ~black_queen_castle;
-        } else if (move.from == 63) {
-            castling_rights &= ~black_king_castle;
-        }
-
-        int capture = squares[move.to];
-        if (capture != Pieces::None) {
-            removePiece(move.to);
-        }
-        new_state.capture = capture;
-
         movePiece(move.from, move.to);
     }
 
@@ -265,8 +284,9 @@ void Board::unmakeMove() {
         }
 
         movePiece(move.to, move.from);
-        if (state.capture != Pieces::None) {
-            addPiece(move.to, state.capture);
-        }
+    }
+
+    if (state.capture != Pieces::None) {
+        addPiece(move.to, state.capture);
     }
 }
