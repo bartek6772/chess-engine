@@ -9,7 +9,6 @@
 #include <vector>
 
 Board::Board() {
-    history.reserve(100);
 }
 
 void Board::addPiece(int square, int piece) {
@@ -55,7 +54,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
     // TODO: handle errors and invalid strings, maybe return bool as veryfication
 
-    history.clear();
+    history_ptr = 0;
 
     std::vector<std::string> parts;
     std::stringstream stream(fen);
@@ -230,13 +229,12 @@ void Board::makeMove(const Move& move) {
     }
 
     white_to_move = !white_to_move;
-    history.push_back(new_state);
+    history[history_ptr++] = new_state;
 }
 
 void Board::unmakeMove() {
 
-    HistoryState state = history[history.size() - 1];
-    history.pop_back();
+    HistoryState state = history[--history_ptr];
     Move& move = state.move;
 
     white_to_move = !white_to_move;

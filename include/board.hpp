@@ -4,7 +4,8 @@
 #include "move.hpp"
 #include <array>
 #include <string>
-#include <vector>
+
+static constexpr int MAX_GAME_MOVES = 1024;
 
 struct Board {
     std::array<int, BoardSize> squares{};
@@ -47,5 +48,6 @@ struct Board {
 
     Board();
 
-    std::vector<HistoryState> history;
+    std::array<HistoryState, MAX_GAME_MOVES> history;
+    int history_ptr = 0;
 };
