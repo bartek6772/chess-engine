@@ -1,28 +1,20 @@
 #include "magics.hpp"
 #include "constants.hpp"
+#include "utility.hpp"
 #include <array>
 #include <bit>
 #include <random>
-
-// TODO: consider reusing in other places
-bitmask setBit(int rank, int file) {
-    return 1ULL << (rank * BoardLength + file);
-}
-
-bitmask setBit(int square) {
-    return 1ULL << (square);
-}
 
 bitmask calculate_rook_mask(int square) {
     bitmask mask = 0;
     int file = square % 8;
     int rank = square / 8;
 
-    for (int f = file + 1; f <= 6; f++) mask |= setBit(rank, f);
-    for (int f = file - 1; f >= 1; f--) mask |= setBit(rank, f);
+    for (int f = file + 1; f <= 6; f++) mask |= setBit(rank * 8 + f);
+    for (int f = file - 1; f >= 1; f--) mask |= setBit(rank * 8 + f);
 
-    for (int r = rank + 1; r <= 6; r++) mask |= setBit(r, file);
-    for (int r = rank - 1; r >= 1; r--) mask |= setBit(r, file);
+    for (int r = rank + 1; r <= 6; r++) mask |= setBit(r * 8 + file);
+    for (int r = rank - 1; r >= 1; r--) mask |= setBit(r * 8 + file);
 
     return mask;
 }
@@ -83,11 +75,11 @@ bitmask calculate_bishop_mask(int square) {
     int rank = square / 8;
 
     int r, f;
-    for (r = rank + 1, f = file + 1; r <= 6 && f <= 6; r++, f++) mask |= setBit(r, f);
-    for (r = rank + 1, f = file - 1; r <= 6 && f >= 1; r++, f--) mask |= setBit(r, f);
+    for (r = rank + 1, f = file + 1; r <= 6 && f <= 6; r++, f++) mask |= setBit(r * 8 + f);
+    for (r = rank + 1, f = file - 1; r <= 6 && f >= 1; r++, f--) mask |= setBit(r * 8 + f);
 
-    for (r = rank - 1, f = file + 1; r >= 1 && f <= 6; r--, f++) mask |= setBit(r, f);
-    for (r = rank - 1, f = file - 1; r >= 1 && f >= 1; r--, f--) mask |= setBit(r, f);
+    for (r = rank - 1, f = file + 1; r >= 1 && f <= 6; r--, f++) mask |= setBit(r * 8 + f);
+    for (r = rank - 1, f = file - 1; r >= 1 && f >= 1; r--, f--) mask |= setBit(r * 8 + f);
 
     return mask;
 }

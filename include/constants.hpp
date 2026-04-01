@@ -3,6 +3,8 @@
 constexpr int BoardLength = 8;
 constexpr int BoardSize = BoardLength * BoardLength;
 
+constexpr int MaxPiecesCount = 16;
+
 using bitmask = unsigned long long;
 
 constexpr bitmask FILE_A = 0x0101010101010101;

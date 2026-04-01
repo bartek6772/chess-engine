@@ -1,5 +1,6 @@
 #include "precomputed.hpp"
 #include "constants.hpp"
+#include "utility.hpp"
 #include <array>
 
 void precomputeKnightMoves(std::array<bitmask, BoardSize>& knightMoves) {
@@ -16,7 +17,7 @@ void precomputeKnightMoves(std::array<bitmask, BoardSize>& knightMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= 1ULL << (r * BoardLength + c);
+                    moves |= setBit(r * BoardLength + c);
                 }
             }
 
@@ -40,7 +41,7 @@ void precomputeKingMoves(std::array<bitmask, BoardSize>& kingMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= 1ULL << (r * BoardLength + c);
+                    moves |= setBit(r * BoardLength + c);
                 }
             }
 

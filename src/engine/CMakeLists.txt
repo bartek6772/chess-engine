@@ -1,6 +1,5 @@
 add_library(engine STATIC 
     board.cpp
-    piece_list.cpp
     precomputed.cpp
     move_generator.cpp
     magics.cpp

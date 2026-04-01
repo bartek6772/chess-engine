@@ -11,5 +11,7 @@ add_subdirectory(src/cli)
 add_subdirectory(src/gui)
 add_subdirectory(tests/)
 
+# set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -fno-omit-frame-pointer")
+
 # Forces the final executable to be in the root of /build
 # set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

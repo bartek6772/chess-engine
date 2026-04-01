@@ -2,14 +2,11 @@
 #include "constants.hpp"
 #include "move.hpp"
 #include "pieces.hpp"
+#include "utility.hpp"
 #include <cctype>
 #include <sstream>
 #include <string>
 #include <vector>
-
-bitmask setBit(int square) {
-    return 1ULL << square;
-}
 
 Board::Board() {
     history.reserve(100);
@@ -17,7 +14,6 @@ Board::Board() {
 
 void Board::addPiece(int square, int piece) {
     squares[square] = piece;
-    pieceLists[piece].addPiece(square);
     bitboards[piece] |= setBit(square);
 
     if (Pieces::isWhite(piece)) {
@@ -30,7 +26,6 @@ void Board::addPiece(int square, int piece) {
 void Board::removePiece(int square) {
     int piece = squares[square];
     squares[square] = Pieces::None;
-    pieceLists[piece].removePiece(square);
     bitboards[piece] ^= setBit(square);
 
     if (Pieces::isWhite(piece)) {
@@ -48,7 +43,6 @@ void Board::movePiece(int from, int to) {
     squares[to] = piece;
 
     bitboards[piece] ^= (setBit(from)) | (setBit(to));
-    pieceLists[piece].movePiece(from, to);
 
     if (Pieces::isWhite(piece)) {
         white_pieces ^= (setBit(from)) | (setBit(to));

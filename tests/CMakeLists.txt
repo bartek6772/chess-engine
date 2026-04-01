@@ -23,3 +23,5 @@ target_link_libraries(
 
 include(GoogleTest)
 gtest_discover_tests(engine_tests)
+
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g -fno-omit-frame-pointer")

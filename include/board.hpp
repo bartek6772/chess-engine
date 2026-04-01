@@ -2,7 +2,6 @@
 
 #include "constants.hpp"
 #include "move.hpp"
-#include "piece_list.hpp"
 #include <array>
 #include <string>
 #include <vector>
@@ -10,7 +9,6 @@
 struct Board {
     std::array<int, BoardSize> squares{};
     std::array<bitmask, MaxPiecesCount> bitboards{};
-    std::array<PieceList, MaxPiecesCount> pieceLists;
 
     bitmask white_pieces{};
     bitmask black_pieces{};

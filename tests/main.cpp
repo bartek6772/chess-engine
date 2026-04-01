@@ -25,4 +25,5 @@ TEST(MoveGeneration, Perft) {
     EXPECT_EQ(Diagnostics::runPerft(board, move_gen, 4), 197281);
     EXPECT_EQ(Diagnostics::runPerft(board, move_gen, 5), 4865609);
     EXPECT_EQ(Diagnostics::runPerft(board, move_gen, 6), 119060324);
+    // EXPECT_EQ(Diagnostics::runPerft(board, move_gen, 7), 3195901860);
 }
