@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cctype>
+#include <string>
 namespace Pieces {
 
 inline constexpr int None = 0;
@@ -33,21 +34,25 @@ inline constexpr int MaxPieceIndex = BlackKing;
 inline constexpr int TypeMask = 0b0111;
 inline constexpr int ColorMask = 0b1000;
 
-inline auto pieceType(const int piece) -> int {
+inline auto pieceType(int piece) -> int {
     return piece & TypeMask;
 }
-inline auto pieceColor(const int piece) -> int {
+inline auto pieceColor(int piece) -> int {
     return piece & ColorMask;
 }
-inline auto isWhite(const int piece) -> bool {
+inline auto isWhite(int piece) -> bool {
     return pieceColor(piece) == White;
 }
-inline auto isBlack(const int piece) -> bool {
+inline auto isBlack(int piece) -> bool {
     return pieceColor(piece) == Black;
+}
+inline auto oppositeColor(int color) {
+    // Trick to avoid if statement
+    return Black - color;
 }
 
 inline auto getSymbol(int piece) -> char {
-    const char* piece_symbols = ".PRNBQK";
+    static std::string piece_symbols = ".PRNBQK";
     char sign = piece_symbols[pieceType(piece)];
     return pieceColor(piece) == Black ? (char)std::tolower(sign) : sign;
 }

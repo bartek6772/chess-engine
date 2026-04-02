@@ -45,10 +45,9 @@ bitmask getPawnsAttacks(const Board& board, int color) {
 }
 
 void MoveGenerator::generateKnightMoves(const Board& board, MoveList& moves, int color) const {
-    int piece = Pieces::Knight | color;
-    bitmask friendly_pieces = color == Pieces::White ? board.white_pieces : board.black_pieces;
+    bitmask friendly_pieces = (color == Pieces::White) ? board.white_pieces : board.black_pieces;
+    bitmask pieces = board.bitboards[Pieces::Knight | color];
 
-    bitmask pieces = board.bitboards[piece];
     while (pieces) {
         int from = std::countr_zero(pieces);
         pieces &= (pieces - 1);
@@ -63,11 +62,10 @@ void MoveGenerator::generateKnightMoves(const Board& board, MoveList& moves, int
 }
 
 void MoveGenerator::generateRookMoves(const Board& board, MoveList& moves, int color) const {
-
     int piece = Pieces::Rook | color;
     bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
-
     bitmask pieces = board.bitboards[piece];
+
     while (pieces) {
         int from = std::countr_zero(pieces);
         pieces &= (pieces - 1);
@@ -82,11 +80,10 @@ void MoveGenerator::generateRookMoves(const Board& board, MoveList& moves, int c
 }
 
 void MoveGenerator::generateBishopMoves(const Board& board, MoveList& moves, int color) const {
-
     int piece = Pieces::Bishop | color;
     bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
-
     bitmask pieces = board.bitboards[piece];
+
     while (pieces) {
         int from = std::countr_zero(pieces);
         pieces &= (pieces - 1);
@@ -101,11 +98,10 @@ void MoveGenerator::generateBishopMoves(const Board& board, MoveList& moves, int
 }
 
 void MoveGenerator::generateQueenMoves(const Board& board, MoveList& moves, int color) const {
-
     int piece = Pieces::Queen | color;
     bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
-
     bitmask pieces = board.bitboards[piece];
+
     while (pieces) {
         int from = std::countr_zero(pieces);
         pieces &= (pieces - 1);
@@ -167,6 +163,7 @@ void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int c
         }
     };
 
+    // NOLINTBEGIN
     if (color == Pieces::White) {
         single_pushes = (pawns << 8) & empty_squares;
         double_pushes = (single_pushes << 8) & empty_squares & RANK_4;
@@ -200,6 +197,7 @@ void MoveGenerator::generatePawnMoves(const Board& board, MoveList& moves, int c
         moves.push({ from, target, MoveType::DoublePush });
         double_pushes &= (double_pushes - 1);
     }
+    // NOLINTEND
 }
 
 void MoveGenerator::generateKingMoves(const Board& board, MoveList& moves, int color) const {
@@ -209,16 +207,15 @@ void MoveGenerator::generateKingMoves(const Board& board, MoveList& moves, int c
 
     bitmask pieces = board.bitboards[piece];
     int from = std::countr_zero(pieces);
-    pieces &= (pieces - 1);
-
     bitmask targets = precomputed.kingMoves[from] & friends_free;
-    while (targets > 0) {
+
+    while (targets) {
         int target = std::countr_zero(targets);
         moves.push({ from, target });
         targets &= (targets - 1);
     }
 
-    int enemy = (color == Pieces::White) ? Pieces::Black : Pieces::White;
+    int enemy = Pieces::oppositeColor(color);
     auto checkSquares = [&](int sq1, int sq2) {
         if (board.squares[sq1] != Pieces::None || isSquareAttacked(board, sq1, enemy)) return false;
         if (board.squares[sq2] != Pieces::None || isSquareAttacked(board, sq2, enemy)) return false;
@@ -254,7 +251,6 @@ bool MoveGenerator::isSquareAttacked(const Board& board, int square, int attacke
         return true;
     }
 
-    // int player_color = (attacker_color == Pieces::White) ? Pieces::Black : Pieces::White;
     bitmask pawn_attacks = getPawnsAttacks(board, attacker_color);
     if (pawn_attacks & setBit(square)) {
         return true;
@@ -302,7 +298,7 @@ auto MoveGenerator::generateLegalMoves(Board& board) -> MoveList {
 
     MoveList legal_moves;
     int color = board.white_to_move ? Pieces::White : Pieces::Black;
-    int response_color = board.white_to_move ? Pieces::Black : Pieces::White;
+    int response_color = Pieces::oppositeColor(color);
 
     MoveList moves = generateMoves(board);
     for (const Move& move : moves) {

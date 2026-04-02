@@ -15,6 +15,7 @@ constexpr bitmask RANK_4 = 0x00000000FF000000;
 constexpr bitmask RANK_5 = 0x000000FF00000000;
 constexpr bitmask RANK_8 = 0xFF00000000000000;
 
+// NOLINTBEGIN
 namespace Squares {
 constexpr bitmask A1 = 0;
 constexpr bitmask B1 = 1;
@@ -34,3 +35,4 @@ constexpr bitmask F8 = 61;
 constexpr bitmask G8 = 62;
 constexpr bitmask H8 = 63;
 } // namespace Squares
+// NOLINTEND

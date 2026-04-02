@@ -6,13 +6,12 @@
 #include "move_list.hpp"
 #include "precomputed.hpp"
 
-// TODO: Precomputed can be embeded in MoveGenerator, removing the need to pass it in constructor
-
 class MoveGenerator {
 private:
-    Precomputed precomputed;
-    Magics magics;
+    static inline Precomputed precomputed{};
+    static inline Magics magics{};
 
+    // TODO: Remove this or find a usecase
     bitmask white_attacks;
     bitmask black_attacks;
 
@@ -36,7 +35,7 @@ public:
         return black_attacks;
     }
 
-    MoveGenerator(Precomputed precomputed) : precomputed(precomputed) {
+    MoveGenerator() {
         white_attacks = 0;
         black_attacks = 0;
     }

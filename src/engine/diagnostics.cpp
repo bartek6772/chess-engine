@@ -19,8 +19,7 @@ void perft(Board& board, MoveGenerator& move_gen, Diagnostics::PerftResults& res
     };
 
     auto isPromotion = [&](const Move& move) {
-        return move.type == MoveType::PromotionBishop || move.type == MoveType::PromotionKnight ||
-               move.type == MoveType::PromotionQueen || move.type == MoveType::PromotionRook;
+        return move.isPromotion();
     };
 
     MoveList moves = move_gen.generateLegalMoves(board);

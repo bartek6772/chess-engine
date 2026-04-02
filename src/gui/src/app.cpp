@@ -5,7 +5,7 @@
 #include <raylib.h>
 #include <vector>
 
-App::App() : move_gen(precomputed) {
+App::App() {
     const char* appDir = GetApplicationDirectory();
     const char* piecesPath = TextFormat("%sassets/pieces.png", appDir);
     pieces_texture = LoadTexture(piecesPath);

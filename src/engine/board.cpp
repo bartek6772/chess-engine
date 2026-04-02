@@ -9,6 +9,8 @@
 #include <vector>
 
 Board::Board() {
+    castling_rights =
+        white_king_castle | white_queen_castle | black_king_castle | black_queen_castle;
 }
 
 void Board::addPiece(int square, int piece) {
@@ -138,10 +140,6 @@ void Board::makeMove(const Move& move) {
     new_state.enpassant_square = enpassant_square;
     new_state.castling_rights = castling_rights;
 
-    bool is_promotion =
-        move.type == MoveType::PromotionBishop || move.type == MoveType::PromotionKnight ||
-        move.type == MoveType::PromotionQueen || move.type == MoveType::PromotionRook;
-
     int color = white_to_move ? Pieces::White : Pieces::Black;
 
     switch (move.from) {
@@ -166,7 +164,7 @@ void Board::makeMove(const Move& move) {
     }
     new_state.capture = capture;
 
-    if (is_promotion) {
+    if (move.isPromotion()) {
         removePiece(move.from);
         if (move.type == MoveType::PromotionBishop) {
             addPiece(move.to, Pieces::Bishop | color);
@@ -184,7 +182,7 @@ void Board::makeMove(const Move& move) {
             int rook_start_file = 0;
             int rook_target_file = 0;
 
-            if ((move.to % BoardLength) == 6) {
+            if (move.to == Squares::G1 || move.to == Squares::G8) {
                 rook_start_file = 7;
                 rook_target_file = 5;
             } else {
@@ -241,13 +239,9 @@ void Board::unmakeMove() {
     enpassant_square = state.enpassant_square;
     castling_rights = state.castling_rights;
 
-    bool was_promotion =
-        move.type == MoveType::PromotionBishop || move.type == MoveType::PromotionKnight ||
-        move.type == MoveType::PromotionQueen || move.type == MoveType::PromotionRook;
-
     int color = white_to_move ? Pieces::White : Pieces::Black;
 
-    if (was_promotion) {
+    if (move.isPromotion()) {
         removePiece(move.to);
         addPiece(move.from, Pieces::Pawn | color);
     } else {

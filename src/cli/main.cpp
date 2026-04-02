@@ -197,8 +197,7 @@ auto main() -> int {
     std::cin.tie(nullptr);
 
     Board board;
-    Precomputed precomputed;
-    MoveGenerator moveGenerator(precomputed);
+    MoveGenerator moveGenerator;
 
     board.loadFEN(START_POS);
 

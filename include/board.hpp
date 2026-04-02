@@ -21,8 +21,7 @@ struct Board {
     static constexpr int white_queen_castle = 2;
     static constexpr int black_king_castle = 4;
     static constexpr int black_queen_castle = 8;
-    int castling_rights =
-        white_king_castle | white_queen_castle | black_king_castle | black_queen_castle;
+    int castling_rights;
 
     void addPiece(int square, int piece);
     void removePiece(int square);

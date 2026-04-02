@@ -54,7 +54,12 @@ struct Move {
         return from != move.from || to != move.to || type != move.type;
     }
 
-    bool isNull() {
+    bool isNull() const {
         return to == 0 && from == 0;
+    }
+
+    bool isPromotion() const {
+        return type == MoveType::PromotionBishop || type == MoveType::PromotionKnight ||
+               type == MoveType::PromotionQueen || type == MoveType::PromotionRook;
     }
 };
