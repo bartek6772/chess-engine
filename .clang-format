@@ -31,3 +31,4 @@ AllowShortLoopsOnASingleLine: true
 
 # Misc
 Cpp11BracedListStyle: false
+NamespaceIndentation: Inner

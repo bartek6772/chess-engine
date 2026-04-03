@@ -4,7 +4,7 @@
 #include "move_list.hpp"
 #include "pieces.hpp"
 
-void perft(Board& board, MoveGenerator& move_gen, Diagnostics::PerftResults& results, int depth) {
+void perft(Board& board, Diagnostics::PerftResults& results, int depth) {
 
     auto isCapture = [&](const Move& move) {
         return board.squares[move.to] != Pieces::None || move.type == MoveType::EnPassant;
@@ -22,7 +22,7 @@ void perft(Board& board, MoveGenerator& move_gen, Diagnostics::PerftResults& res
         return move.isPromotion();
     };
 
-    MoveList moves = move_gen.generateLegalMoves(board);
+    MoveList moves = MoveGenerator::generateLegalMoves(board);
     if (depth == 1) {
 
         for (Move& move : moves) {
@@ -38,13 +38,13 @@ void perft(Board& board, MoveGenerator& move_gen, Diagnostics::PerftResults& res
 
     for (Move& move : moves) {
         board.makeMove(move);
-        perft(board, move_gen, results, depth - 1);
+        perft(board, results, depth - 1);
         board.unmakeMove();
     }
 }
 
-Diagnostics::PerftResults Diagnostics::runPerft(Board& board, MoveGenerator& move_gen, int depth) {
+Diagnostics::PerftResults Diagnostics::runPerft(Board& board, int depth) {
     PerftResults results{};
-    perft(board, move_gen, results, depth);
+    perft(board, results, depth);
     return results;
 }

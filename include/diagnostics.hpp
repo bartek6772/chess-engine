@@ -1,6 +1,5 @@
 #pragma once
 #include "board.hpp"
-#include "move_generator.hpp"
 
 namespace Diagnostics {
 
@@ -12,6 +11,6 @@ struct PerftResults {
     long long enpassants;
 };
 
-PerftResults runPerft(Board& board, MoveGenerator& move_gen, int depth);
+PerftResults runPerft(Board& board, int depth);
 
 } // namespace Diagnostics

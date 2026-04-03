@@ -57,7 +57,7 @@ void printBoard(const Board& board) {
     std::cout << std::endl;
 }
 
-void handleInput(std::string& input, Board& board, MoveGenerator& move_generator) {
+void handleInput(std::string& input, Board& board) {
     using namespace std;
 
     constexpr int TEST_CASES = 6;
@@ -109,7 +109,7 @@ void handleInput(std::string& input, Board& board, MoveGenerator& move_generator
 
             // cant make it this way because it loses flag, need to find move in generated
             auto find_move = [&](int from, int to) {
-                MoveList moves = move_generator.generateMoves(board);
+                MoveList moves = MoveGenerator::generateLegalMoves(board);
                 Move move(0, 0);
                 for (const Move& m : moves) {
                     if (m.from == from && m.to == to) {
@@ -141,7 +141,7 @@ void handleInput(std::string& input, Board& board, MoveGenerator& move_generator
 
     } else if (command == "legalmoves") {
         // change back to legal moves
-        MoveList moves = move_generator.generateMoves(board);
+        MoveList moves = MoveGenerator::generateLegalMoves(board);
         for (Move move : moves) {
             cout << move.toString() << endl;
         }
@@ -197,7 +197,6 @@ auto main() -> int {
     std::cin.tie(nullptr);
 
     Board board;
-    MoveGenerator moveGenerator;
 
     board.loadFEN(START_POS);
 
