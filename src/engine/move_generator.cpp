@@ -328,4 +328,18 @@ auto generateLegalMoves(Board& board) -> MoveList {
 
     return legal_moves;
 }
+
+auto generateCaptures(Board& board) -> MoveList {
+    MoveList moves = generateLegalMoves(board);
+    MoveList captures;
+
+    for (const Move& move : moves) {
+        if (board.squares[move.to] != Pieces::None) {
+            captures.push(move);
+        }
+    }
+
+    return captures;
+}
+
 } // namespace MoveGenerator

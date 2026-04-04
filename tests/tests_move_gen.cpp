@@ -1,7 +1,5 @@
 #include "board.hpp"
 #include "diagnostics.hpp"
-#include "move_generator.hpp"
-#include "precomputed.hpp"
 #include <gtest/gtest.h>
 
 #define START_POS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"

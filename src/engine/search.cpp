@@ -3,7 +3,7 @@
 #include "move_generator.hpp"
 #include "move_list.hpp"
 #include "pieces.hpp"
-#include <algorithm>
+#include <chrono>
 #include <vector>
 
 namespace Search {
@@ -11,105 +11,103 @@ namespace Search {
 namespace {
     constexpr int MATE = 99999;
     constexpr int INF = 100'000'000;
-} // namespace
 
-int minimax(Board& board, int depth, int alpha, int beta, bool maximizing, std::vector<Move>& pv) {
-    if (depth == 0) {
-        pv.clear();
-        return Evaluation::evaluate(board);
+    int quiescence(Board& board, int alpha, int beta, SearchStats& stats) {
+        stats.nodes++;
+        stats.quiescence_nodes++;
+
+        int stand_pat = Evaluation::evaluateRelative(board);
+        if (stand_pat >= beta) return beta;
+        if (alpha < stand_pat) alpha = stand_pat;
+
+        MoveList captures = MoveGenerator::generateCaptures(board);
+
+        for (const Move& move : captures) {
+            board.makeMove(move);
+            int score = -quiescence(board, -beta, -alpha, stats);
+            board.unmakeMove();
+
+            if (score >= beta) return beta;
+            if (score > alpha) alpha = score;
+        }
+
+        return alpha;
     }
 
-    MoveList moves = MoveGenerator::generateLegalMoves(board);
+    int negamax(
+        Board& board, int depth, int alpha, int beta, std::vector<Move>& pv, SearchStats& stats) {
+        stats.nodes++;
 
-    if (moves.size() == 0) {
-        pv.clear();
-        int color = board.white_to_move ? Pieces::White : Pieces::Black;
-        if (MoveGenerator::isCheck(board, color)) {
-            return board.white_to_move ? -MATE : MATE;
-        } else {
+        if (depth == 0) {
+            pv.clear();
+            // return Evaluation::evaluateRelative(board);
+            return quiescence(board, alpha, beta, stats);
+        }
+
+        MoveList moves = MoveGenerator::generateLegalMoves(board);
+
+        if (moves.size() == 0) {
+            pv.clear();
+            int color = board.white_to_move ? Pieces::White : Pieces::Black;
+            if (MoveGenerator::isCheck(board, color)) {
+                return -MATE;
+            }
             return 0;
         }
-    }
 
-    std::vector<Move> child_pv;
-    if (maximizing) {
+        std::vector<Move> child_pv;
+        child_pv.reserve(depth);
 
-        int max_eval = -INF;
         for (const Move& move : moves) {
             board.makeMove(move);
-            int eval = minimax(board, depth - 1, alpha, beta, false, child_pv);
+            int eval = -negamax(board, depth - 1, -beta, -alpha, child_pv, stats);
             board.unmakeMove();
 
-            if (eval > max_eval) {
-                max_eval = eval;
+            if (eval >= beta) {
+                stats.beta_cutoffs++;
+                return beta;
+            }
+
+            if (eval > alpha) {
+                alpha = eval;
+
                 pv.clear();
                 pv.push_back(move);
                 pv.insert(pv.end(), child_pv.begin(), child_pv.end());
             }
-
-            // max_eval = std::max(max_eval, eval);
-            alpha = std::max(alpha, eval);
-            if (beta <= alpha) break;
         }
-        return max_eval;
 
-    } else {
-
-        int min_eval = INF;
-        for (const Move& move : moves) {
-            board.makeMove(move);
-            int eval = minimax(board, depth - 1, alpha, beta, true, child_pv);
-            board.unmakeMove();
-
-            if (eval < min_eval) {
-                min_eval = eval;
-                pv.clear();
-                pv.push_back(move);
-                pv.insert(pv.end(), child_pv.begin(), child_pv.end());
-            }
-
-            // min_eval = std::min(min_eval, eval);
-            beta = std::min(beta, eval);
-            if (beta <= alpha) break;
-        }
-        return min_eval;
+        return alpha;
     }
-}
+} // namespace
 
 SearchResult findBestMove(Board& board, int depth) {
 
+    SearchStats stats;
     std::vector<Move> pv;
-    int score = minimax(board, depth, -INF, INF, board.white_to_move, pv);
+
+    auto start = std::chrono::high_resolution_clock::now();
+    int score = negamax(board, depth, -INF, INF, pv, stats);
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    double nps = 0;
+    if (elapsed != 0) {
+        nps = (double)stats.nodes / ((double)elapsed / 1000.0);
+    }
+
+    stats.time_ms = elapsed;
+    stats.nodes_per_second = nps;
+
+    int absolute_score = -score;
 
     return {
         .best_move = pv.empty() ? Move() : pv[0],
-        .score = score,
+        .score = absolute_score,
         .pv = pv,
+        .stats = stats,
     };
-
-    // Move best_move;
-    // int best_value = board.white_to_move ? -INF : INF;
-
-    // MoveList moves = MoveGenerator::generateLegalMoves(board);
-    // for (const Move& move : moves) {
-    //     board.makeMove(move);
-    //     int eval = minimax(board, depth - 1, -INF, INF, !board.white_to_move);
-    //     board.unmakeMove();
-
-    //     if (board.white_to_move) {
-    //         if (eval > best_value) {
-    //             best_value = eval;
-    //             best_move = move;
-    //         }
-    //     } else {
-    //         if (eval < best_value) {
-    //             best_value = eval;
-    //             best_move = move;
-    //         }
-    //     }
-    // }
-
-    // return best_move;
 }
 
 } // namespace Search

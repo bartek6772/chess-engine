@@ -36,6 +36,10 @@ struct Board {
         return (castling_rights & castle_type) != 0;
     }
 
+    inline void loadStartPos() {
+        loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    }
+
     struct HistoryState {
         Move move;
         int capture{};

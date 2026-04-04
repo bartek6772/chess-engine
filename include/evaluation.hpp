@@ -11,5 +11,6 @@ constexpr int RookValue = 500;
 constexpr int QueenValue = 900;
 
 int evaluate(const Board& board);
+int evaluateRelative(const Board& board);
 
 } // namespace Evaluation

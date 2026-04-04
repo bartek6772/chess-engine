@@ -1,5 +1,6 @@
 #include "board.hpp"
 #include "board_renderer.hpp"
+#include "evaluation.hpp"
 #include "imgui.h"
 #include "raylib.h"
 #include "rlImGui.h"
@@ -17,7 +18,7 @@ struct App {
     Board board;
     Board board2;
 
-    int evaluation = 0;
+    Search::SearchResult search_result;
 
     // Init function
     App() : board_renderer(0, 0, true), board_renderer2(450, 0, false) {
@@ -54,7 +55,7 @@ void update(App& app) {
 
         app.board.makeMove(result.best_move);
         app.board_renderer.makeMoveMap(app.board);
-        app.evaluation = result.score;
+        app.search_result = result;
     }
 }
 
@@ -67,7 +68,17 @@ int main() {
 
     App app;
 
+    int cos = 0;
+
     while (!WindowShouldClose()) {
+
+        bool isInteracting = IsMouseButtonDown(MOUSE_LEFT_BUTTON);
+
+        if (isInteracting) {
+            SetTargetFPS(30); // Smooth dragging
+        } else {
+            SetTargetFPS(10); // Idle - essentially stops the CPU hogging
+        }
 
         update(app);
 
@@ -77,32 +88,47 @@ int main() {
 
         // --- ImGui ---
         rlImGuiBegin();
-        ImGui::Begin("Bitboards");
+        ImGui::Begin("Search results");
         ImGui::Text("Hello, Engine Developer!");
 
-        ImGui::Text("Evaluation: %d", app.evaluation);
+        ImGui::Text("Evaluation: %d", app.search_result.score);
+        ImGui::Text("Total nodes: %llu", app.search_result.stats.nodes);
+        ImGui::Text("Quiescence nodes: %llu", app.search_result.stats.quiescence_nodes);
+        ImGui::Text("Time [ms]: %.0ld", app.search_result.stats.time_ms);
+        ImGui::Text("Nodes per second: %.0f", app.search_result.stats.nodes_per_second);
+        ImGui::Text("Beta cutoffs: %lld", app.search_result.stats.beta_cutoffs);
+        ImGui::End();
 
-        // if (ImGui::Button("None")) {
-        //     app.background_bitboard = BoardRenderer::BackgroundBitbord::None;
-        // }
+        ImGui::Begin("Bitbords");
+        if (ImGui::Button("None")) {
+            app.board_renderer.background_bitboard = BoardRenderer::BackgroundBitbord::None;
+        }
         // if (ImGui::Button("White Attacks")) {
-        //     app.background_bitboard = BoardRenderer::BackgroundBitbord::WhiteAttacks;
+        //     app.board_renderer.background_bitboard =
+        //     BoardRenderer::BackgroundBitbord::WhiteAttacks;
         // }
         // if (ImGui::Button("Black Attacks")) {
-        //     app.background_bitboard = BoardRenderer::BackgroundBitbord::BlackAttacks;
+        //     app.board_renderer.background_bitboard =
+        //     BoardRenderer::BackgroundBitbord::BlackAttacks;
         // }
-        // if (ImGui::Button("White Pawns")) {
-        //     app.background_bitboard = BoardRenderer::BackgroundBitbord::WhitePawns;
-        // }
-        // if (ImGui::Button("Black Pawns")) {
-        //     app.background_bitboard = BoardRenderer::BackgroundBitbord::BlackPawns;
-        // }
-        // if (ImGui::Button("Enpassant")) {
-        //     app.background_bitboard = BoardRenderer::BackgroundBitbord::Enpassant;
-        // }
+        if (ImGui::Button("White Pawns")) {
+            app.board_renderer.background_bitboard = BoardRenderer::BackgroundBitbord::WhitePawns;
+        }
+        if (ImGui::Button("Black Pawns")) {
+            app.board_renderer.background_bitboard = BoardRenderer::BackgroundBitbord::BlackPawns;
+        }
+        if (ImGui::Button("Enpassant")) {
+            app.board_renderer.background_bitboard = BoardRenderer::BackgroundBitbord::Enpassant;
+        }
         ImGui::End();
-        rlImGuiEnd();
 
+        ImGui::Begin("Board");
+        ImGui::Text("Evaluation: %d", Evaluation::evaluate(app.board));
+        ImGui::Text("Cos: %d", cos);
+        cos = (cos + 1) % 1000000000;
+        ImGui::End();
+
+        rlImGuiEnd();
         EndDrawing();
     }
 

@@ -10,6 +10,7 @@
 constexpr Color white_square = Color(238, 238, 210, 255);
 constexpr Color black_square = Color(118, 150, 86, 255);
 constexpr Color bitbord_overlay = Color(68, 111, 212, 200);
+constexpr Color last_move_overlay = Color(224, 190, 20, 150);
 
 constexpr int square_size = 50;
 
@@ -25,8 +26,8 @@ public:
 
     enum class BackgroundBitbord {
         None,
-        WhiteAttacks,
-        BlackAttacks,
+        // WhiteAttacks,
+        // BlackAttacks,
         WhitePawns,
         BlackPawns,
         Enpassant,

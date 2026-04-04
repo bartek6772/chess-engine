@@ -38,4 +38,8 @@ int evaluate(const Board& board) {
     return evaluation;
 }
 
+int evaluateRelative(const Board& board) {
+    return evaluate(board) * (board.white_to_move ? 1 : -1);
+}
+
 } // namespace Evaluation

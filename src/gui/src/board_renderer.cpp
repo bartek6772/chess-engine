@@ -49,6 +49,16 @@ void BoardRenderer::drawBoard(const Board& board) {
             DrawRectanglePro(destination, { 0, 0 }, 0, color);
 
             int square = row * 8 + col;
+
+            if (board.history_ptr > 0) {
+                int from = board.history[board.history_ptr - 1].move.from;
+                int to = board.history[board.history_ptr - 1].move.to;
+
+                if (from == square || to == square) {
+                    DrawRectanglePro(destination, { 0, 0 }, 0, last_move_overlay);
+                }
+            }
+
             if ((bitboard & (1ULL << square)) != 0) {
                 DrawRectanglePro(destination, { 0, 0 }, 0, bitbord_overlay);
             }
