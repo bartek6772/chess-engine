@@ -2,6 +2,7 @@
 #include "board.hpp"
 #include "move_generator.hpp"
 #include "pieces.hpp"
+#include "search.hpp"
 #include <raylib.h>
 #include <vector>
 
@@ -27,8 +28,8 @@ void App::draw(const Board& board) {
     unsigned long long bitboard = 0;
     switch (background_bitboard) {
         case BackgroundBitbord::None: break;
-        case BackgroundBitbord::WhiteAttacks: bitboard = move_gen.getWhiteAttacks(); break;
-        case BackgroundBitbord::BlackAttacks: bitboard = move_gen.getBlackAttacks(); break;
+        // case BackgroundBitbord::WhiteAttacks: bitboard = move_gen.getWhiteAttacks(); break;
+        // case BackgroundBitbord::BlackAttacks: bitboard = move_gen.getBlackAttacks(); break;
         case BackgroundBitbord::WhitePawns: bitboard = board.bitboards[Pieces::WhitePawn]; break;
         case BackgroundBitbord::BlackPawns: bitboard = board.bitboards[Pieces::BlackPawn]; break;
         case BackgroundBitbord::Enpassant:
@@ -63,7 +64,7 @@ void App::draw(const Board& board) {
 }
 
 void App::makeMoveMap(Board& board) {
-    available_moves = move_gen.generateLegalMoves(board);
+    available_moves = MoveGenerator::generateLegalMoves(board);
     // available_moves = move_gen.generateMoves(board);
 
     for (auto& vec : move_map) {
@@ -131,6 +132,11 @@ void App::update(Board& board) {
 
         if (!final_move.isNull()) {
             board.makeMove(final_move);
+
+            // AI RESPONSE
+            Move ai_move = Search::findBestMove(board, 5);
+            board.makeMove(ai_move);
+
             makeMoveMap(board);
         }
         drag_start = -1;

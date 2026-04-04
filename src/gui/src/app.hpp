@@ -43,7 +43,6 @@ private:
     MoveList available_moves;
 
     Precomputed precomputed;
-    MoveGenerator move_gen;
 
     int drag_start = -1;
     int dragged_piece = 0;

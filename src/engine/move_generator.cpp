@@ -290,6 +290,11 @@ namespace {
 
 } // namespace
 
+bool isCheck(const Board& board, int color) {
+    int king_position = std::countr_zero(board.bitboards[Pieces::King | color]);
+    return isSquareAttacked(board, king_position, Pieces::oppositeColor(color));
+}
+
 auto generateMoves(const Board& board) -> MoveList {
     MoveList moves;
 
@@ -306,16 +311,15 @@ auto generateMoves(const Board& board) -> MoveList {
 
 auto generateLegalMoves(Board& board) -> MoveList {
 
-    MoveList legal_moves;
     int color = board.white_to_move ? Pieces::White : Pieces::Black;
-    int response_color = Pieces::oppositeColor(color);
 
+    MoveList legal_moves;
     MoveList moves = generateMoves(board);
+
     for (const Move& move : moves) {
         board.makeMove(move);
-        int king_position = std::countr_zero(board.bitboards[Pieces::King | color]);
 
-        if (!isSquareAttacked(board, king_position, response_color)) {
+        if (!isCheck(board, color)) {
             legal_moves.push(move);
         }
 

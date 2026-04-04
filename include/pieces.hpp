@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cctype>
 #include <string>
 namespace Pieces {
@@ -72,5 +73,20 @@ inline auto getPiece(char symbol) -> int {
     int color = std::islower(symbol) ? Pieces::Black : Pieces::White;
     return type | color;
 }
+
+// clang-format off
+static constexpr std::array<int, 12> all_pieces{ 
+    WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing, 
+    BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing 
+};
+
+static constexpr std::array<int, 6> white_pieces{ 
+    WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing, 
+};
+
+static constexpr std::array<int, 6> black_pieces{ 
+    BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing 
+};
+// clang-format on
 
 } // namespace Pieces

@@ -1,0 +1,15 @@
+#pragma once
+
+#include "board.hpp"
+
+namespace Evaluation {
+
+constexpr int PawnValue = 100;
+constexpr int KnightValue = 320;
+constexpr int BishopValue = 330;
+constexpr int RookValue = 500;
+constexpr int QueenValue = 900;
+
+int evaluate(const Board& board);
+
+} // namespace Evaluation

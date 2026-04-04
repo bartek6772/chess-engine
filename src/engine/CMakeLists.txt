@@ -4,6 +4,8 @@ add_library(engine STATIC
     move_generator.cpp
     magics.cpp
     diagnostics.cpp
+    evaluate.cpp
+    search.cpp
 )
 
 target_include_directories(engine 
