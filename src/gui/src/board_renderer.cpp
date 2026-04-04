@@ -1,20 +1,6 @@
-#include "app.hpp"
-#include "board.hpp"
+#include "board_renderer.hpp"
 #include "move_generator.hpp"
 #include "pieces.hpp"
-#include "search.hpp"
-#include <raylib.h>
-#include <vector>
-
-App::App() {
-    const char* appDir = GetApplicationDirectory();
-    const char* piecesPath = TextFormat("%sassets/pieces.png", appDir);
-    pieces_texture = LoadTexture(piecesPath);
-}
-
-App::~App() {
-    // UnloadTexture(pieces_texture);
-}
 
 Rectangle getSource(int piece) {
     int col = 6 - Pieces::pieceType(piece);
@@ -23,7 +9,19 @@ Rectangle getSource(int piece) {
     return { float(col * size), float(row * size), size, size };
 }
 
-void App::draw(const Board& board) {
+BoardRenderer::BoardRenderer(int pos_x, int pos_y, bool interactable)
+    : interactable(interactable), pos_x(pos_x), pos_y(pos_y) {
+
+    const char* appDir = GetApplicationDirectory();
+    const char* piecesPath = TextFormat("%sassets/pieces.png", appDir);
+    pieces_texture = LoadTexture(piecesPath);
+}
+
+BoardRenderer::~BoardRenderer() {
+    // UnloadTexture(pieces_texture);
+}
+
+void BoardRenderer::drawBoard(const Board& board) {
 
     unsigned long long bitboard = 0;
     switch (background_bitboard) {
@@ -42,8 +40,8 @@ void App::draw(const Board& board) {
             Color color = (row + col) & 1 ? white_square : black_square;
 
             Rectangle destination = {
-                float(col) * square_size,
-                float(7 - row) * square_size,
+                pos_x + float(col) * square_size,
+                pos_y + float(7 - row) * square_size,
                 square_size,
                 square_size,
             };
@@ -63,9 +61,43 @@ void App::draw(const Board& board) {
     }
 }
 
-void App::makeMoveMap(Board& board) {
+void BoardRenderer::drawMoves() {
+    if (drag_start == -1) return;
+
+    for (int square : move_map[drag_start]) {
+        int row = square / 8;
+        int col = square % 8;
+        float scale = 0.5F;
+
+        Color circle_color = BLACK;
+        circle_color.a = 100;
+        DrawCircle(pos_x + col * square_size + square_size / 2,
+            pos_y + (7 - row) * square_size + square_size / 2, square_size * scale / 2,
+            circle_color);
+    }
+}
+
+void BoardRenderer::drawDraggedPiece() {
+    if (drag_start == -1) return;
+
+    Rectangle dest = {
+        pos_x + (float)GetMouseX() - square_size / 2.0F,
+        pos_y + (float)GetMouseY() - square_size / 2.0F,
+        square_size,
+        square_size,
+    };
+    Rectangle source = getSource(dragged_piece);
+    DrawTexturePro(pieces_texture, source, dest, { 0, 0 }, 0, WHITE);
+}
+
+void BoardRenderer::draw(const Board& board) {
+    drawBoard(board);
+    drawMoves();
+    drawDraggedPiece();
+}
+
+void BoardRenderer::makeMoveMap(Board& board) {
     available_moves = MoveGenerator::generateLegalMoves(board);
-    // available_moves = move_gen.generateMoves(board);
 
     for (auto& vec : move_map) {
         vec.clear();
@@ -76,36 +108,15 @@ void App::makeMoveMap(Board& board) {
     }
 }
 
-void App::drawMoves() {
-    if (drag_start == -1) return;
+std::optional<Move> BoardRenderer::update(Board& board) {
 
-    for (int square : move_map[drag_start]) {
-        int row = square / 8;
-        int col = square % 8;
-        float scale = 0.5F;
+    if (!interactable) return std::nullopt;
 
-        Color circle_color = BLACK;
-        circle_color.a = 100;
-        DrawCircle(col * square_size + square_size / 2, (7 - row) * square_size + square_size / 2,
-            square_size * scale / 2, circle_color);
-    }
-}
-
-void App::drawDraggedPiece() {
-    if (drag_start == -1) return;
-
-    Rectangle dest = {
-        (float)GetMouseX() - square_size / 2.0F,
-        (float)GetMouseY() - square_size / 2.0F,
-        square_size,
-        square_size,
-    };
-    Rectangle source = getSource(dragged_piece);
-    DrawTexturePro(pieces_texture, source, dest, { 0, 0 }, 0, WHITE);
-}
-
-void App::update(Board& board) {
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) && dragged_piece == 0) {
+
+        if (GetMouseX() < pos_x || GetMouseX() > pos_x + square_size * 8) return std::nullopt;
+        if (GetMouseY() < pos_y || GetMouseY() > pos_y + square_size * 8) return std::nullopt;
+
         int file = GetMouseX() / square_size;
         int rank = GetMouseY() / square_size;
         rank = 7 - rank;
@@ -130,16 +141,16 @@ void App::update(Board& board) {
             }
         }
 
-        if (!final_move.isNull()) {
-            board.makeMove(final_move);
-
-            // AI RESPONSE
-            Move ai_move = Search::findBestMove(board, 5);
-            board.makeMove(ai_move);
-
-            makeMoveMap(board);
-        }
         drag_start = -1;
         dragged_piece = 0;
+
+        if (GetMouseX() < pos_x || GetMouseX() > pos_x + square_size * 8) return std::nullopt;
+        if (GetMouseY() < pos_y || GetMouseY() > pos_y + square_size * 8) return std::nullopt;
+
+        if (!final_move.isNull()) {
+            return final_move;
+        }
     }
+
+    return std::nullopt;
 }

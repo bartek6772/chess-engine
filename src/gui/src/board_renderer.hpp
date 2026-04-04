@@ -1,10 +1,9 @@
 #pragma once
 #include "board.hpp"
 #include "move.hpp"
-#include "move_generator.hpp"
 #include "move_list.hpp"
-#include "precomputed.hpp"
 #include <array>
+#include <optional>
 #include <raylib.h>
 #include <vector>
 
@@ -12,18 +11,15 @@ constexpr Color white_square = Color(238, 238, 210, 255);
 constexpr Color black_square = Color(118, 150, 86, 255);
 constexpr Color bitbord_overlay = Color(68, 111, 212, 200);
 
-constexpr int square_size = 70;
+constexpr int square_size = 50;
 
-class App {
+class BoardRenderer {
 public:
-    App();
-    ~App();
+    BoardRenderer(int pos_x, int pos_y, bool interactable);
+    ~BoardRenderer();
 
-    void update(Board& board);
-
+    std::optional<Move> update(Board& board);
     void draw(const Board& board);
-    void drawMoves();
-    void drawDraggedPiece();
 
     void makeMoveMap(Board& board);
 
@@ -42,8 +38,15 @@ private:
     std::array<std::vector<int>, 64> move_map;
     MoveList available_moves;
 
-    Precomputed precomputed;
+    int pos_x;
+    int pos_y;
+
+    void drawMoves();
+    void drawDraggedPiece();
+    void drawBoard(const Board& board);
 
     int drag_start = -1;
     int dragged_piece = 0;
+
+    bool interactable;
 };
