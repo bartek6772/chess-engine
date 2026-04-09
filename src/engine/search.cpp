@@ -4,6 +4,7 @@
 #include "move_list.hpp"
 #include "pieces.hpp"
 #include <chrono>
+#include <thread>
 #include <vector>
 
 namespace Search {
@@ -11,10 +12,15 @@ namespace Search {
 namespace {
     constexpr int MATE = 99999;
     constexpr int INF = 100'000'000;
+    constexpr int STOP_INTERVAL = 65536;
 
     int quiescence(Board& board, int alpha, int beta, SearchStats& stats) {
         stats.nodes++;
         stats.quiescence_nodes++;
+
+        if (stats.stop_search) {
+            return 0;
+        }
 
         int stand_pat = Evaluation::evaluateRelative(board);
         if (stand_pat >= beta) return beta;
@@ -37,6 +43,10 @@ namespace {
     int negamax(
         Board& board, int depth, int alpha, int beta, std::vector<Move>& pv, SearchStats& stats) {
         stats.nodes++;
+
+        if (stats.stop_search) {
+            return 0;
+        }
 
         if (depth == 0) {
             pv.clear();
@@ -81,15 +91,32 @@ namespace {
     }
 } // namespace
 
-SearchResult findBestMove(Board& board, int depth) {
+SearchResult findBestMove(Board& board, int depth, int time_ms) {
 
     SearchStats stats;
-    std::vector<Move> pv;
-
+    std::vector<Move> best_pv;
+    int best_score = 0;
     auto start = std::chrono::high_resolution_clock::now();
-    int score = negamax(board, depth, -INF, INF, pv, stats);
-    auto end = std::chrono::high_resolution_clock::now();
 
+    std::thread timer([&stats, time_ms]() {
+        std::this_thread::sleep_for(std::chrono::milliseconds(time_ms));
+        stats.stop_search = true;
+    });
+
+    for (int current_depth = 1; current_depth <= depth; current_depth++) {
+        std::vector<Move> pv;
+        int score = negamax(board, current_depth, -INF, INF, pv, stats);
+
+        if (stats.stop_search) {
+            break;
+        }
+
+        best_pv = pv;
+        best_score = score;
+        stats.depth = current_depth;
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     double nps = 0;
@@ -99,13 +126,14 @@ SearchResult findBestMove(Board& board, int depth) {
 
     stats.time_ms = elapsed;
     stats.nodes_per_second = nps;
+    int absolute_score = board.white_to_move ? best_score : -best_score;
 
-    int absolute_score = -score;
+    timer.detach();
 
     return {
-        .best_move = pv.empty() ? Move() : pv[0],
+        .best_move = best_pv.empty() ? Move() : best_pv[0],
         .score = absolute_score,
-        .pv = pv,
+        .pv = best_pv,
         .stats = stats,
     };
 }

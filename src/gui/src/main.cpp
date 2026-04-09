@@ -46,7 +46,7 @@ void update(App& app) {
         app.board.makeMove(move.value());
         app.board2.makeMove(move.value());
 
-        Search::SearchResult result = Search::findBestMove(app.board, 4);
+        Search::SearchResult result = Search::findBestMove(app.board, 10, 1000);
         for (Move ai_move : result.pv) {
             app.board2.makeMove(ai_move);
             std::cout << ai_move.toString() << " ";
@@ -97,6 +97,7 @@ int main() {
         ImGui::Text("Time [ms]: %.0ld", app.search_result.stats.time_ms);
         ImGui::Text("Nodes per second: %.0f", app.search_result.stats.nodes_per_second);
         ImGui::Text("Beta cutoffs: %lld", app.search_result.stats.beta_cutoffs);
+        ImGui::Text("Depth: %d", app.search_result.stats.depth);
         ImGui::End();
 
         ImGui::Begin("Bitbords");

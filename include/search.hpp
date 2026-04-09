@@ -11,6 +11,9 @@ struct SearchStats {
     long time_ms = 0;
     double nodes_per_second = 0;
     unsigned long long beta_cutoffs = 0;
+
+    int depth = 0;
+    bool stop_search = false;
 };
 
 struct SearchResult {
@@ -21,6 +24,6 @@ struct SearchResult {
     SearchStats stats;
 };
 
-SearchResult findBestMove(Board& board, int depth);
+SearchResult findBestMove(Board& board, int depth, int time_ms);
 
 } // namespace Search
