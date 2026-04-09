@@ -14,6 +14,7 @@ add_executable(
     engine_tests 
     tests_fen.cpp
     tests_move_gen.cpp
+    tests_random.cpp
 )
 
 target_link_libraries(
