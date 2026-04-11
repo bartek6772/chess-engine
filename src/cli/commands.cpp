@@ -71,6 +71,10 @@ void CLI::position(stringstream& stream) {
         string move_str;
         while (stream >> move_str) {
             Move move = parseMove(board, move_str);
+            if (move.isNull()) {
+                cout << "failed parsing move" << endl;
+                continue;
+            }
             board.makeMove(move);
         }
     }

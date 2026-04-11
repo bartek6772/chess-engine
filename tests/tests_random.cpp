@@ -21,3 +21,25 @@ TEST(Misc, CheckmateDetection_Rh8) {
         }
     }
 }
+
+TEST(Misc, ReloadingFEN) {
+    Board board;
+    board.loadStartPos();
+
+    Move e2e4;
+    auto moves = MoveGenerator::generateLegalMoves(board);
+    for (const auto& m : moves) {
+        if (m.from == 12 && m.to == 28) {
+            e2e4 = m;
+            break;
+        }
+    }
+    ASSERT_FALSE(e2e4.isNull());
+
+    board.makeMove(e2e4);
+    board.loadStartPos();
+
+    uint64_t e4_bit = 1ULL << 28;
+    EXPECT_EQ(board.white_pieces & e4_bit, 0ULL)
+        << "White pieces should not have e4 set after reloading startpos";
+}

@@ -18,7 +18,7 @@ auto main() -> int {
         stream >> command;
 
         if (command == "uci") cli.uci(stream);
-        else if (command == "readyok") cli.readyok(stream);
+        else if (command == "isready") cli.readyok(stream);
         else if (command == "ucinewgame") cli.ucinewgame(stream);
         else if (command == "position") cli.position(stream);
         else if (command == "go") cli.go(stream);

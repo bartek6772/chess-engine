@@ -58,6 +58,8 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
     bitboards.fill(0);
     squares.fill(Pieces::None);
+    white_pieces = 0;
+    black_pieces = 0;
     history_ptr = 0;
     enpassant_square = -1;
     white_to_move = true;

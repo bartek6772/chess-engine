@@ -2,3 +2,8 @@ build/
 perf.*
 imgui.ini
 GEMINI.md
+
+testing/tools
+testing/third_party
+testing/engines/
+testing/results/
