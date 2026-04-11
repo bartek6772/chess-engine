@@ -56,7 +56,11 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
     // TODO: handle errors and invalid strings, maybe return bool as veryfication
 
+    bitboards.fill(0);
+    squares.fill(Pieces::None);
     history_ptr = 0;
+    enpassant_square = -1;
+    white_to_move = true;
 
     std::vector<std::string> parts;
     std::stringstream stream(fen);

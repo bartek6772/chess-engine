@@ -6,6 +6,7 @@
 #include "pieces.hpp"
 #include <atomic>
 #include <chrono>
+#include <iostream>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -100,6 +101,8 @@ SearchResult Searcher::findBestMove(int depth, int time_ms) {
 
     auto timer_should_exit = std::make_shared<std::atomic<bool>>(false);
     std::thread timer([this, time_ms, timer_should_exit]() {
+        if (time_ms == 0) return;
+
         auto start = std::chrono::high_resolution_clock::now();
         while (!*timer_should_exit) {
             auto now = std::chrono::high_resolution_clock::now();
@@ -125,6 +128,11 @@ SearchResult Searcher::findBestMove(int depth, int time_ms) {
         best_pv = pv;
         best_score = score;
         stats.depth = current_depth;
+
+        if (info) {
+            std::cout << "info depth " << current_depth << " score cp " << score << " nodes "
+                      << stats.nodes << std::endl;
+        }
     }
 
     *timer_should_exit = true;
@@ -153,5 +161,9 @@ void Searcher::stop() {
     stop_search = true;
 }
 
-Searcher::Searcher(Board& board) : board(board) {
+void Searcher::enableInfo() {
+    info = true;
+}
+
+Searcher::Searcher(Board board) : board(board) {
 }

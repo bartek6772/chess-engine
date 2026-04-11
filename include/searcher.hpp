@@ -23,15 +23,17 @@ struct SearchResult {
 
 class Searcher {
 public:
-    Searcher(Board& board);
+    Searcher(Board board);
     SearchResult findBestMove(int depth, int time_ms);
 
     void stop();
+    void enableInfo();
 
 private:
-    Board& board;
+    Board board;
     std::atomic<bool> stop_search = false;
     SearchStats stats;
+    bool info;
 
     int quiescence(int alpha, int beta);
     int negamax(int depth, int alpha, int beta, std::vector<Move>& pv);
