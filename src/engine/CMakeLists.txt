@@ -5,7 +5,7 @@ add_library(engine STATIC
     magics.cpp
     diagnostics.cpp
     evaluate.cpp
-    search.cpp
+    searcher.cpp
 )
 
 target_include_directories(engine 

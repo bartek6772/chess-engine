@@ -4,12 +4,12 @@
 #include "move_generator.hpp"
 #include "move_list.hpp"
 #include "pieces.hpp"
-#include "search.hpp"
+#include "searcher.hpp"
 #include <algorithm>
-#include <atomic>
 #include <iomanip>
 #include <ios>
 #include <iostream>
+#include <memory>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -110,8 +110,9 @@ void position(Board& board, std::stringstream& stream) {
     }
 }
 
-std::atomic<bool> is_searching = false;
-std::atomic<bool> stop_search = false;
+// std::atomic<bool> is_searching = false;
+// std::atomic<bool> stop_search = false;
+std::unique_ptr<Searcher> current_search = nullptr;
 
 void handleInput(std::string& input, Board& board) {
     using namespace std;
@@ -135,13 +136,17 @@ void handleInput(std::string& input, Board& board) {
         }
         cout << "done" << endl;
     } else if (command == "quit") {
-        stop_search = true;
+        // stop_search = true;
+        current_search->stop();
         exit(0);
     } else if (command == "go") {
 
-        if (is_searching) return;
-        is_searching = true;
-        stop_search = false;
+        // TODO: add check to avoid starting new search during previous one
+        // consider ways to destroy searcher after it finish searching
+
+        // if (is_searching) return;
+        // is_searching = true;
+        // stop_search = false;
 
         int depth = 4;
         int move_time = 1000;
@@ -154,16 +159,19 @@ void handleInput(std::string& input, Board& board) {
             }
         }
 
-        thread search_thread([&board, depth, move_time]() {
-            Board board_copy = board;
-            auto result = Search::findBestMove(board_copy, depth, move_time, stop_search);
+        Board board_copy = board;
+        current_search = make_unique<Searcher>(board_copy);
+
+        thread search_thread([depth, move_time]() {
+            auto result = current_search->findBestMove(depth, move_time);
             cout << "bestmove " << result.best_move.toString() << endl;
-            is_searching = false;
+            // is_searching = false;
         });
         search_thread.detach();
 
     } else if (command == "stop") {
-        stop_search = true;
+        if (current_search) current_search->stop();
+        // stop_search = true;
     } else if (command == "ucinewgame") {
 
     }

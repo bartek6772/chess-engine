@@ -4,7 +4,7 @@
 #include "imgui.h"
 #include "raylib.h"
 #include "rlImGui.h"
-#include "search.hpp"
+#include "searcher.hpp"
 #include <iostream>
 #include <optional>
 #include <ostream>
@@ -15,7 +15,10 @@ struct App {
     Board board;
     Board board2;
 
-    Search::SearchResult search_result;
+    SearchResult search_result;
+
+    double nps_sum = 0;
+    int nps_count = 0;
 
     // Init function
     App() : board_renderer(0, 0, true), board_renderer2(450, 0, false) {
@@ -43,7 +46,8 @@ void update(App& app) {
         app.board.makeMove(move.value());
         app.board2.makeMove(move.value());
 
-        Search::SearchResult result = Search::findBestMove(app.board, 10, 500);
+        Searcher search(app.board);
+        SearchResult result = search.findBestMove(10, 500);
         for (Move ai_move : result.pv) {
             app.board2.makeMove(ai_move);
             std::cout << ai_move.toString() << " ";
@@ -53,6 +57,9 @@ void update(App& app) {
         app.board.makeMove(result.best_move);
         app.board_renderer.makeMoveMap(app.board);
         app.search_result = result;
+
+        app.nps_count++;
+        app.nps_sum += result.stats.mln_nodes_per_second;
     }
 }
 
@@ -95,6 +102,12 @@ int main() {
         ImGui::Text("Nodes per second [mln]: %.3f", app.search_result.stats.mln_nodes_per_second);
         ImGui::Text("Beta cutoffs: %lld", app.search_result.stats.beta_cutoffs);
         ImGui::Text("Depth: %d", app.search_result.stats.depth);
+
+        double average = 0;
+        if (app.nps_count != 0) {
+            average = app.nps_sum / app.nps_count;
+        }
+        ImGui::Text("Average NPS [mln]: %.3f", average);
         ImGui::End();
 
         ImGui::Begin("Bitbords");
