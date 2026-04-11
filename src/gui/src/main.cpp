@@ -8,9 +8,6 @@
 #include <iostream>
 #include <optional>
 #include <ostream>
-#include <string>
-
-#define START_POS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 struct App {
     BoardRenderer board_renderer;
@@ -22,10 +19,10 @@ struct App {
 
     // Init function
     App() : board_renderer(0, 0, true), board_renderer2(450, 0, false) {
-        board.loadFEN(START_POS);
+        board.loadStartPos();
         board_renderer.makeMoveMap(board);
 
-        board2.loadFEN(START_POS);
+        board2.loadStartPos();
     }
 };
 
@@ -46,7 +43,7 @@ void update(App& app) {
         app.board.makeMove(move.value());
         app.board2.makeMove(move.value());
 
-        Search::SearchResult result = Search::findBestMove(app.board, 10, 1000);
+        Search::SearchResult result = Search::findBestMove(app.board, 10, 500);
         for (Move ai_move : result.pv) {
             app.board2.makeMove(ai_move);
             std::cout << ai_move.toString() << " ";
@@ -95,7 +92,7 @@ int main() {
         ImGui::Text("Total nodes: %llu", app.search_result.stats.nodes);
         ImGui::Text("Quiescence nodes: %llu", app.search_result.stats.quiescence_nodes);
         ImGui::Text("Time [ms]: %.0ld", app.search_result.stats.time_ms);
-        ImGui::Text("Nodes per second: %.0f", app.search_result.stats.nodes_per_second);
+        ImGui::Text("Nodes per second [mln]: %.3f", app.search_result.stats.mln_nodes_per_second);
         ImGui::Text("Beta cutoffs: %lld", app.search_result.stats.beta_cutoffs);
         ImGui::Text("Depth: %d", app.search_result.stats.depth);
         ImGui::End();

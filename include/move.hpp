@@ -21,16 +21,21 @@ struct Move {
 
     [[nodiscard]] auto toString() const -> std::string {
         std::string move{};
-        int row = from / BoardLength;
-        int col = from % BoardLength;
-        move += (char)(col + 'a');
-        move += (char)(row + '1');
+        move += (char)(from % BoardLength + 'a');
+        move += (char)(from / BoardLength + '1');
 
-        row = to / BoardLength;
-        col = to % BoardLength;
-        move += (char)(col + 'a');
-        move += (char)(row + '1');
+        move += (char)(to % BoardLength + 'a');
+        move += (char)(to / BoardLength + '1');
 
+        if (isPromotion()) {
+            switch (type) {
+                case MoveType::PromotionRook: move += 'r'; break;
+                case MoveType::PromotionBishop: move += 'b'; break;
+                case MoveType::PromotionKnight: move += 'n'; break;
+                case MoveType::PromotionQueen: move += 'q'; break;
+                default: break;
+            }
+        }
         return move;
     }
 

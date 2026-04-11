@@ -1,24 +1,19 @@
 #include "board.hpp"
 #include "constants.hpp"
-#include "diagnostics.hpp"
-#include "magics.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
+#include "move_list.hpp"
 #include "pieces.hpp"
-#include "precomputed.hpp"
+#include "search.hpp"
 #include <algorithm>
+#include <atomic>
 #include <iomanip>
 #include <ios>
 #include <iostream>
 #include <ostream>
-#include <random>
 #include <sstream>
 #include <string>
-#include <vector>
-
-#define START_POS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-std::string last_loaded_position;
+#include <thread>
 
 void printBitboard(unsigned long long moves) {
     for (int row = BoardLength - 1; row >= 0; row--) {
@@ -57,13 +52,72 @@ void printBoard(const Board& board) {
     std::cout << std::endl;
 }
 
+Move parseMove(Board& board, const std::string& move_str) {
+    int from = (move_str[0] - 'a') + (move_str[1] - '1') * BoardLength;
+    int to = (move_str[2] - 'a') + (move_str[3] - '1') * BoardLength;
+
+    MoveType type = MoveType::Normal;
+    bool is_promotion = move_str.size() == 5;
+    if (is_promotion) {
+        switch (move_str[4]) {
+            case 'q': type = MoveType::PromotionQueen; break;
+            case 'n': type = MoveType::PromotionKnight; break;
+            case 'b': type = MoveType::PromotionBishop; break;
+            case 'r': type = MoveType::PromotionRook; break;
+        }
+    }
+
+    MoveList moves = MoveGenerator::generateLegalMoves(board);
+    for (const Move& move : moves) {
+
+        if (move.from == from && move.to == to) {
+            if (is_promotion) {
+                if (move.type == type) return move;
+            } else {
+                return move;
+            }
+        }
+    }
+    return {};
+}
+
+void position(Board& board, std::stringstream& stream) {
+    using namespace std;
+
+    string token;
+    stream >> token;
+
+    if (token == "startpos") {
+        board.loadStartPos();
+    } else if (token == "fen") {
+        string fen;
+        while (stream >> token && token != "moves") {
+            fen += (fen.empty() ? "" : " ") + token;
+        }
+        board.loadFEN(fen);
+    }
+
+    if (token != "moves") {
+        stream >> token;
+    }
+
+    if (token == "moves") {
+        string move_str;
+        while (stream >> move_str) {
+            Move move = parseMove(board, move_str);
+            board.makeMove(move);
+        }
+    }
+}
+
+std::atomic<bool> is_searching = false;
+std::atomic<bool> stop_search = false;
+
 void handleInput(std::string& input, Board& board) {
     using namespace std;
 
-    constexpr int TEST_CASES = 6;
-
-    std::stringstream stream(input);
-    std::string command;
+    stringstream stream(input);
+    string command;
     stream >> command;
 
     if (command == "uci") {
@@ -73,122 +127,49 @@ void handleInput(std::string& input, Board& board) {
     } else if (command == "isready") {
         cout << "readyok" << endl;
     } else if (command == "position") {
-
-        string position{};
-        string sth;
-
-        while (stream >> sth) {
-            if (sth == "moves") {
-                break;
-            }
-
-            if (sth == "startpos") {
-                position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-                break;
-            }
-
-            position += sth + " ";
-        }
-
-        if (position != last_loaded_position) {
-            cout << "Loading fen: " << position << endl;
-            bool success = board.loadFEN(position);
-            if (!success) {
-                cout << "failed" << endl;
-                return;
-            }
-            last_loaded_position = position;
-        }
-
-        int move_index = 0;
-        while (stream >> sth) {
-
-            if (sth == "moves") {
-                continue;
-            }
-
-            // cant make it this way because it loses flag, need to find move in generated
-            auto find_move = [&](int from, int to) {
-                MoveList moves = MoveGenerator::generateLegalMoves(board);
-                Move move(0, 0);
-                for (const Move& m : moves) {
-                    if (m.from == from && m.to == to) {
-                        return m;
-                    }
-                }
-                return move;
-            };
-
-            Move sth_move(sth);
-
-            if (board.history.size() >= move_index + 1) {
-
-                if (board.history[move_index].move.from != sth_move.from ||
-                    board.history[move_index].move.to != sth_move.to) {
-
-                    while (board.history.size() - 1 >= move_index) {
-                        board.unmakeMove();
-                    }
-
-                    board.makeMove(find_move(sth_move.from, sth_move.to));
-                }
-            } else {
-                board.makeMove(find_move(sth_move.from, sth_move.to));
-            }
-
-            move_index++;
-        }
-
+        position(board, stream);
     } else if (command == "legalmoves") {
-        // change back to legal moves
         MoveList moves = MoveGenerator::generateLegalMoves(board);
         for (Move move : moves) {
             cout << move.toString() << endl;
         }
         cout << "done" << endl;
     } else if (command == "quit") {
+        stop_search = true;
         exit(0);
+    } else if (command == "go") {
+
+        if (is_searching) return;
+        is_searching = true;
+        stop_search = false;
+
+        int depth = 4;
+        int move_time = 1000;
+        string part;
+        while (stream >> part) {
+            if (part == "depth") {
+                stream >> depth;
+            } else if (part == "movetime") {
+                stream >> move_time;
+            }
+        }
+
+        thread search_thread([&board, depth, move_time]() {
+            Board board_copy = board;
+            auto result = Search::findBestMove(board_copy, depth, move_time, stop_search);
+            cout << "bestmove " << result.best_move.toString() << endl;
+            is_searching = false;
+        });
+        search_thread.detach();
+
+    } else if (command == "stop") {
+        stop_search = true;
+    } else if (command == "ucinewgame") {
+
     }
 
     else if (command == "d") {
         printBoard(board);
-    }
-
-    // for debugging
-    else if (command == "move") {
-        string arg;
-        stream >> arg;
-        if (arg.size() < 4) {
-            return;
-        }
-        Move move(arg);
-        board.makeMove(move);
-    }
-
-    // else if (command == "test") {
-    //     printBoard(board);
-
-    //     for (int i = 0; i < TEST_CASES; i++) {
-    //         MoveList moves = move_generator.generateLegalMoves(board);
-    //         std::random_device dev;
-    //         std::mt19937 rng(dev());
-
-    //         if (moves.size() > 0) {
-    //             std::uniform_int_distribution<std::mt19937::result_type> dist(0, moves.size() -
-    //             1); board.makeMove(moves[dist(rng)]);
-
-    //             // bug here
-
-    //             printBoard(board);
-    //         }
-    //     }
-    // }
-
-    else if (command == "undo_test") {
-        cout << "\nUNMAKING MOVES\n";
-        for (int i = 0; i < TEST_CASES; i++) {
-            board.unmakeMove();
-        }
     }
 }
 
@@ -197,37 +178,11 @@ auto main() -> int {
     std::cin.tie(nullptr);
 
     Board board;
+    // board.loadStartPos();
 
-    board.loadFEN(START_POS);
-
-    // std::string line;
-    // while (std::getline(std::cin, line)) {
-    //     handleInput(line, board, moveGenerator);
-    // }
-
-    // Magics magics;
-    // for (auto magic : magics.rook_magics) {
-    //     std::cout << magic << std::endl;
-    // }
-
-    // std::cout << Diagnostics::runPerft(board, moveGenerator, 2) << std::endl;
-
-    // board.loadFEN(START_POS);
-    // board.makeMove(Move("a2a4"));
-    // board.makeMove({ 8, 24, MoveType::DoublePush });
-    // board.makeMove({ 48, 40 });
-    // board.makeMove({ 24, 32 });
-    // board.makeMove({ 49, 49 - 16, MoveType::DoublePush });
-
-    // printBoard(board);
-    // std::cout << board.enpassant_square << "\n";
-    // printBitboard(1ULL << board.enpassant_square);
-
-    // board.loadFEN("position startpos moves a2a4 a7a6 a4a5 b7b5");
-    // MoveList moves = moveGenerator.generateMoves(board);
-    // for (Move move : moves) {
-    //     std::cout << move.toString() << std::endl;
-    // }
-
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        handleInput(line, board);
+    }
     return 0;
 }

@@ -1,8 +1,10 @@
 #include "search.hpp"
+#include "board.hpp"
 #include "evaluation.hpp"
 #include "move_generator.hpp"
 #include "move_list.hpp"
 #include "pieces.hpp"
+#include <atomic>
 #include <chrono>
 #include <thread>
 #include <vector>
@@ -12,26 +14,32 @@ namespace Search {
 namespace {
     constexpr int MATE = 99999;
     constexpr int INF = 100'000'000;
-    constexpr int STOP_INTERVAL = 65536;
+    constexpr int STOP_INTERVAL = 1024;
 
-    int quiescence(Board& board, int alpha, int beta, SearchStats& stats) {
-        stats.nodes++;
-        stats.quiescence_nodes++;
+    struct SearchContext {
+        Board& board;
+        SearchStats& stats;
+        std::atomic<bool>& stop_search;
+    };
 
-        if (stats.stop_search) {
+    int quiescence(SearchContext& ctx, int alpha, int beta) {
+        ctx.stats.nodes++;
+        ctx.stats.quiescence_nodes++;
+
+        if (ctx.stop_search) {
             return 0;
         }
 
-        int stand_pat = Evaluation::evaluateRelative(board);
+        int stand_pat = Evaluation::evaluateRelative(ctx.board);
         if (stand_pat >= beta) return beta;
         if (alpha < stand_pat) alpha = stand_pat;
 
-        MoveList captures = MoveGenerator::generateCaptures(board);
+        MoveList captures = MoveGenerator::generateCaptures(ctx.board);
 
         for (const Move& move : captures) {
-            board.makeMove(move);
-            int score = -quiescence(board, -beta, -alpha, stats);
-            board.unmakeMove();
+            ctx.board.makeMove(move);
+            int score = -quiescence(ctx, -beta, -alpha);
+            ctx.board.unmakeMove();
 
             if (score >= beta) return beta;
             if (score > alpha) alpha = score;
@@ -40,26 +48,25 @@ namespace {
         return alpha;
     }
 
-    int negamax(
-        Board& board, int depth, int alpha, int beta, std::vector<Move>& pv, SearchStats& stats) {
-        stats.nodes++;
+    int negamax(SearchContext& ctx, int depth, int alpha, int beta, std::vector<Move>& pv) {
+        ctx.stats.nodes++;
 
-        if (stats.stop_search) {
+        if (ctx.stop_search) {
             return 0;
         }
 
         if (depth == 0) {
             pv.clear();
             // return Evaluation::evaluateRelative(board);
-            return quiescence(board, alpha, beta, stats);
+            return quiescence(ctx, alpha, beta);
         }
 
-        MoveList moves = MoveGenerator::generateLegalMoves(board);
+        MoveList moves = MoveGenerator::generateLegalMoves(ctx.board);
 
         if (moves.size() == 0) {
             pv.clear();
-            int color = board.white_to_move ? Pieces::White : Pieces::Black;
-            if (MoveGenerator::isCheck(board, color)) {
+            int color = ctx.board.white_to_move ? Pieces::White : Pieces::Black;
+            if (MoveGenerator::isCheck(ctx.board, color)) {
                 return -MATE;
             }
             return 0;
@@ -69,12 +76,12 @@ namespace {
         child_pv.reserve(depth);
 
         for (const Move& move : moves) {
-            board.makeMove(move);
-            int eval = -negamax(board, depth - 1, -beta, -alpha, child_pv, stats);
-            board.unmakeMove();
+            ctx.board.makeMove(move);
+            int eval = -negamax(ctx, depth - 1, -beta, -alpha, child_pv);
+            ctx.board.unmakeMove();
 
             if (eval >= beta) {
-                stats.beta_cutoffs++;
+                ctx.stats.beta_cutoffs++;
                 return beta;
             }
 
@@ -91,23 +98,25 @@ namespace {
     }
 } // namespace
 
-SearchResult findBestMove(Board& board, int depth, int time_ms) {
+SearchResult findBestMove(Board& board, int depth, int time_ms, std::atomic<bool>& external_stop) {
 
-    SearchStats stats;
+    auto start = std::chrono::high_resolution_clock::now();
     std::vector<Move> best_pv;
     int best_score = 0;
-    auto start = std::chrono::high_resolution_clock::now();
 
-    std::thread timer([&stats, time_ms]() {
+    SearchStats stats;
+    SearchContext ctx{ board, stats, external_stop };
+
+    std::thread timer([&ctx, time_ms]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(time_ms));
-        stats.stop_search = true;
+        ctx.stop_search = true;
     });
 
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
         std::vector<Move> pv;
-        int score = negamax(board, current_depth, -INF, INF, pv, stats);
+        int score = negamax(ctx, current_depth, -INF, INF, pv);
 
-        if (stats.stop_search) {
+        if (ctx.stop_search) {
             break;
         }
 
@@ -126,6 +135,7 @@ SearchResult findBestMove(Board& board, int depth, int time_ms) {
 
     stats.time_ms = elapsed;
     stats.nodes_per_second = nps;
+    stats.mln_nodes_per_second = nps / 1'000'000;
     int absolute_score = board.white_to_move ? best_score : -best_score;
 
     timer.detach();
@@ -138,4 +148,8 @@ SearchResult findBestMove(Board& board, int depth, int time_ms) {
     };
 }
 
+SearchResult findBestMove(Board& board, int depth, int time_ms) {
+    std::atomic<bool> stop = false;
+    return findBestMove(board, depth, time_ms, stop);
+}
 } // namespace Search
