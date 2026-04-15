@@ -15,3 +15,8 @@ Time and what was changed:
 | 1 938 | switch to relase mode |
 | 2 522 | with PieceLists back in relase mode |
 | 1 862 | use array to store move history |
+
+## Versions History
+Version:
+- v1.0.0 - first version supporting UCI protocol
+- v1.1.0 - add piece-square-tables and improve time management

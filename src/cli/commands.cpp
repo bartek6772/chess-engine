@@ -109,8 +109,9 @@ void CLI::go(stringstream& stream) {
     } else if (move_time == 0) {
         int remaining = board.white_to_move ? wtime : btime;
         int increment = board.white_to_move ? winc : binc;
-        time = remaining / 40 + increment;
+        time = remaining / 40 + (increment * 0.8);
 
+        if (time > remaining / 2) time = remaining / 2;
         if (time > 100) time -= 50;
     }
 
@@ -121,7 +122,6 @@ void CLI::go(stringstream& stream) {
     thread search_thread([this, depth, time]() {
         auto result = current_search->findBestMove(depth, time);
         cout << "bestmove " << result.best_move.toString() << endl;
-        // current_search = nullptr;
         is_searching = false;
     });
     search_thread.detach();

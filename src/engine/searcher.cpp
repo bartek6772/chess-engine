@@ -69,6 +69,10 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
     child_pv.reserve(depth);
 
     for (const Move& move : moves) {
+        if (stop_search) {
+            return 0;
+        }
+
         board.makeMove(move);
         int eval = -negamax(depth - 1, -beta, -alpha, child_pv);
         board.unmakeMove();
@@ -117,6 +121,7 @@ SearchResult Searcher::findBestMove(int depth, int time_ms) {
         }
     });
 
+    auto last_search = start;
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
         std::vector<Move> pv;
         int score = negamax(current_depth, -INF, INF, pv);
@@ -132,6 +137,14 @@ SearchResult Searcher::findBestMove(int depth, int time_ms) {
         if (info) {
             std::cout << "info depth " << current_depth << " score cp " << score << " nodes "
                       << stats.nodes << std::endl;
+        }
+
+        auto now = std::chrono::high_resolution_clock::now();
+        int used_now =
+            std::chrono::duration_cast<std::chrono::milliseconds>(now - last_search).count();
+        int used_total = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+        if (time_ms - used_total <= used_now) {
+            break;
         }
     }
 
@@ -151,9 +164,9 @@ SearchResult Searcher::findBestMove(int depth, int time_ms) {
 
     return {
         .best_move = best_pv.empty() ? Move() : best_pv[0],
-        .score = absolute_score,
         .pv = best_pv,
         .stats = stats,
+        .score = absolute_score,
     };
 }
 
