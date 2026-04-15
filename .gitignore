@@ -8,5 +8,7 @@ testing/third_party
 testing/engines/
 testing/results/
 
+cli.sh
+
 # temporal
 /testing

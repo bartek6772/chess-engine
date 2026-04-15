@@ -1,6 +1,7 @@
 #include "searcher.hpp"
 #include "board.hpp"
 #include "evaluation.hpp"
+#include "move.hpp"
 #include "move_generator.hpp"
 #include "move_list.hpp"
 #include "pieces.hpp"
@@ -9,6 +10,7 @@
 #include <iostream>
 #include <memory>
 #include <thread>
+#include <utility>
 #include <vector>
 
 constexpr int MATE = 99999;
@@ -28,8 +30,11 @@ int Searcher::quiescence(int alpha, int beta) {
     if (alpha < stand_pat) alpha = stand_pat;
 
     MoveList captures = MoveGenerator::generateCaptures(board);
+    // scoreMoves(captures, Move(), 0);
 
     for (const Move& move : captures) {
+        if (stop_search) return 0;
+
         board.makeMove(move);
         int score = -quiescence(-beta, -alpha);
         board.unmakeMove();
@@ -55,6 +60,7 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
     }
 
     MoveList moves = MoveGenerator::generateLegalMoves(board);
+    scoreMoves(moves, pv.size() > 0 ? pv[0] : Move(), depth);
 
     if (moves.size() == 0) {
         pv.clear();
@@ -68,16 +74,28 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
     std::vector<Move> child_pv;
     child_pv.reserve(depth);
 
-    for (const Move& move : moves) {
-        if (stop_search) {
-            return 0;
+    for (int i = 0; i < moves.size(); i++) {
+
+        if (stop_search) return 0;
+
+        for (int j = i + 1; j < moves.size(); j++) {
+            if (moves[j].score > moves[i].score) {
+                std::swap(moves[j], moves[i]);
+            }
         }
+        Move& move = moves[i];
 
         board.makeMove(move);
         int eval = -negamax(depth - 1, -beta, -alpha, child_pv);
         board.unmakeMove();
 
         if (eval >= beta) {
+
+            if (board.squares[move.to] == Pieces::None) {
+                killer_moves[depth][1] = killer_moves[depth][0];
+                killer_moves[depth][0] = move;
+            }
+
             stats.beta_cutoffs++;
             return beta;
         }
@@ -94,12 +112,46 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
     return alpha;
 }
 
+void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
+
+    auto isCapture = [&](Move& move) -> bool {
+        return board.squares[move.to] != Pieces::None;
+    };
+
+    auto mvv_lva = [&](int from, int to) -> int {
+        int attacker_value = Evaluation::getPieceValue(board.squares[from]);
+        int victim_value = Evaluation::getPieceValue(board.squares[to]);
+        return victim_value * 10 - attacker_value;
+    };
+
+    constexpr int LAST_MOVE = 1000000;
+    constexpr int CAPTURE = 100000;
+    constexpr int KILLER_1 = 90000;
+    constexpr int KILLER_2 = 80000;
+
+    for (Move& move : moves) {
+        if (move == pv_move) {
+            move.score = LAST_MOVE;
+        } else if (isCapture(move)) {
+            move.score = CAPTURE + mvv_lva(move.from, move.to);
+        } else if (move == killer_moves[ply][0]) {
+            move.score = KILLER_1;
+        } else if (move == killer_moves[ply][1]) {
+            move.score = KILLER_2;
+        } else {
+            // position gain from PST
+        }
+    }
+}
+
 SearchResult Searcher::findBestMove(int depth, int time_ms) {
+
+    using namespace std::chrono;
 
     stats = SearchStats();
     stop_search = false;
 
-    auto start = std::chrono::high_resolution_clock::now();
+    auto start = high_resolution_clock::now();
     std::vector<Move> best_pv;
     int best_score = 0;
 
@@ -107,19 +159,20 @@ SearchResult Searcher::findBestMove(int depth, int time_ms) {
     std::thread timer([this, time_ms, timer_should_exit]() {
         if (time_ms == 0) return;
 
-        auto start = std::chrono::high_resolution_clock::now();
+        auto start = high_resolution_clock::now();
         while (!*timer_should_exit) {
-            auto now = std::chrono::high_resolution_clock::now();
-            auto elapsed =
-                std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+            auto now = high_resolution_clock::now();
+            auto elapsed = duration_cast<milliseconds>(now - start).count();
 
             if (elapsed >= time_ms) {
                 stop_search = true;
                 break;
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            std::this_thread::sleep_for(milliseconds(10));
         }
     });
+
+    long remaining = time_ms;
 
     auto last_search = start;
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
@@ -134,25 +187,26 @@ SearchResult Searcher::findBestMove(int depth, int time_ms) {
         best_score = score;
         stats.depth = current_depth;
 
-        if (info) {
-            std::cout << "info depth " << current_depth << " score cp " << score << " nodes "
-                      << stats.nodes << std::endl;
+        auto now = high_resolution_clock::now();
+        long used_now = duration_cast<milliseconds>(now - last_search).count();
+        last_search = now;
+        remaining -= used_now;
+
+        if (remaining <= used_now * 4) {
+            break;
         }
 
-        auto now = std::chrono::high_resolution_clock::now();
-        int used_now =
-            std::chrono::duration_cast<std::chrono::milliseconds>(now - last_search).count();
-        int used_total = std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
-        if (time_ms - used_total <= used_now) {
-            break;
+        if (info) {
+            std::cout << "info depth " << current_depth << " time " << used_now << " score cp "
+                      << score << " nodes " << stats.nodes << std::endl;
         }
     }
 
     *timer_should_exit = true;
     if (timer.joinable()) timer.join();
 
-    auto end = std::chrono::high_resolution_clock::now();
-    stats.time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    auto end = high_resolution_clock::now();
+    stats.time_ms = duration_cast<milliseconds>(end - start).count();
 
     if (stats.time_ms > 0) {
         double nps = (double)stats.nodes / ((double)stats.time_ms / 1000.0);

@@ -112,8 +112,8 @@ void CLI::go(stringstream& stream) {
         time = remaining / 40 + (increment * 0.8);
 
         if (time > remaining / 2) time = remaining / 2;
-        if (time > 100) time -= 50;
     }
+    if (time > 100) time -= 50;
 
     current_search = make_unique<Searcher>(board);
     current_search->enableInfo();

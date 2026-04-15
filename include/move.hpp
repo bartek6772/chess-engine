@@ -18,6 +18,7 @@ struct Move {
     int from;
     int to;
     MoveType type;
+    int score;
 
     [[nodiscard]] auto toString() const -> std::string {
         std::string move{};

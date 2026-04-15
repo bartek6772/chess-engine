@@ -53,19 +53,18 @@ namespace {
         20, 30, 10,  0,  0, 10, 30, 20
     };
     // clang-format on
-
-    int getPieceValue(int piece) {
-        switch (Pieces::pieceType(piece)) {
-            case Pieces::Pawn: return PawnValue;
-            case Pieces::Knight: return KnightValue;
-            case Pieces::Bishop: return BishopValue;
-            case Pieces::Rook: return RookValue;
-            case Pieces::Queen: return QueenValue;
-        }
-        return 0;
-    }
-
 } // namespace
+
+int getPieceValue(int piece) {
+    switch (Pieces::pieceType(piece)) {
+        case Pieces::Pawn: return PawnValue;
+        case Pieces::Knight: return KnightValue;
+        case Pieces::Bishop: return BishopValue;
+        case Pieces::Rook: return RookValue;
+        case Pieces::Queen: return QueenValue;
+    }
+    return 0;
+}
 
 int evaluate(const Board& board) {
 

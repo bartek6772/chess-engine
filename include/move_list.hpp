@@ -30,4 +30,12 @@ struct MoveList {
     const Move* end() const {
         return moves.begin() + count;
     }
+
+    Move& operator[](int i) {
+        return moves[i];
+    }
+
+    const Move& operator[](int i) const {
+        return moves[i];
+    }
 };

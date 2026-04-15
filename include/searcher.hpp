@@ -1,6 +1,7 @@
 #pragma once
 
 #include "board.hpp"
+#include "move_list.hpp"
 #include <atomic>
 #include <vector>
 
@@ -35,6 +36,9 @@ private:
     SearchStats stats;
     bool info;
 
+    Move killer_moves[64][2];
+
     int quiescence(int alpha, int beta);
     int negamax(int depth, int alpha, int beta, std::vector<Move>& pv);
+    void scoreMoves(MoveList& moves, Move pv_move, int ply);
 };
