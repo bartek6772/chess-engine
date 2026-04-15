@@ -1,5 +1,6 @@
 #include "cli.hpp"
 #include "move_generator.hpp"
+#include <algorithm>
 #include <cstddef>
 #include <iostream>
 #include <sstream>
@@ -84,7 +85,7 @@ void CLI::go(stringstream& stream) {
 
     if (is_searching) return;
 
-    int depth = 100;
+    int depth = 64;
     int move_time = 0;
     int wtime = 0;
     int btime = 0;
@@ -108,12 +109,11 @@ void CLI::go(stringstream& stream) {
         time = 0;
     } else if (move_time == 0) {
         int remaining = board.white_to_move ? wtime : btime;
-        int increment = board.white_to_move ? winc : binc;
-        time = remaining / 40 + (increment * 0.8);
+        int inc = board.white_to_move ? winc : binc;
 
-        if (time > remaining / 2) time = remaining / 2;
+        time = (remaining / 40) + (inc * 0.8);
     }
-    if (time > 100) time -= 50;
+    if (time > 400) time -= 300;
 
     current_search = make_unique<Searcher>(board);
     current_search->enableInfo();
@@ -121,7 +121,9 @@ void CLI::go(stringstream& stream) {
 
     thread search_thread([this, depth, time]() {
         auto result = current_search->findBestMove(depth, time);
-        cout << "bestmove " << result.best_move.toString() << endl;
+        if (!result.pv.empty()) {
+            cout << "bestmove " << result.best_move.toString() << endl;
+        }
         is_searching = false;
     });
     search_thread.detach();

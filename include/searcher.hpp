@@ -3,6 +3,7 @@
 #include "board.hpp"
 #include "move_list.hpp"
 #include <atomic>
+#include <chrono>
 #include <vector>
 
 struct SearchStats {
@@ -25,18 +26,22 @@ struct SearchResult {
 class Searcher {
 public:
     Searcher(Board board);
-    SearchResult findBestMove(int depth, int time_ms);
+    SearchResult findBestMove(int depth, int time);
 
     void stop();
     void enableInfo();
 
 private:
     Board board;
-    std::atomic<bool> stop_search = false;
+    // std::atomic<bool> stop_search = false;
+    bool stop_search = false;
     SearchStats stats;
     bool info;
 
     Move killer_moves[64][2];
+    std::chrono::time_point<std::chrono::steady_clock> start_point;
+    // int soft_limit;
+    int time_limit;
 
     int quiescence(int alpha, int beta);
     int negamax(int depth, int alpha, int beta, std::vector<Move>& pv);
