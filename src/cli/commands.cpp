@@ -113,7 +113,7 @@ void CLI::go(stringstream& stream) {
 
         time = (remaining / 40) + (inc * 0.8);
     }
-    if (time > 400) time -= 300;
+    if (time > 100) time -= 50;
 
     current_search = make_unique<Searcher>(board);
     current_search->enableInfo();

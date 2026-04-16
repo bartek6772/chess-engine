@@ -3,12 +3,10 @@ perf.*
 imgui.ini
 GEMINI.md
 
-testing/tools
-testing/third_party
-testing/engines/
-testing/results/
+benchmarks/tools
+benchmarks/third_party
+benchmarks/engines/
+benchmarks/results/
+benchmarks/config.json
 
-cli.sh
-
-# temporal
-/testing
+docs/todo.md

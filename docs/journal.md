@@ -1,7 +1,9 @@
 # Journal
-Here can be found interseting observations and records speed improvement.
+
+Here can be found some interseting observations and records about speed improvement.
 
 ## Optimizing perft test
+
 Time and what was changed:
 
 | Time [ms] | What was chnaged |
@@ -17,6 +19,15 @@ Time and what was changed:
 | 1 862 | use array to store move history |
 
 ## Versions History
-Version:
-- v1.0.0 - first version supporting UCI protocol
-- v1.1.0 - add piece-square-tables and improve time management
+
+### v1.0.0
+
+First version supporting UCI protocol
+
+### v1.1.0
+
+New fetaures:
+
+- piece-square-tables
+- improved time managment
+- move ordering

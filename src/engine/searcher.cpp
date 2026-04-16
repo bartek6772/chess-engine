@@ -37,7 +37,6 @@ int Searcher::quiescence(int alpha, int beta) {
     if (alpha < stand_pat) alpha = stand_pat;
 
     MoveList captures = MoveGenerator::generateCaptures(board);
-    // scoreMoves(captures, Move(), 0);
 
     for (const Move& move : captures) {
         if (stop_search) return 0;
@@ -72,7 +71,6 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
 
     if (depth == 0) {
         pv.clear();
-        // return Evaluation::evaluateRelative(board);
         return quiescence(alpha, beta);
     }
 
@@ -155,7 +153,7 @@ void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
         } else if (move == killer_moves[ply][1]) {
             move.score = KILLER_2;
         } else {
-            // position gain from PST
+            move.score = 0;
         }
     }
 }
@@ -184,10 +182,7 @@ SearchResult Searcher::findBestMove(int depth, int time) {
         stats.depth = current_depth;
 
         auto now = steady_clock::now();
-
-        // Consult this, displaying total search time instead of single search
         long used = duration_cast<milliseconds>(now - start_point).count();
-        // used = std::max(0L, used);
 
         if (time_limit - used <= used * 4) {
             break;
@@ -205,7 +200,6 @@ SearchResult Searcher::findBestMove(int depth, int time) {
 
     auto end = steady_clock::now();
     stats.time_ms = duration_cast<milliseconds>(end - start_point).count();
-    // stats.time_ms = std::max(0L, stats.time_ms);
 
     if (stats.time_ms > 0) {
         double nps = (double)stats.nodes / ((double)stats.time_ms / 1000.0);
