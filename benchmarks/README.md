@@ -34,3 +34,5 @@ Tools that are optional, but were used for debugging:
 - `./build_current.sh <current_name>` - builds the engine and copies its executable
 - `./build.sh <git_tag>` - builds previous version of the engine
 - `./run.sh <engine_1> <engine_2> [--official]` - run SPRT test between two versions; flag determines if those games should affect the leaderboard
+
+

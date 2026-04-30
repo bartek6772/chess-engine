@@ -7,7 +7,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-cmake -S "$SCRIPT_DIR/../" -B $BUILD_PATH -DCMAKE_BUILD_TYPE=Release
+cmake -G Ninja -S "$SCRIPT_DIR/../" -B $BUILD_PATH -DCMAKE_BUILD_TYPE=Release
 cmake --build $BUILD_PATH --target cli --config Release -j $(nproc)
 
 cp "$SCRIPT_DIR/../build/src/cli/cli" "$SCRIPT_DIR/engines/$1"
