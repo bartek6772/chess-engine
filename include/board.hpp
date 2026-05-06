@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include "hashes.hpp"
 #include "move.hpp"
 #include <array>
 #include <string>
@@ -45,12 +46,21 @@ struct Board {
         int capture{};
 
         // State before that move
+        int halfmove_clock;
         int enpassant_square{};
         int castling_rights{};
+        unsigned long long hash{};
     };
 
     Board();
 
     std::array<HistoryState, MAX_GAME_MOVES> history;
     int history_ptr = 0;
+
+    inline static const Hashes hashes;
+    unsigned long long hash;
+
+    int halfmove_clock = 0;
+
+    bool isRepetition() const;
 };

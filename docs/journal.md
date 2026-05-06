@@ -20,14 +20,24 @@ Time and what was changed:
 
 ## Versions History
 
-### v1.0.0
+### v1.0 - baseline
 
 First version supporting UCI protocol
 
-### v1.1.0
+### v1.1 - move ordering
 
 New fetaures:
 
 - piece-square-tables
 - improved time managment
 - move ordering
+
+### v1.2 - repetitions
+
+Nodes per second: 2 604 742
+
+New fetaures:
+
+- zobrist hashing
+- repetition detection
+- 50 moves draw detection

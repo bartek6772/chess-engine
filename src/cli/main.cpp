@@ -23,7 +23,7 @@ auto main() -> int {
         else if (command == "position") cli.position(stream);
         else if (command == "go") cli.go(stream);
         else if (command == "stop") cli.stop(stream);
-        else if (command == "quit") cli.quit(stream);
+        else if (command == "quit" || command == "exit") cli.quit(stream);
         else if (command == "d") printBoard(cli.board);
     }
     return 0;

@@ -52,8 +52,13 @@ int Searcher::quiescence(int alpha, int beta) {
     return alpha;
 }
 
-int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
+int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>& pv) {
     stats.nodes++;
+
+    // maybe should not check this at root (start of the search)
+    if (board.halfmove_clock >= 100 || (ply > 0 && board.isRepetition())) {
+        return 0;
+    }
 
     if (stats.nodes % STOP_INTERVAL == 0) {
         using namespace std::chrono;
@@ -69,7 +74,7 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
         return 0;
     }
 
-    if (depth == 0) {
+    if (ply == depth) {
         pv.clear();
         return quiescence(alpha, beta);
     }
@@ -81,7 +86,7 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
         pv.clear();
         int color = board.white_to_move ? Pieces::White : Pieces::Black;
         if (MoveGenerator::isCheck(board, color)) {
-            return -MATE + depth;
+            return -MATE + ply;
         }
         return 0;
     }
@@ -101,7 +106,7 @@ int Searcher::negamax(int depth, int alpha, int beta, std::vector<Move>& pv) {
         Move& move = moves[i];
 
         board.makeMove(move);
-        int eval = -negamax(depth - 1, -beta, -alpha, child_pv);
+        int eval = -negamax(depth, ply + 1, -beta, -alpha, child_pv);
         board.unmakeMove();
 
         if (eval >= beta) {
@@ -171,7 +176,7 @@ SearchResult Searcher::findBestMove(int depth, int time) {
 
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
         std::vector<Move> pv;
-        int score = negamax(current_depth, -INF, INF, pv);
+        int score = negamax(current_depth, 0, -INF, INF, pv);
 
         if (stop_search) {
             break;
@@ -189,11 +194,16 @@ SearchResult Searcher::findBestMove(int depth, int time) {
         }
 
         if (info) {
+            long long nps = stats.nodes;
+            if (used != 0) {
+                nps = (stats.nodes * 1000) / used;
+            }
             // clang-format off
             std::cout << "info depth " << current_depth 
                 << " time " << used 
                 << " score cp " << score
-                << " nodes " << stats.nodes << std::endl;
+                << " nodes " << stats.nodes
+                << " nps " << nps << std::endl;
             // clang-format on
         }
     }
@@ -202,7 +212,7 @@ SearchResult Searcher::findBestMove(int depth, int time) {
     stats.time_ms = duration_cast<milliseconds>(end - start_point).count();
 
     if (stats.time_ms > 0) {
-        double nps = (double)stats.nodes / ((double)stats.time_ms / 1000.0);
+        long long nps = (stats.nodes * 1000) / stats.time_ms;
         stats.nodes_per_second = nps;
         stats.mln_nodes_per_second = nps / 1'000'000;
     }

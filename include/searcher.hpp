@@ -2,16 +2,15 @@
 
 #include "board.hpp"
 #include "move_list.hpp"
-#include <atomic>
 #include <chrono>
 #include <vector>
 
 struct SearchStats {
-    unsigned long long nodes = 0;
-    unsigned long long quiescence_nodes = 0;
-    unsigned long long beta_cutoffs = 0;
-    double nodes_per_second = 0;
-    double mln_nodes_per_second = 0;
+    long long nodes = 0;
+    long long quiescence_nodes = 0;
+    long long beta_cutoffs = 0;
+    long long nodes_per_second = 0;
+    long long mln_nodes_per_second = 0;
     long time_ms = 0;
     int depth = 0;
 };
@@ -33,17 +32,15 @@ public:
 
 private:
     Board board;
-    // std::atomic<bool> stop_search = false;
-    bool stop_search = false;
     SearchStats stats;
+    bool stop_search = false;
     bool info;
 
     Move killer_moves[64][2];
     std::chrono::time_point<std::chrono::steady_clock> start_point;
-    // int soft_limit;
     int time_limit;
 
     int quiescence(int alpha, int beta);
-    int negamax(int depth, int alpha, int beta, std::vector<Move>& pv);
+    int negamax(int depth, int ply, int alpha, int beta, std::vector<Move>& pv);
     void scoreMoves(MoveList& moves, Move pv_move, int ply);
 };

@@ -22,6 +22,8 @@ void Board::addPiece(int square, int piece) {
     } else {
         black_pieces |= setBit(square);
     }
+
+    hash ^= hashes.piece_square[piece][square];
 }
 
 void Board::removePiece(int square) {
@@ -34,6 +36,8 @@ void Board::removePiece(int square) {
     } else {
         black_pieces ^= setBit(square);
     }
+
+    hash ^= hashes.piece_square[piece][square];
 }
 
 // does not handle captures
@@ -50,6 +54,9 @@ void Board::movePiece(int from, int to) {
     } else {
         black_pieces ^= (setBit(from)) | (setBit(to));
     }
+
+    hash ^= hashes.piece_square[piece][from];
+    hash ^= hashes.piece_square[piece][to];
 }
 
 auto Board::loadFEN(const std::string& fen) -> bool {
@@ -63,6 +70,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
     history_ptr = 0;
     enpassant_square = -1;
     white_to_move = true;
+    hash = 0;
 
     std::vector<std::string> parts;
     std::stringstream stream(fen);
@@ -129,12 +137,41 @@ auto Board::loadFEN(const std::string& fen) -> bool {
     }
 
     { // 4. Enpassant
+        if (parts.size() < 4) {
+            return false;
+        }
+
+        if (parts[3] != "-") {
+            int file = parts[3][0] - 'a';
+            int rank = parts[3][1] - '1';
+            enpassant_square = rank * BoardLength + file;
+        } else {
+            enpassant_square = -1;
+        }
     }
 
     { // 5. 50 moves rule counter
+        if (parts.size() < 5) {
+            return false;
+        }
+        halfmove_clock = std::stoi(parts[4]);
     }
 
     { // 6. Total moves counter
+        if (parts.size() < 6) {
+            return false;
+        }
+        // fullmove_number = std::stoi(parts[5]);
+    }
+
+    hash ^= hashes.castling_rights[castling_rights];
+
+    if (!white_to_move) {
+        hash ^= hashes.side_to_move;
+    }
+
+    if (enpassant_square != -1) {
+        hash ^= hashes.enpassant_file[enpassant_square % BoardLength];
     }
 
     return true;
@@ -142,11 +179,19 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
 void Board::makeMove(const Move& move) {
 
-    HistoryState new_state{ move };
-    new_state.enpassant_square = enpassant_square;
-    new_state.castling_rights = castling_rights;
-
     int color = white_to_move ? Pieces::White : Pieces::Black;
+    int piece = squares[move.from];
+    int capture = squares[move.to];
+
+    HistoryState new_state{
+        move,
+        capture,
+        halfmove_clock,
+        enpassant_square,
+        castling_rights,
+        hash,
+    };
+    history[history_ptr++] = new_state;
 
     switch (move.from) {
         case Squares::E1: castling_rights &= ~(white_king_castle | white_queen_castle); break;
@@ -164,11 +209,9 @@ void Board::makeMove(const Move& move) {
         case Squares::H8: castling_rights &= ~black_king_castle; break;
     }
 
-    int capture = squares[move.to];
     if (capture != Pieces::None) {
         removePiece(move.to);
     }
-    new_state.capture = capture;
 
     if (move.isPromotion()) {
         removePiece(move.from);
@@ -233,7 +276,27 @@ void Board::makeMove(const Move& move) {
     }
 
     white_to_move = !white_to_move;
-    history[history_ptr++] = new_state;
+
+    if (castling_rights != new_state.castling_rights) {
+        hash ^= hashes.castling_rights[new_state.castling_rights];
+        hash ^= hashes.castling_rights[castling_rights];
+    }
+
+    if (new_state.enpassant_square != -1) {
+        hash ^= hashes.enpassant_file[new_state.enpassant_square % BoardLength];
+    }
+
+    if (enpassant_square != -1) {
+        hash ^= hashes.enpassant_file[enpassant_square % BoardLength];
+    }
+
+    hash ^= hashes.side_to_move;
+
+    if (piece == Pieces::Pawn || capture != Pieces::None) {
+        halfmove_clock = 0;
+    } else {
+        halfmove_clock++;
+    }
 }
 
 void Board::unmakeMove() {
@@ -244,6 +307,7 @@ void Board::unmakeMove() {
     white_to_move = !white_to_move;
     enpassant_square = state.enpassant_square;
     castling_rights = state.castling_rights;
+    halfmove_clock = state.halfmove_clock;
 
     int color = white_to_move ? Pieces::White : Pieces::Black;
 
@@ -287,4 +351,17 @@ void Board::unmakeMove() {
     if (state.capture != Pieces::None) {
         addPiece(move.to, state.capture);
     }
+
+    hash = state.hash;
+}
+
+bool Board::isRepetition() const {
+    int start = std::max(0, history_ptr - halfmove_clock);
+
+    for (int i = history_ptr - 2; i >= start; i -= 2) {
+        if (history[i].hash == hash) {
+            return true;
+        }
+    }
+    return false;
 }

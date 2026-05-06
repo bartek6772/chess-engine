@@ -105,14 +105,14 @@ void CLI::go(stringstream& stream) {
     }
 
     int time = move_time;
-    if (infinite) {
-        time = 0;
+    if (infinite || time == 0) {
+        time = 60 * 60 * 1000; // one hour
     } else if (move_time == 0) {
         int remaining = board.white_to_move ? wtime : btime;
         int inc = board.white_to_move ? winc : binc;
-
         time = (remaining / 40) + (inc * 0.8);
     }
+
     if (time > 100) time -= 50;
 
     current_search = make_unique<Searcher>(board);
