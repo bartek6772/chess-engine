@@ -2,6 +2,7 @@
 
 #include "board.hpp"
 #include "move_list.hpp"
+#include <array>
 #include <chrono>
 #include <vector>
 
@@ -36,7 +37,8 @@ private:
     bool stop_search = false;
     bool info;
 
-    Move killer_moves[64][2];
+    // Move killer_moves[64][2];
+    std::array<std::array<Move, 2>, 64> killer_moves{};
     std::chrono::time_point<std::chrono::steady_clock> start_point;
     int time_limit;
 

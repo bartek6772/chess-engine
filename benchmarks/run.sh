@@ -1,5 +1,7 @@
 #!/bin/bash
 
+GAMES=20
+
 if [[ -z "$1" || -z "$2" ]]; then
     echo "Usage ./run.sh <engine_1> <engine_2> [--unofficial]"
     exit 1
@@ -23,8 +25,8 @@ mkdir -p results
 -engine cmd="./engines/$engine1" name="$engine1" \
 -engine cmd="./engines/$engine2" name="$engine2" \
 -openings file=8moves_v3.pgn format=pgn order=random \
--each tc=8+0.08 \
--rounds 20 -repeat \
+-each tc=7+0.08 \
+-rounds $GAMES -repeat \
 -concurrency 8 \
 -recover \
 -sprt elo0=0 elo1=10 alpha=0.05 beta=0.1 \

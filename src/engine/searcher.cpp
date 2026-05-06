@@ -55,11 +55,6 @@ int Searcher::quiescence(int alpha, int beta) {
 int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>& pv) {
     stats.nodes++;
 
-    // maybe should not check this at root (start of the search)
-    if (board.halfmove_clock >= 100 || (ply > 0 && board.isRepetition())) {
-        return 0;
-    }
-
     if (stats.nodes % STOP_INTERVAL == 0) {
         using namespace std::chrono;
         auto now = steady_clock::now();
@@ -74,13 +69,17 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
         return 0;
     }
 
+    if (board.halfmove_clock >= 100 || (ply > 0 && board.isRepetition())) {
+        return 0;
+    }
+
     if (ply == depth) {
         pv.clear();
         return quiescence(alpha, beta);
     }
 
     MoveList moves = MoveGenerator::generateLegalMoves(board);
-    scoreMoves(moves, pv.size() > 0 ? pv[0] : Move(), depth);
+    scoreMoves(moves, (pv.size() > 0 ? pv[0] : Move()), ply);
 
     if (moves.size() == 0) {
         pv.clear();
@@ -92,7 +91,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
     }
 
     std::vector<Move> child_pv;
-    child_pv.reserve(depth);
+    child_pv.reserve(depth - ply);
 
     for (int i = 0; i < moves.size(); i++) {
 
@@ -111,8 +110,8 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
 
         if (eval >= beta) {
             if (board.squares[move.to] == Pieces::None) {
-                killer_moves[depth][1] = killer_moves[depth][0];
-                killer_moves[depth][0] = move;
+                killer_moves[ply][1] = killer_moves[ply][0];
+                killer_moves[ply][0] = move;
             }
 
             stats.beta_cutoffs++;
@@ -168,7 +167,6 @@ SearchResult Searcher::findBestMove(int depth, int time) {
 
     std::vector<Move> best_pv;
     stats = SearchStats();
-    stop_search = false;
     int best_score = 0;
 
     time_limit = time;
