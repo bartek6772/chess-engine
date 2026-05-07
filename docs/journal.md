@@ -41,3 +41,15 @@ New fetaures:
 - zobrist hashing
 - repetition detection
 - 50 moves draw detection
+
+### v1.2.1 - timeouts fix
+
+New fetaures:
+
+- playing first avaliable move
+
+### v1.2.2 - better timeouts fix
+
+New fetaures:
+
+- playing first sorted move from search function

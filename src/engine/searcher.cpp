@@ -172,6 +172,17 @@ SearchResult Searcher::findBestMove(int depth, int time) {
     time_limit = time;
     start_point = steady_clock::now();
 
+    MoveList initial_moves = MoveGenerator::generateLegalMoves(board);
+    if (initial_moves.size() > 0) {
+        scoreMoves(initial_moves, Move(), 0);
+
+        Move best_guess = initial_moves[0];
+        for (const Move& move : initial_moves) {
+            if (move.score > best_guess.score) best_guess = move;
+        }
+        best_pv.push_back(best_guess);
+    }
+
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
         std::vector<Move> pv;
         int score = negamax(current_depth, 0, -INF, INF, pv);

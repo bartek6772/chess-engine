@@ -1,6 +1,6 @@
 #!/bin/bash
 
-GAMES=40
+GAMES=20
 TIME=5+0.1
 
 if [[ -z "$1" || -z "$2" ]]; then
@@ -31,8 +31,8 @@ mkdir -p results
 -concurrency 8 \
 -recover \
 -sprt elo0=0 elo1=10 alpha=0.05 beta=0.1 \
--pgnout file="$PGN_OUTPUT" \
--log file=engine_debug.log level=trace engine=true
+-pgnout file="$PGN_OUTPUT"
+# -log file=engine_debug.log level=trace engine=true
 
 # Update leader board
 if [ "$IS_OFFICIAL" = true ]; then

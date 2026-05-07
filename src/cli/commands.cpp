@@ -89,7 +89,10 @@ void CLI::go(stringstream& stream) {
     constexpr int minimal_time = 20;
     constexpr double safety_margin = 0.95;
 
-    int depth = 64;
+    constexpr int one_hour = 60 * 60 * 1000;
+    constexpr int max_depth = 32;
+
+    int depth = 0;
     int move_time = 0;
     int wtime = 0;
     int btime = 0;
@@ -113,15 +116,15 @@ void CLI::go(stringstream& stream) {
         int remaining = board.white_to_move ? wtime : btime;
         int inc = board.white_to_move ? winc : binc;
         int target = (remaining / 40) + (inc * 8 / 10);
-        time = std::max(0, (int)(target * safety_margin) - time_buffer);
+        time = std::max(minimal_time, (int)(target * safety_margin) - time_buffer);
     }
 
-    if (infinite || time == 0) {
-        time = 60 * 60 * 1000; // one hour
+    if (infinite) {
+        time = one_hour;
+        depth = max_depth;
+    } else if (depth > 0 || time == 0) {
+        time = one_hour;
     }
-
-    // if (time > 100) time -= 50;
-    if (time < minimal_time) time = minimal_time;
 
     current_search = make_unique<Searcher>(board);
     current_search->enableInfo();
@@ -131,13 +134,6 @@ void CLI::go(stringstream& stream) {
         auto result = current_search->findBestMove(depth, time);
         if (!result.pv.empty()) {
             cout << "bestmove " << result.best_move.toString() << endl;
-        } else {
-            auto moves = MoveGenerator::generateLegalMoves(board);
-            if (moves.size() > 0) {
-                cout << "bestmove " << moves[0].toString() << endl;
-            } else {
-                cout << "bestmove a1a1" << endl;
-            }
         }
         is_searching = false;
     });

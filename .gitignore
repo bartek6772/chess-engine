@@ -10,3 +10,5 @@ benchmarks/results/
 benchmarks/config.json
 
 docs/todo.md
+engine_debug.log
+build.py
