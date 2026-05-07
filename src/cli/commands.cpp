@@ -108,23 +108,21 @@ void CLI::go(stringstream& stream) {
         else if (part == "btime") stream >> btime;
         else if (part == "winc") stream >> winc;
         else if (part == "binc") stream >> binc;
-        else if (part == "infinite") infinite = true;
     }
 
-    int time = move_time;
-    if (move_time == 0) {
+    int time = 0;
+    if (move_time != 0) {
+        time = move_time;
+    } else if (wtime != 0 || btime != 0) {
         int remaining = board.white_to_move ? wtime : btime;
         int inc = board.white_to_move ? winc : binc;
         int target = (remaining / 40) + (inc * 8 / 10);
         time = std::max(minimal_time, (int)(target * safety_margin) - time_buffer);
+    } else {
+        time = one_hour;
     }
 
-    if (infinite) {
-        time = one_hour;
-        depth = max_depth;
-    } else if (depth > 0 || time == 0) {
-        time = one_hour;
-    }
+    if (depth == 0) depth = max_depth;
 
     current_search = make_unique<Searcher>(board);
     current_search->enableInfo();
