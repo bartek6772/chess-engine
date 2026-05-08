@@ -56,18 +56,9 @@ struct Move {
         return move;
     }
 
-    Move() : data(0) {
-    }
+    Move() : data(0){};
 
     Move(int from, int to, MoveType type = MoveType::Normal) {
-        data = (from) | (to << 6) | ((int)type << 12);
-    }
-
-    Move(const std::string& move) {
-        int from = (move[0] - 'a') + (move[1] - '1') * BoardLength;
-        int to = (move[2] - 'a') + (move[3] - '1') * BoardLength;
-        MoveType type = MoveType::Normal;
-
         data = (from) | (to << 6) | ((int)type << 12);
     }
 

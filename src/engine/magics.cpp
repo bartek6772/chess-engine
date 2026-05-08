@@ -7,8 +7,8 @@
 
 bitmask calculate_rook_mask(int square) {
     bitmask mask = 0;
-    int file = square % 8;
-    int rank = square / 8;
+    int file = fileOf(square);
+    int rank = rankOf(square);
 
     for (int f = file + 1; f <= 6; f++) mask |= setBit(rank * 8 + f);
     for (int f = file - 1; f >= 1; f--) mask |= setBit(rank * 8 + f);
@@ -71,8 +71,8 @@ bitmask calculate_rook_attacks(int square, bitmask blockers) {
 
 bitmask calculate_bishop_mask(int square) {
     bitmask mask = 0ULL;
-    int file = square % 8;
-    int rank = square / 8;
+    int file = fileOf(square);
+    int rank = rankOf(square);
 
     int r, f;
     for (r = rank + 1, f = file + 1; r <= 6 && f <= 6; r++, f++) mask |= setBit(r * 8 + f);
@@ -86,8 +86,8 @@ bitmask calculate_bishop_mask(int square) {
 
 bitmask calculate_bishop_attack(int square, bitmask blockers) {
     bitmask attack = 0ULL;
-    int file = square % 8;
-    int rank = square / 8;
+    int file = fileOf(square);
+    int rank = rankOf(square);
     int r, f;
 
     for (r = rank + 1, f = file + 1; r <= 7 && f <= 7; r++, f++) {

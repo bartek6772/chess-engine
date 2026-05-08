@@ -17,11 +17,11 @@ void precomputeKnightMoves(std::array<bitmask, BoardSize>& knightMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= setBit(r * BoardLength + c);
+                    moves |= setBit(makeSquare(c, r));
                 }
             }
 
-            int square = row * BoardLength + col;
+            int square = makeSquare(col, row);
             knightMoves[square] = moves;
         }
     }
@@ -41,11 +41,11 @@ void precomputeKingMoves(std::array<bitmask, BoardSize>& kingMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= setBit(r * BoardLength + c);
+                    moves |= setBit(makeSquare(c, r));
                 }
             }
 
-            int square = row * BoardLength + col;
+            int square = makeSquare(col, row);
             kingMoves[square] = moves;
         }
     }

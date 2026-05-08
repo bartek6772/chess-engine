@@ -13,3 +13,7 @@ inline int rankOf(int square) {
 inline int fileOf(int square) {
     return square & 7;
 }
+
+inline int makeSquare(int file, int rank) {
+    return file + rank * BoardLength;
+}

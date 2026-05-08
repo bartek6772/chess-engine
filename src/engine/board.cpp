@@ -100,7 +100,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
                 col += c - '0';
             } else {
                 int piece = Pieces::getPiece(c);
-                addPiece(row * BoardLength + col, piece);
+                addPiece(makeSquare(col, row), piece);
                 col++;
             }
         }
@@ -144,7 +144,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
         if (parts[3] != "-") {
             int file = parts[3][0] - 'a';
             int rank = parts[3][1] - '1';
-            enpassant_square = rank * BoardLength + file;
+            enpassant_square = makeSquare(file, rank);
         } else {
             enpassant_square = -1;
         }
@@ -171,7 +171,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
     }
 
     if (enpassant_square != -1) {
-        hash ^= hashes.enpassant_file[enpassant_square % BoardLength];
+        hash ^= hashes.enpassant_file[fileOf(enpassant_square)];
     }
 
     return true;
@@ -246,8 +246,8 @@ void Board::makeMove(const Move& move) {
             }
 
             int rank = rankOf(move.to());
-            int rook_start = rank * BoardLength + rook_start_file;
-            int rook_target = rank * BoardLength + rook_target_file;
+            int rook_start = makeSquare(rook_start_file, rank);
+            int rook_target = makeSquare(rook_target_file, rank);
             movePiece(rook_start, rook_target);
         }
 
@@ -320,7 +320,7 @@ void Board::unmakeMove() {
             int rook_start_file = 0;
             int rook_target_file = 0;
 
-            if ((move.to() % BoardLength) == 6) {
+            if (fileOf(move.to()) == 6) {
                 rook_start_file = 7;
                 rook_target_file = 5;
             } else {
@@ -329,8 +329,8 @@ void Board::unmakeMove() {
             }
 
             int rank = rankOf(move.to());
-            int rook_start = rank * BoardLength + rook_start_file;
-            int rook_target = rank * BoardLength + rook_target_file;
+            int rook_start = makeSquare(rook_start_file, rank);
+            int rook_target = makeSquare(rook_target_file, rank);
             movePiece(rook_target, rook_start);
         }
 
