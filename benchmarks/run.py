@@ -51,19 +51,19 @@ def main():
     if args.unofficial:
         return
     
-    files = [str(p) for p in results_dir.glob("*.pgn") if p.name != "tmp.pgn"]
-    leaderboard = results_dir / "leaderboard.txt"
+    # files = [str(p) for p in results_dir.glob("*.pgn") if p.name != "tmp.pgn"]
+    # leaderboard = results_dir / "leaderboard.txt"
 
-    subprocess.run([
-        "./tools/ordo",
-        "-a", "0", "-A", "v1_base", "-Q",
-        "-o", str(leaderboard),
-        "--aliases=aliases.txt",
-        "--groups=results/groups.txt",
-        "--"
-    ] + files)
+    # subprocess.run([
+    #     "./tools/ordo",
+    #     "-a", "0", "-A", "v1_base", "-Q",
+    #     "-o", str(leaderboard),
+    #     "--aliases=aliases.txt",
+    #     "--groups=results/groups.txt",
+    #     "--"
+    # ] + files)
     
-    print("\n".join(leaderboard.read_text().splitlines()[:20]))
+    # print("\n".join(leaderboard.read_text().splitlines()[:20]))
 
 if __name__ == "__main__":
     main()

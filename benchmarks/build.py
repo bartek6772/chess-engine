@@ -18,8 +18,8 @@ def build(project_root, script_dir, tag):
     engines_dir = script_dir / "engines"
 
     try:
-        if build_path.exists():
-            shutil.rmtree(build_path)
+        # if build_path.exists():
+        #     shutil.rmtree(build_path)
 
         run_command([
             "cmake", "-G", "Ninja",

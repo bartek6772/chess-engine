@@ -24,6 +24,7 @@ Time and what was changed:
 
 First version supporting UCI protocol.
 
+---
 ### v1.1 - move ordering
 
 New fetaures:
@@ -32,6 +33,7 @@ New fetaures:
 - improved time managment
 - move ordering
 
+---
 ### v1.2 - repetitions
 
 New fetaures:
@@ -46,9 +48,21 @@ Bugfixes:
 
 Nodes per second: 2 604 742
 
+---
 ### v1.3 - panic move
 
 New fetaures:
 
 - search function always can return first sorted move
 - new time management logic
+
+---
+### v2.0 - stronger search
+
+Reduced number of swaps and returning best evaluation value instead of alpha in search function.
+
+| Nodes at depth 8 | Version |
+| --- | --- |
+| 16 317 252 | v1.3 |
+| 10 862 274 | Reduced number of swaps and returning best evaluation value instead of alpha in search function. |
+| 3 537 846 | Transposition table |

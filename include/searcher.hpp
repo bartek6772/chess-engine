@@ -2,16 +2,18 @@
 
 #include "board.hpp"
 #include "move_list.hpp"
+#include "transposition_table.hpp"
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <vector>
 
 struct SearchStats {
-    long long nodes = 0;
-    long long quiescence_nodes = 0;
-    long long beta_cutoffs = 0;
-    long long nodes_per_second = 0;
-    long long mln_nodes_per_second = 0;
+    unsigned long long nodes = 0;
+    unsigned long long quiescence_nodes = 0;
+    unsigned long long beta_cutoffs = 0;
+    unsigned long long nodes_per_second = 0;
+    unsigned long long mln_nodes_per_second = 0;
     long time_ms = 0;
     int depth = 0;
 };
@@ -34,10 +36,9 @@ public:
 private:
     Board board;
     SearchStats stats;
-    bool stop_search = false;
+    std::atomic<bool> stop_search = false;
     bool info;
 
-    // Move killer_moves[64][2];
     std::array<std::array<Move, 2>, 64> killer_moves{};
     std::chrono::time_point<std::chrono::steady_clock> start_point;
     int time_limit;
@@ -45,4 +46,9 @@ private:
     int quiescence(int alpha, int beta);
     int negamax(int depth, int ply, int alpha, int beta, std::vector<Move>& pv);
     void scoreMoves(MoveList& moves, Move pv_move, int ply);
+
+    long searchTime();
+    bool shouldStop();
+
+    static inline TranspositionTable table;
 };
