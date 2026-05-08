@@ -1,6 +1,8 @@
 #pragma once
 
 #include "constants.hpp"
+#include "utility.hpp"
+#include <cstdint>
 #include <string>
 
 enum class MoveType : int {
@@ -15,21 +17,35 @@ enum class MoveType : int {
 };
 
 struct Move {
-    int from;
-    int to;
-    MoveType type;
+    uint16_t data;
     int score;
+
+    static const int from_mask = 0b0000000000111111;
+    static const int to_mask = 0b0000111111000000;
+    static const int flag_mask = 0b1111000000000000;
+
+    inline int from() const {
+        return data & from_mask;
+    }
+
+    inline int to() const {
+        return (data & to_mask) >> 6;
+    }
+
+    inline MoveType type() const {
+        return static_cast<MoveType>((data & flag_mask) >> 12);
+    }
 
     [[nodiscard]] auto toString() const -> std::string {
         std::string move{};
-        move += (char)(from % BoardLength + 'a');
-        move += (char)(from / BoardLength + '1');
+        move += (char)(fileOf(from()) + 'a');
+        move += (char)(rankOf(from()) + '1');
 
-        move += (char)(to % BoardLength + 'a');
-        move += (char)(to / BoardLength + '1');
+        move += (char)(fileOf(to()) + 'a');
+        move += (char)(rankOf(to()) + '1');
 
         if (isPromotion()) {
-            switch (type) {
+            switch (type()) {
                 case MoveType::PromotionRook: move += 'r'; break;
                 case MoveType::PromotionBishop: move += 'b'; break;
                 case MoveType::PromotionKnight: move += 'n'; break;
@@ -40,32 +56,35 @@ struct Move {
         return move;
     }
 
-    Move() : from(0), to(0), type(MoveType::Normal) {
+    Move() : data(0) {
     }
 
-    Move(int from, int to, MoveType type = MoveType::Normal) : from(from), to(to), type(type) {
+    Move(int from, int to, MoveType type = MoveType::Normal) {
+        data = (from) | (to << 6) | ((int)type << 12);
     }
 
     Move(const std::string& move) {
-        from = (move[0] - 'a') + (move[1] - '1') * BoardLength;
-        to = (move[2] - 'a') + (move[3] - '1') * BoardLength;
-        type = MoveType::Normal;
+        int from = (move[0] - 'a') + (move[1] - '1') * BoardLength;
+        int to = (move[2] - 'a') + (move[3] - '1') * BoardLength;
+        MoveType type = MoveType::Normal;
+
+        data = (from) | (to << 6) | ((int)type << 12);
     }
 
-    auto operator==(Move& move) const -> bool {
-        return from == move.from && to == move.to && type == move.type;
+    auto operator==(const Move& other) const -> bool {
+        return data == other.data;
     }
 
-    auto operator!=(Move& move) const -> bool {
-        return from != move.from || to != move.to || type != move.type;
+    auto operator!=(const Move& other) const -> bool {
+        return data != other.data;
     }
 
     bool isNull() const {
-        return to == 0 && from == 0;
+        return data == 0;
     }
 
     bool isPromotion() const {
-        return type == MoveType::PromotionBishop || type == MoveType::PromotionKnight ||
-               type == MoveType::PromotionQueen || type == MoveType::PromotionRook;
+        return type() == MoveType::PromotionBishop || type() == MoveType::PromotionKnight ||
+               type() == MoveType::PromotionQueen || type() == MoveType::PromotionRook;
     }
 };

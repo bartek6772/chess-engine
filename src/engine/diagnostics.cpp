@@ -7,15 +7,15 @@
 void perft(Board& board, Diagnostics::PerftResults& results, int depth) {
 
     auto isCapture = [&](const Move& move) {
-        return board.squares[move.to] != Pieces::None || move.type == MoveType::EnPassant;
+        return board.squares[move.to()] != Pieces::None || move.type() == MoveType::EnPassant;
     };
 
     auto isCastle = [&](const Move& move) {
-        return move.type == MoveType::Castling;
+        return move.type() == MoveType::Castling;
     };
 
     auto isEp = [&](const Move& move) {
-        return move.type == MoveType::EnPassant;
+        return move.type() == MoveType::EnPassant;
     };
 
     auto isPromotion = [&](const Move& move) {

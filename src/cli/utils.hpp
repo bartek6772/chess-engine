@@ -22,7 +22,7 @@ inline void printMoves(const MoveList& moves) {
             int bit = row * BoardLength + col;
 
             bool containing = std::ranges::find_if(moves.begin(), moves.end(), [bit](Move m) {
-                return m.to == bit;
+                return m.to() == bit;
             }) != moves.end();
 
             std::cout << std::setw(2) << (containing ? "1" : "0");

@@ -35,8 +35,8 @@ bitmask set_blocker_bits(int index, bitmask mask) {
 
 bitmask calculate_rook_attacks(int square, bitmask blockers) {
     bitmask attacks = 0ULL;
-    int file = square % BoardLength;
-    int rank = square / BoardLength;
+    int file = fileOf(square);
+    int rank = rankOf(square);
 
     // RIGHT
     for (int f = file + 1; f < 8; f++) {

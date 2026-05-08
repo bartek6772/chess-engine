@@ -30,8 +30,6 @@ inline constexpr int BlackRook = Rook | Black;
 inline constexpr int BlackQueen = Queen | Black;
 inline constexpr int BlackKing = King | Black;
 
-inline constexpr int MaxPieceIndex = BlackKing;
-
 inline constexpr int TypeMask = 0b0111;
 inline constexpr int ColorMask = 0b1000;
 

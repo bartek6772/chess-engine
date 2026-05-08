@@ -180,8 +180,8 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 void Board::makeMove(const Move& move) {
 
     int color = white_to_move ? Pieces::White : Pieces::Black;
-    int piece = squares[move.from];
-    int capture = squares[move.to];
+    int piece = squares[move.from()];
+    int capture = squares[move.to()];
 
     HistoryState new_state{
         move,
@@ -193,7 +193,7 @@ void Board::makeMove(const Move& move) {
     };
     history[history_ptr++] = new_state;
 
-    switch (move.from) {
+    switch (move.from()) {
         case Squares::E1: castling_rights &= ~(white_king_castle | white_queen_castle); break;
         case Squares::E8: castling_rights &= ~(black_king_castle | black_queen_castle); break;
         case Squares::A1: castling_rights &= ~white_queen_castle; break;
@@ -202,7 +202,7 @@ void Board::makeMove(const Move& move) {
         case Squares::H8: castling_rights &= ~black_king_castle; break;
     }
 
-    switch (move.to) {
+    switch (move.to()) {
         case Squares::A1: castling_rights &= ~white_queen_castle; break;
         case Squares::H1: castling_rights &= ~white_king_castle; break;
         case Squares::A8: castling_rights &= ~black_queen_castle; break;
@@ -210,28 +210,28 @@ void Board::makeMove(const Move& move) {
     }
 
     if (capture != Pieces::None) {
-        removePiece(move.to);
+        removePiece(move.to());
     }
 
     if (move.isPromotion()) {
-        removePiece(move.from);
-        if (move.type == MoveType::PromotionBishop) {
-            addPiece(move.to, Pieces::Bishop | color);
-        } else if (move.type == MoveType::PromotionQueen) {
-            addPiece(move.to, Pieces::Queen | color);
-        } else if (move.type == MoveType::PromotionKnight) {
-            addPiece(move.to, Pieces::Knight | color);
-        } else if (move.type == MoveType::PromotionRook) {
-            addPiece(move.to, Pieces::Rook | color);
+        removePiece(move.from());
+        if (move.type() == MoveType::PromotionBishop) {
+            addPiece(move.to(), Pieces::Bishop | color);
+        } else if (move.type() == MoveType::PromotionQueen) {
+            addPiece(move.to(), Pieces::Queen | color);
+        } else if (move.type() == MoveType::PromotionKnight) {
+            addPiece(move.to(), Pieces::Knight | color);
+        } else if (move.type() == MoveType::PromotionRook) {
+            addPiece(move.to(), Pieces::Rook | color);
         }
         enpassant_square = -1;
     } else {
 
-        if (move.type == MoveType::Castling) {
+        if (move.type() == MoveType::Castling) {
             int rook_start_file = 0;
             int rook_target_file = 0;
 
-            if (move.to == Squares::G1 || move.to == Squares::G8) {
+            if (move.to() == Squares::G1 || move.to() == Squares::G8) {
                 rook_start_file = 7;
                 rook_target_file = 5;
             } else {
@@ -245,34 +245,34 @@ void Board::makeMove(const Move& move) {
                 castling_rights &= ~(black_queen_castle | black_king_castle);
             }
 
-            int rank = rankOf(move.to);
+            int rank = rankOf(move.to());
             int rook_start = rank * BoardLength + rook_start_file;
             int rook_target = rank * BoardLength + rook_target_file;
             movePiece(rook_start, rook_target);
         }
 
-        if (move.type == MoveType::EnPassant) {
+        if (move.type() == MoveType::EnPassant) {
             int enpassant = 0;
             if (white_to_move) {
-                enpassant = move.to - BoardLength;
+                enpassant = move.to() - BoardLength;
             } else {
-                enpassant = move.to + BoardLength;
+                enpassant = move.to() + BoardLength;
             }
 
             removePiece(enpassant);
         }
 
-        if (move.type == MoveType::DoublePush) {
+        if (move.type() == MoveType::DoublePush) {
             if (white_to_move) {
-                enpassant_square = move.to - BoardLength;
+                enpassant_square = move.to() - BoardLength;
             } else {
-                enpassant_square = move.to + BoardLength;
+                enpassant_square = move.to() + BoardLength;
             }
         } else {
             enpassant_square = -1;
         }
 
-        movePiece(move.from, move.to);
+        movePiece(move.from(), move.to());
     }
 
     white_to_move = !white_to_move;
@@ -312,15 +312,15 @@ void Board::unmakeMove() {
     int color = white_to_move ? Pieces::White : Pieces::Black;
 
     if (move.isPromotion()) {
-        removePiece(move.to);
-        addPiece(move.from, Pieces::Pawn | color);
+        removePiece(move.to());
+        addPiece(move.from(), Pieces::Pawn | color);
     } else {
 
-        if (move.type == MoveType::Castling) {
+        if (move.type() == MoveType::Castling) {
             int rook_start_file = 0;
             int rook_target_file = 0;
 
-            if ((move.to % BoardLength) == 6) {
+            if ((move.to() % BoardLength) == 6) {
                 rook_start_file = 7;
                 rook_target_file = 5;
             } else {
@@ -328,28 +328,28 @@ void Board::unmakeMove() {
                 rook_target_file = 3;
             }
 
-            int rank = rankOf(move.to);
+            int rank = rankOf(move.to());
             int rook_start = rank * BoardLength + rook_start_file;
             int rook_target = rank * BoardLength + rook_target_file;
             movePiece(rook_target, rook_start);
         }
 
-        if (move.type == MoveType::EnPassant) {
+        if (move.type() == MoveType::EnPassant) {
             int enpassant = 0;
             if (white_to_move) {
-                enpassant = move.to - BoardLength;
+                enpassant = move.to() - BoardLength;
             } else {
-                enpassant = move.to + BoardLength;
+                enpassant = move.to() + BoardLength;
             }
 
             addPiece(enpassant, white_to_move ? Pieces::BlackPawn : Pieces::WhitePawn);
         }
 
-        movePiece(move.to, move.from);
+        movePiece(move.to(), move.from());
     }
 
     if (state.capture != Pieces::None) {
-        addPiece(move.to, state.capture);
+        addPiece(move.to(), state.capture);
     }
 
     hash = state.hash;

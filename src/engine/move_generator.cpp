@@ -334,7 +334,7 @@ auto generateCaptures(Board& board) -> MoveList {
     MoveList captures;
 
     for (const Move& move : moves) {
-        if (board.squares[move.to] != Pieces::None) {
+        if (board.squares[move.to()] != Pieces::None) {
             captures.push(move);
         }
     }

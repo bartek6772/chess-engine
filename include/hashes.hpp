@@ -1,12 +1,11 @@
 #pragma once
 
 #include "constants.hpp"
-#include "pieces.hpp"
 #include <array>
 #include <random>
 
 struct Hashes {
-    std::array<std::array<unsigned long long, BoardSize>, Pieces::MaxPieceIndex> piece_square{};
+    std::array<std::array<unsigned long long, BoardSize>, MaxPiecesCount> piece_square{};
     std::array<unsigned long long, BoardLength> enpassant_file{};
     std::array<unsigned long long, 16> castling_rights{};
     unsigned long long side_to_move;

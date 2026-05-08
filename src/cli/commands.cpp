@@ -26,9 +26,9 @@ Move parseMove(Board& board, const string& move_str) {
     MoveList moves = MoveGenerator::generateLegalMoves(board);
     for (const Move& move : moves) {
 
-        if (move.from == from && move.to == to) {
+        if (move.from() == from && move.to() == to) {
             if (is_promotion) {
-                if (move.type == type) return move;
+                if (move.type() == type) return move;
             } else {
                 return move;
             }

@@ -159,7 +159,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
         }
 
         if (eval >= beta) {
-            if (board.squares[move.to] == Pieces::None) {
+            if (board.squares[move.to()] == Pieces::None) {
                 killer_moves[ply][1] = killer_moves[ply][0];
                 killer_moves[ply][0] = move;
             }
@@ -175,8 +175,8 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
 
     table.store({
         board.hash,
-        remaining_depth,
-        scoreToTT(best_eval, ply),
+        static_cast<int16_t>(remaining_depth),
+        static_cast<int16_t>(scoreToTT(best_eval, ply)),
         flag,
         (pv.empty() ? Move() : pv[0]),
     });
@@ -187,7 +187,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
 void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
 
     auto isCapture = [&](Move& move) -> bool {
-        return board.squares[move.to] != Pieces::None;
+        return board.squares[move.to()] != Pieces::None;
     };
 
     auto mvv_lva = [&](int from, int to) -> int {
@@ -205,7 +205,7 @@ void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
         if (move == pv_move) {
             move.score = LAST_MOVE;
         } else if (isCapture(move)) {
-            move.score = CAPTURE + mvv_lva(move.from, move.to);
+            move.score = CAPTURE + mvv_lva(move.from(), move.to());
         } else if (move == killer_moves[ply][0]) {
             move.score = KILLER_1;
         } else if (move == killer_moves[ply][1]) {
@@ -291,7 +291,4 @@ void Searcher::stop() {
 
 void Searcher::enableInfo() {
     info = true;
-}
-
-Searcher::Searcher(Board board) : board(board) {
 }

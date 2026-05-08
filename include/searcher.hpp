@@ -27,7 +27,7 @@ struct SearchResult {
 
 class Searcher {
 public:
-    Searcher(Board board);
+    Searcher(Board board) : board(board){};
     SearchResult findBestMove(int depth, int time);
 
     void stop();
@@ -50,5 +50,5 @@ private:
     long searchTime();
     bool shouldStop();
 
-    static inline TranspositionTable table;
+    static inline TranspositionTable table{ 100 };
 };
