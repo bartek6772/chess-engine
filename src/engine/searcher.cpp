@@ -98,10 +98,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
                 pv.clear();
                 pv.push_back(entry->best_move);
                 return score;
-            }
-
-            else if (entry->flag == LOWER_BOUND)
-                alpha = std::max(alpha, score);
+            } else if (entry->flag == LOWER_BOUND) alpha = std::max(alpha, score);
             else if (entry->flag == UPPER_BOUND) beta = std::min(beta, score);
 
             if (alpha >= beta) return score;
@@ -196,10 +193,10 @@ void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
         return victim_value * 10 - attacker_value;
     };
 
-    constexpr int LAST_MOVE = 1000000;
-    constexpr int CAPTURE = 100000;
-    constexpr int KILLER_1 = 90000;
-    constexpr int KILLER_2 = 80000;
+    constexpr int LAST_MOVE = 30'000;
+    constexpr int CAPTURE = 20'000;
+    constexpr int KILLER_1 = 10'000;
+    constexpr int KILLER_2 = 9'000;
 
     for (Move& move : moves) {
         if (move == pv_move) {

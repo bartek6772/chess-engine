@@ -6,7 +6,7 @@ namespace Evaluation {
 
 constexpr int PawnValue = 100;
 constexpr int KnightValue = 320;
-constexpr int BishopValue = 330;
+constexpr int BishopValue = 350;
 constexpr int RookValue = 500;
 constexpr int QueenValue = 900;
 

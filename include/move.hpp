@@ -1,6 +1,5 @@
 #pragma once
 
-#include "constants.hpp"
 #include "utility.hpp"
 #include <cstdint>
 #include <string>
@@ -18,7 +17,7 @@ enum class MoveType : int {
 
 struct Move {
     uint16_t data;
-    int score;
+    uint16_t score;
 
     static const int from_mask = 0b0000000000111111;
     static const int to_mask = 0b0000111111000000;

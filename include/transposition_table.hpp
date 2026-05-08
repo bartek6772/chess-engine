@@ -3,12 +3,7 @@
 #include "move.hpp"
 #include <cmath>
 #include <cstdint>
-#include <iostream>
 #include <vector>
-
-constexpr int TT_BITS = 20;
-constexpr int TT_SIZE = 1 << TT_BITS;
-constexpr int TT_MASK = TT_SIZE - 1;
 
 enum NodeFlag : uint8_t { EXACT, LOWER_BOUND, UPPER_BOUND };
 
@@ -41,10 +36,6 @@ public:
 
         table.resize(entries_pow_2);
         size = entries_pow_2;
-
-        // std::cout << size_mb << " mb\n";
-        // std::cout << entries << " entries\n";
-        // std::cout << table.size() << " TT size\n";
     }
 
     const TTEntry* get(unsigned long long hash) const {
