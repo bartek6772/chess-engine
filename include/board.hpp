@@ -6,7 +6,7 @@
 #include <array>
 #include <string>
 
-static constexpr int MAX_GAME_MOVES = 1024;
+constexpr int MAX_GAME_MOVES = 1024;
 
 struct Board {
     std::array<int, BoardSize> squares{};

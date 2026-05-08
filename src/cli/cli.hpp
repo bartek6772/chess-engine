@@ -1,15 +1,16 @@
 #pragma once
 #include "board.hpp"
 #include "searcher.hpp"
-#include <atomic>
 #include <memory>
+#include <string>
 #include <thread>
+
+const std::string engine_version = "v1.3";
 
 struct CLI {
     Board board;
     std::unique_ptr<Searcher> current_search = nullptr;
-    std::atomic<bool> is_searching = false;
-    // std::thread search_thread;
+    std::thread search_thread;
 
     void uci(std::stringstream& stream);
     void readyok(std::stringstream& stream);

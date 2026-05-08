@@ -1,9 +1,9 @@
 #include "cli.hpp"
 #include "move_generator.hpp"
 #include <algorithm>
-#include <cstddef>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <thread>
 
 using namespace std;
@@ -38,7 +38,7 @@ Move parseMove(Board& board, const string& move_str) {
 }
 
 void CLI::uci(stringstream& stream) {
-    cout << "id name MyChessEngine v0.1" << endl;
+    cout << "id name MyChessEngine " << engine_version << endl;
     cout << "id author Bartłomiej Borowski" << endl;
     cout << "uciok" << endl;
 }
@@ -56,16 +56,13 @@ void CLI::position(stringstream& stream) {
 
     if (token == "startpos") {
         board.loadStartPos();
+        stream >> token;
     } else if (token == "fen") {
         string fen;
         while (stream >> token && token != "moves") {
             fen += (fen.empty() ? "" : " ") + token;
         }
         board.loadFEN(fen);
-    }
-
-    if (token != "moves") {
-        stream >> token;
     }
 
     if (token == "moves") {
@@ -83,7 +80,7 @@ void CLI::position(stringstream& stream) {
 
 void CLI::go(stringstream& stream) {
 
-    if (is_searching) return;
+    stop(stream);
 
     constexpr int time_buffer = 50;
     constexpr int minimal_time = 20;
@@ -126,25 +123,22 @@ void CLI::go(stringstream& stream) {
 
     current_search = make_unique<Searcher>(board);
     current_search->enableInfo();
-    is_searching = true;
 
-    thread search([this, depth, time]() {
+    search_thread = thread([this, depth, time]() {
         auto result = current_search->findBestMove(depth, time);
         if (!result.pv.empty()) {
             cout << "bestmove " << result.best_move.toString() << endl;
         }
-        is_searching = false;
     });
-    search.detach();
 }
 
 void CLI::stop(stringstream& stream) {
-    if (is_searching && current_search) {
+    if (current_search) {
         current_search->stop();
+    }
 
-        // if (search_thread.joinable()) {
-        //     search_thread.join();
-        // }
+    if (search_thread.joinable()) {
+        search_thread.join();
     }
 }
 

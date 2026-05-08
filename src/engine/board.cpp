@@ -245,7 +245,7 @@ void Board::makeMove(const Move& move) {
                 castling_rights &= ~(black_queen_castle | black_king_castle);
             }
 
-            int rank = move.to / BoardLength;
+            int rank = rankOf(move.to);
             int rook_start = rank * BoardLength + rook_start_file;
             int rook_target = rank * BoardLength + rook_target_file;
             movePiece(rook_start, rook_target);
@@ -283,16 +283,16 @@ void Board::makeMove(const Move& move) {
     }
 
     if (new_state.enpassant_square != -1) {
-        hash ^= hashes.enpassant_file[new_state.enpassant_square % BoardLength];
+        hash ^= hashes.enpassant_file[fileOf(new_state.enpassant_square)];
     }
 
     if (enpassant_square != -1) {
-        hash ^= hashes.enpassant_file[enpassant_square % BoardLength];
+        hash ^= hashes.enpassant_file[fileOf(enpassant_square)];
     }
 
     hash ^= hashes.side_to_move;
 
-    if (piece == Pieces::Pawn || capture != Pieces::None) {
+    if (Pieces::pieceType(piece) == Pieces::Pawn || capture != Pieces::None) {
         halfmove_clock = 0;
     } else {
         halfmove_clock++;
@@ -328,7 +328,7 @@ void Board::unmakeMove() {
                 rook_target_file = 3;
             }
 
-            int rank = move.to / BoardLength;
+            int rank = rankOf(move.to);
             int rook_start = rank * BoardLength + rook_start_file;
             int rook_target = rank * BoardLength + rook_target_file;
             movePiece(rook_target, rook_start);
