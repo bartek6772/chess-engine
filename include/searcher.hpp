@@ -49,11 +49,11 @@ private:
     std::atomic<bool> stop_search = false;
     bool info = false;
 
-    std::array<std::array<Move, 2>, MaxSearchDepth> killer_moves{};
+    std::array<std::array<Move, 2>, MaxSearchDepth + 1> killer_moves{};
     std::chrono::time_point<std::chrono::steady_clock> start_point;
     int time_limit = 0;
 
-    int quiescence(int alpha, int beta);
+    int quiescence(int alpha, int beta, int ply);
     int negamax(int depth, int ply, int alpha, int beta);
     void scoreMoves(MoveList& moves, Move pv_move, int ply);
 

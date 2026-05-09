@@ -96,3 +96,16 @@ New features:
 Bugfixes:
 
 - Not storing interrupted search results in transposition table
+
+---
+
+### v3.1
+
+Scoring moves increased NPS significantly, but performance boost was consumed by improved quality of the q-search, so NPS are at simillar level than before, but engine strength has increased significantly.
+
+Reached 6 229 278 NPS after scoring moves.
+
+New features:
+
+- scoring moves in quienscence search
+- handling checks at low depths in quienscence search

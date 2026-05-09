@@ -40,7 +40,7 @@ bool Searcher::shouldStop() {
     return searchTime() >= time_limit;
 }
 
-int Searcher::quiescence(int alpha, int beta) {
+int Searcher::quiescence(int alpha, int beta, int ply) {
     stats.nodes++;
     stats.quiescence_nodes++;
 
@@ -52,17 +52,44 @@ int Searcher::quiescence(int alpha, int beta) {
         return 0;
     }
 
-    int stand_pat = Evaluation::evaluateRelative(board);
-    if (stand_pat >= beta) return beta;
-    if (alpha < stand_pat) alpha = stand_pat;
+    int color = board.white_to_move ? Pieces::White : Pieces::Black;
+    bool is_check = MoveGenerator::isCheck(board, color);
 
-    MoveList captures = MoveGenerator::generateCaptures(board);
+    if (!is_check) {
+        int stand_pat = Evaluation::evaluateRelative(board);
+        if (stand_pat >= beta) return beta;
+        if (alpha < stand_pat) alpha = stand_pat;
+    }
 
-    for (const Move& move : captures) {
+    MoveList captures;
+
+    if (ply < 2 && is_check) {
+        captures = MoveGenerator::generateLegalMoves(board);
+    } else {
+        captures = MoveGenerator::generateCaptures(board);
+    }
+
+    // MoveList captures = MoveGenerator::generateCaptures(board);
+    scoreMoves(captures, Move(), MaxSearchDepth);
+
+    if (is_check && captures.size() == 0) {
+        return -MATE + ply;
+    }
+
+    for (int i = 0; i < captures.size(); i++) {
         if (stop_search) return 0;
 
+        int best_index = i;
+        for (int j = i + 1; j < captures.size(); j++) {
+            if (captures[j].score > captures[best_index].score) {
+                best_index = j;
+            }
+        }
+        std::swap(captures[best_index], captures[i]);
+        Move& move = captures[i];
+
         board.makeMove(move);
-        int score = -quiescence(-beta, -alpha);
+        int score = -quiescence(-beta, -alpha, ply + 1);
         board.unmakeMove();
 
         if (score >= beta) return beta;
@@ -108,7 +135,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
     }
 
     if (ply == depth) {
-        return quiescence(alpha, beta);
+        return quiescence(alpha, beta, 0);
     }
 
     MoveList moves = MoveGenerator::generateLegalMoves(board);
