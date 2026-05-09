@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
-from pathlib import Path
 import subprocess
 
 def main():
@@ -12,7 +10,6 @@ def main():
     parser.add_argument("engine2", help="Name of the second engine")
     parser.add_argument("-g", "--games", type=int, default=20, help="Number of games")
     parser.add_argument("-t", "--time", type=str, default="5+0.1", help="Time control")
-    parser.add_argument("-u", "--unofficial", action="store_true", help="Save results in temporary file")
     parser.add_argument("-r", "--regression", action="store_true", help="Do regression test")
 
     args = parser.parse_args()
@@ -22,18 +19,10 @@ def main():
     games = args.games
     time = args.time
 
-    script_dir = Path(__file__).parent.absolute()
-    results_dir = script_dir / "results"
-
-    results_dir.mkdir(parents=True, exist_ok=True)
-    results_file = results_dir / f"{engine1}_vs_{engine2}.pgn"
-
     hypothesis = (0, 40)
     if args.regression:
         hypothesis = (-40, 0)
 
-    if args.unofficial:
-        results_file = results_dir / "tmp.pgn"
 
     subprocess.run([
         "./tools/fastchess",
@@ -45,25 +34,7 @@ def main():
         "-each", f"tc={time}",
         "-rounds", str(games), "-repeat",
         "-sprt", f"elo0={hypothesis[0]}", f"elo1={hypothesis[1]}", "alpha=0.1", "beta=0.1",
-        "-pgnout", f"file={results_file}"
     ])
-
-    if args.unofficial:
-        return
-    
-    # files = [str(p) for p in results_dir.glob("*.pgn") if p.name != "tmp.pgn"]
-    # leaderboard = results_dir / "leaderboard.txt"
-
-    # subprocess.run([
-    #     "./tools/ordo",
-    #     "-a", "0", "-A", "v1_base", "-Q",
-    #     "-o", str(leaderboard),
-    #     "--aliases=aliases.txt",
-    #     "--groups=results/groups.txt",
-    #     "--"
-    # ] + files)
-    
-    # print("\n".join(leaderboard.read_text().splitlines()[:20]))
 
 if __name__ == "__main__":
     main()

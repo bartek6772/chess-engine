@@ -288,6 +288,23 @@ namespace {
         }
     }
 
+    auto filterLegalMoves(Board& board, const MoveList& moves) -> MoveList {
+        int color = board.white_to_move ? Pieces::White : Pieces::Black;
+        MoveList legal_moves;
+
+        for (const Move& move : moves) {
+            board.makeMove(move);
+
+            if (!isCheck(board, color)) {
+                legal_moves.push(move);
+            }
+
+            board.unmakeMove();
+        }
+
+        return legal_moves;
+    }
+
 } // namespace
 
 bool isCheck(const Board& board, int color) {
@@ -310,27 +327,12 @@ auto generateMoves(const Board& board) -> MoveList {
 }
 
 auto generateLegalMoves(Board& board) -> MoveList {
-
-    int color = board.white_to_move ? Pieces::White : Pieces::Black;
-
-    MoveList legal_moves;
     MoveList moves = generateMoves(board);
-
-    for (const Move& move : moves) {
-        board.makeMove(move);
-
-        if (!isCheck(board, color)) {
-            legal_moves.push(move);
-        }
-
-        board.unmakeMove();
-    }
-
-    return legal_moves;
+    return filterLegalMoves(board, moves);
 }
 
 auto generateCaptures(Board& board) -> MoveList {
-    MoveList moves = generateLegalMoves(board);
+    MoveList moves = generateMoves(board);
     MoveList captures;
 
     for (const Move& move : moves) {
@@ -339,7 +341,7 @@ auto generateCaptures(Board& board) -> MoveList {
         }
     }
 
-    return captures;
+    return filterLegalMoves(board, captures);
 }
 
 } // namespace MoveGenerator
