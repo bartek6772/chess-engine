@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+from pathlib import Path
 import subprocess
 
 def main():
@@ -11,6 +12,8 @@ def main():
     parser.add_argument("-g", "--games", type=int, default=20, help="Number of games")
     parser.add_argument("-t", "--time", type=str, default="5+0.1", help="Time control")
     parser.add_argument("-r", "--regression", action="store_true", help="Do regression test")
+    parser.add_argument("-f", "--fixed", action="store_true", help="Play all games, use to tell the elo difference")
+    parser.add_argument("-s", "--save", action="store_true", help="Save results of this game")
 
     args = parser.parse_args()
 
@@ -19,12 +22,16 @@ def main():
     games = args.games
     time = args.time
 
+    script_dir = Path(__file__).parent.absolute()
+    results_dir = script_dir / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    results_file = results_dir / f"{engine1}_vs_{engine2}.pgn"
+
     hypothesis = (0, 40)
     if args.regression:
         hypothesis = (-40, 0)
 
-
-    subprocess.run([
+    command = [
         "./tools/fastchess",
         "-engine", f"cmd=./engines/{engine1}", f"name={engine1}",
         "-engine", f"cmd=./engines/{engine2}", f"name={engine2}",
@@ -33,8 +40,15 @@ def main():
         "-recover",
         "-each", f"tc={time}",
         "-rounds", str(games), "-repeat",
-        "-sprt", f"elo0={hypothesis[0]}", f"elo1={hypothesis[1]}", "alpha=0.1", "beta=0.1",
-    ])
+    ]
+
+    if not args.fixed:
+        command += ["-sprt", f"elo0={hypothesis[0]}", f"elo1={hypothesis[1]}", "alpha=0.1", "beta=0.1"]
+
+    if args.save:
+        command += ["-pgnout", f"file={results_file}"]
+
+    subprocess.run(command)
 
 if __name__ == "__main__":
     main()

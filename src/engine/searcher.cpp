@@ -166,6 +166,10 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
         }
     }
 
+    if (stop_search) {
+        return 0; // prevents overwriting good TT entry
+    }
+
     NodeFlag flag = EXACT;
     if (best_eval <= alpha_original) flag = UPPER_BOUND;
     else if (best_eval >= beta) flag = LOWER_BOUND;
@@ -214,13 +218,11 @@ void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
 }
 
 SearchResult Searcher::findBestMove(int depth, int time) {
-
+    start_point = std::chrono::steady_clock::now();
     std::vector<Move> best_pv;
     stats = SearchStats();
-    int best_score = 0;
     stop_search = false;
     time_limit = time;
-    start_point = std::chrono::steady_clock::now();
 
     MoveList initial_moves = MoveGenerator::generateLegalMoves(board);
     if (initial_moves.size() > 0) {
@@ -233,6 +235,7 @@ SearchResult Searcher::findBestMove(int depth, int time) {
         best_pv.push_back(best_guess);
     }
 
+    int best_score = 0;
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
         std::vector<Move> pv;
         int score = negamax(current_depth, 0, -INF, INF, pv);
@@ -246,27 +249,14 @@ SearchResult Searcher::findBestMove(int depth, int time) {
         stats.depth = current_depth;
 
         long used = searchTime();
+        reportInfo(depth, score, used);
+
         if (time_limit - used <= used * 4) {
             break;
-        }
-
-        if (info) {
-            unsigned long long nps = stats.nodes;
-            if (used != 0) {
-                nps = (stats.nodes * 1000) / used;
-            }
-            // clang-format off
-            std::cout << "info depth " << current_depth 
-                << " time " << used 
-                << " score cp " << score
-                << " nodes " << stats.nodes
-                << " nps " << nps << std::endl;
-            // clang-format on
         }
     }
 
     stats.time_ms = searchTime();
-
     if (stats.time_ms > 0) {
         unsigned long long nps = (stats.nodes * 1000) / stats.time_ms;
         stats.nodes_per_second = nps;
@@ -288,4 +278,21 @@ void Searcher::stop() {
 
 void Searcher::enableInfo() {
     info = true;
+}
+
+void Searcher::reportInfo(int depth, int score, long time) {
+    if (!info) return;
+
+    unsigned long long nps = stats.nodes;
+    if (time != 0) {
+        nps = (stats.nodes * 1000) / time;
+    }
+
+    // clang-format off
+    std::cout << "info depth " << depth 
+    << " time " << time 
+    << " score cp " << score
+    << " nodes " << stats.nodes
+    << " nps " << nps << std::endl;
+    // clang-format on
 }

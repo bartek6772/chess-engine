@@ -19,6 +19,7 @@ class TranspositionTable {
 private:
     std::vector<TTEntry> table;
     int size;
+    int used_entries;
 
     inline int indexFrom(unsigned long long hash) const {
         return static_cast<int>(hash & (size - 1));
@@ -26,7 +27,6 @@ private:
 
 public:
     TranspositionTable(int size_mb) {
-
         int entries_limit = (size_mb * 1024 * 1024) / sizeof(TTEntry);
 
         int entries_pow_2 = 1;
@@ -36,6 +36,8 @@ public:
 
         table.resize(entries_pow_2);
         size = entries_pow_2;
+
+        used_entries = 0;
     }
 
     const TTEntry* get(unsigned long long hash) const {
@@ -47,6 +49,20 @@ public:
     }
 
     void store(const TTEntry& entry) {
-        table[indexFrom(entry.hash)] = entry;
+        int index = indexFrom(entry.hash);
+        if (table[index].hash == 0) {
+            used_entries++;
+        }
+
+        table[index] = entry;
     };
+
+    void clear() {
+        table.clear();
+        used_entries = 0;
+    }
+
+    int fillRate() const {
+        return used_entries * 100 / size;
+    }
 };

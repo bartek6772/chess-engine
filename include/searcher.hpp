@@ -33,6 +33,14 @@ public:
     void stop();
     void enableInfo();
 
+    static void clearTable() {
+        table.clear();
+    }
+
+    static int tableFillRate() {
+        return table.fillRate();
+    }
+
 private:
     Board board;
     SearchStats stats;
@@ -49,6 +57,7 @@ private:
 
     long searchTime();
     bool shouldStop();
+    void reportInfo(int depth, int score, long time);
 
     static inline TranspositionTable table{ 100 };
 };

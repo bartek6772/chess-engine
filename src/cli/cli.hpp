@@ -19,4 +19,6 @@ struct CLI {
     void go(std::stringstream& stream);
     void stop(std::stringstream& stream);
     void quit(std::stringstream& stream);
+
+    void bench(std::stringstream& stream);
 };

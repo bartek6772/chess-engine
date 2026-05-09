@@ -25,6 +25,7 @@ auto main() -> int {
         else if (command == "stop") cli.stop(stream);
         else if (command == "quit" || command == "exit") cli.quit(stream);
         else if (command == "d") printBoard(cli.board);
+        else if (command == "bench") cli.bench(stream);
     }
     return 0;
 }

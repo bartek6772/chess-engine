@@ -1,10 +1,15 @@
 #include "cli.hpp"
+#include "constants.hpp"
 #include "move_generator.hpp"
+#include "searcher.hpp"
+#include "utils.hpp"
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <thread>
+#include <vector>
 
 using namespace std;
 
@@ -87,7 +92,6 @@ void CLI::go(stringstream& stream) {
     constexpr double safety_margin = 0.95;
 
     constexpr int one_hour = 60 * 60 * 1000;
-    constexpr int max_depth = 32;
 
     int depth = 0;
     int move_time = 0;
@@ -119,7 +123,7 @@ void CLI::go(stringstream& stream) {
         time = one_hour;
     }
 
-    if (depth == 0) depth = max_depth;
+    if (depth == 0) depth = MaxSearchDepth;
 
     current_search = make_unique<Searcher>(board);
     current_search->enableInfo();
@@ -144,4 +148,65 @@ void CLI::stop(stringstream& stream) {
 
 void CLI::quit(stringstream& stream) {
     exit(0);
+}
+
+void CLI::bench(stringstream& stream) {
+    static const vector<string> positions = {
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+        "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
+        "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
+        "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
+        "8/k7/3p4/p2P1p2/P2P1P2/8/8/K7 w - - 0 1",
+    };
+
+    constexpr int default_depth = 8;
+    constexpr int time = 60 * 1000;
+    int depth = default_depth;
+    stream >> depth;
+
+    cout << "Running benchmark - " << positions.size() << " positions, depth " << depth << "\n\n";
+    Board bench_board;
+
+    unsigned long long nodes_total = 0;
+    long time_total = 0;
+
+    for (const string& fen : positions) {
+        cout << "Position: " << fen << endl;
+
+        bench_board.loadFEN(fen);
+
+        Searcher search(bench_board);
+        SearchResult results = search.findBestMove(depth, time);
+
+        if (results.stats.time_ms > 0) {
+            nodes_total += results.stats.nodes;
+            time_total += results.stats.time_ms;
+        }
+
+        cout << "Depth: " << depth << ", Nodes: " << results.stats.nodes
+             << ", Time: " << results.stats.time_ms << ", NPS: " << results.stats.nodes_per_second
+             << ", TT usage: " << Searcher::tableFillRate() << endl;
+        cout << endl;
+
+        Searcher::clearTable();
+    }
+
+    unsigned long long nps = nodes_total * 1000 / time_total;
+
+    constexpr int label_width = 25;
+    constexpr int value_width = 14;
+
+    cout << setfill('=') << setw(label_width + value_width + 1) << "" << endl;
+    cout << setfill(' ');
+
+    cout << left << setw(label_width) << "Total nodes searched" << ":" << right << setw(value_width)
+         << readableNumber(nodes_total) << endl;
+    cout << left << setw(label_width) << "Total time" << ":" << right << setw(value_width)
+         << readableNumber(time_total) << endl;
+    cout << left << setw(label_width) << "Nodes per second" << ":" << right << setw(value_width)
+         << readableNumber(nps) << endl;
+
+    cout << setfill('=') << setw(label_width + value_width + 1) << "" << endl;
+    cout << setfill(' ');
 }

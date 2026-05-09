@@ -3,8 +3,10 @@
 #include "constants.hpp"
 #include "move_list.hpp"
 #include "pieces.hpp"
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <string>
 
 inline void printBitboard(unsigned long long moves) {
     for (int row = BoardLength - 1; row >= 0; row--) {
@@ -41,4 +43,25 @@ inline void printBoard(const Board& board) {
         std::cout << std::endl;
     }
     std::cout << std::endl;
+}
+
+inline std::string readableNumber(unsigned long long number) {
+    std::string result;
+
+    int counter = 0;
+    while (number > 0) {
+        int digit = number % 10;
+        number /= 10;
+
+        if (counter >= 3) {
+            counter = 0;
+            result += ",";
+        }
+
+        result += ('0' + digit);
+        counter++;
+    }
+
+    std::reverse(result.begin(), result.end());
+    return result;
 }
