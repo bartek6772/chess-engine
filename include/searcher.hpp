@@ -1,11 +1,13 @@
 #pragma once
 
 #include "board.hpp"
+#include "constants.hpp"
 #include "move_list.hpp"
 #include "transposition_table.hpp"
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstring>
 #include <vector>
 
 struct SearchStats {
@@ -45,14 +47,14 @@ private:
     Board board;
     SearchStats stats;
     std::atomic<bool> stop_search = false;
-    bool info;
+    bool info = false;
 
-    std::array<std::array<Move, 2>, 64> killer_moves{};
+    std::array<std::array<Move, 2>, MaxSearchDepth> killer_moves{};
     std::chrono::time_point<std::chrono::steady_clock> start_point;
-    int time_limit;
+    int time_limit = 0;
 
     int quiescence(int alpha, int beta);
-    int negamax(int depth, int ply, int alpha, int beta, std::vector<Move>& pv);
+    int negamax(int depth, int ply, int alpha, int beta);
     void scoreMoves(MoveList& moves, Move pv_move, int ply);
 
     long searchTime();
@@ -60,4 +62,23 @@ private:
     void reportInfo(int depth, int score, long time);
 
     static inline TranspositionTable table{ 100 };
+
+    struct PVLine {
+        int count = 0;
+        std::array<Move, MaxSearchDepth + 1> moves;
+
+        void push(const Move& move) {
+            moves[count++] = move;
+        }
+        void clear() {
+            count = 0;
+        }
+
+        void insert(const PVLine& other) {
+            std::memcpy(&moves[1], other.moves.data(), other.count * sizeof(Move));
+            count = other.count + 1;
+        }
+    };
+
+    std::array<PVLine, MaxSearchDepth + 1> pv_table;
 };

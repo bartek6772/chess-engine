@@ -1,5 +1,6 @@
 #include "searcher.hpp"
 #include "board.hpp"
+#include "constants.hpp"
 #include "evaluation.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
@@ -71,7 +72,7 @@ int Searcher::quiescence(int alpha, int beta) {
     return alpha;
 }
 
-int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>& pv) {
+int Searcher::negamax(int depth, int ply, int alpha, int beta) {
     stats.nodes++;
 
     if (stats.nodes % STOP_INTERVAL == 0 && shouldStop()) {
@@ -86,6 +87,8 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
         return 0;
     }
 
+    pv_table[ply].clear();
+
     int remaining_depth = depth - ply;
     Move tt_move = Move();
     const TTEntry* entry = table.get(board.hash);
@@ -95,8 +98,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
             int score = scoreFromTT(entry->score, ply);
 
             if (entry->flag == EXACT) {
-                pv.clear();
-                pv.push_back(entry->best_move);
+                pv_table[ply].push(entry->best_move);
                 return score;
             } else if (entry->flag == LOWER_BOUND) alpha = std::max(alpha, score);
             else if (entry->flag == UPPER_BOUND) beta = std::min(beta, score);
@@ -106,7 +108,6 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
     }
 
     if (ply == depth) {
-        pv.clear();
         return quiescence(alpha, beta);
     }
 
@@ -114,7 +115,6 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
     scoreMoves(moves, tt_move, ply);
 
     if (moves.size() == 0) {
-        pv.clear();
         int color = board.white_to_move ? Pieces::White : Pieces::Black;
         if (MoveGenerator::isCheck(board, color)) {
             return -MATE + ply;
@@ -122,8 +122,6 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
         return 0;
     }
 
-    std::vector<Move> child_pv;
-    child_pv.reserve(depth - ply);
     int best_eval = -INF;
     int alpha_original = alpha;
 
@@ -140,7 +138,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
         Move& move = moves[i];
 
         board.makeMove(move);
-        int eval = -negamax(depth, ply + 1, -beta, -alpha, child_pv);
+        int eval = -negamax(depth, ply + 1, -beta, -alpha);
         board.unmakeMove();
 
         if (eval > best_eval) {
@@ -149,9 +147,9 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
             if (eval > alpha) {
                 alpha = eval;
 
-                pv.clear();
-                pv.push_back(move);
-                pv.insert(pv.end(), child_pv.begin(), child_pv.end());
+                pv_table[ply].clear();
+                pv_table[ply].push(move);
+                pv_table[ply].insert(pv_table[ply + 1]);
             }
         }
 
@@ -179,7 +177,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta, std::vector<Move>
         static_cast<int16_t>(remaining_depth),
         static_cast<int16_t>(scoreToTT(best_eval, ply)),
         flag,
-        (pv.empty() ? Move() : pv[0]),
+        (pv_table[ply].count == 0 ? Move() : pv_table[ply].moves[0]),
     });
 
     return best_eval;
@@ -219,37 +217,39 @@ void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
 
 SearchResult Searcher::findBestMove(int depth, int time) {
     start_point = std::chrono::steady_clock::now();
-    std::vector<Move> best_pv;
     stats = SearchStats();
     stop_search = false;
     time_limit = time;
+
+    PVLine best_pv;
 
     MoveList initial_moves = MoveGenerator::generateLegalMoves(board);
     if (initial_moves.size() > 0) {
         scoreMoves(initial_moves, Move(), 0);
 
-        Move best_guess = initial_moves[0];
-        for (const Move& move : initial_moves) {
-            if (move.score > best_guess.score) best_guess = move;
+        int best_guess = 0;
+        for (int i = 0; i < initial_moves.size(); i++) {
+            if (initial_moves[i].score > initial_moves[best_guess].score) {
+                best_guess = i;
+            }
         }
-        best_pv.push_back(best_guess);
+        std::swap(initial_moves[best_guess], initial_moves[0]);
     }
 
     int best_score = 0;
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
-        std::vector<Move> pv;
-        int score = negamax(current_depth, 0, -INF, INF, pv);
+        int score = negamax(current_depth, 0, -INF, INF);
 
         if (stop_search) {
             break;
         }
 
-        best_pv = pv;
+        best_pv = pv_table[0];
         best_score = score;
         stats.depth = current_depth;
 
         long used = searchTime();
-        reportInfo(depth, score, used);
+        reportInfo(current_depth, score, used);
 
         if (time_limit - used <= used * 4) {
             break;
@@ -264,9 +264,11 @@ SearchResult Searcher::findBestMove(int depth, int time) {
     }
     int absolute_score = board.white_to_move ? best_score : -best_score;
 
+    std::vector<Move> pv(best_pv.moves.begin(), best_pv.moves.begin() + best_pv.count);
+
     return {
-        .best_move = best_pv.empty() ? Move() : best_pv[0],
-        .pv = best_pv,
+        .best_move = pv.empty() ? initial_moves[0] : best_pv.moves[0],
+        .pv = pv,
         .stats = stats,
         .score = absolute_score,
     };
