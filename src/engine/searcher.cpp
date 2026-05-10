@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <chrono>
 #include <iostream>
+#include <ostream>
 #include <utility>
 #include <vector>
 
@@ -41,8 +42,9 @@ bool Searcher::shouldStop() {
 }
 
 int Searcher::quiescence(int alpha, int beta, int ply) {
-    stats.nodes++;
+    // stats.nodes++;
     stats.quiescence_nodes++;
+    stats.quienscence_depth = std::max(stats.quienscence_depth, ply);
 
     if (stats.nodes % STOP_INTERVAL == 0 && shouldStop()) {
         stop_search = true;
@@ -61,39 +63,44 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
         if (alpha < stand_pat) alpha = stand_pat;
     }
 
-    MoveList captures;
+    MoveList moves;
 
     if (ply < 2 && is_check) {
-        captures = MoveGenerator::generateLegalMoves(board);
+        moves = MoveGenerator::generateMoves(board);
     } else {
-        captures = MoveGenerator::generateCaptures(board);
+        moves = MoveGenerator::generateCaptures(board);
     }
 
-    // MoveList captures = MoveGenerator::generateCaptures(board);
-    scoreMoves(captures, Move(), MaxSearchDepth);
+    scoreMoves(moves, Move(), MaxSearchDepth);
+    bool has_legal_move = false;
 
-    if (is_check && captures.size() == 0) {
-        return -MATE + ply;
-    }
-
-    for (int i = 0; i < captures.size(); i++) {
+    for (int i = 0; i < moves.size(); i++) {
         if (stop_search) return 0;
 
         int best_index = i;
-        for (int j = i + 1; j < captures.size(); j++) {
-            if (captures[j].score > captures[best_index].score) {
+        for (int j = i + 1; j < moves.size(); j++) {
+            if (moves[j].score > moves[best_index].score) {
                 best_index = j;
             }
         }
-        std::swap(captures[best_index], captures[i]);
-        Move& move = captures[i];
+        std::swap(moves[best_index], moves[i]);
+        Move& move = moves[i];
 
         board.makeMove(move);
+        if (MoveGenerator::isCheck(board, color)) {
+            board.unmakeMove();
+            continue;
+        }
+        has_legal_move = true;
         int score = -quiescence(-beta, -alpha, ply + 1);
         board.unmakeMove();
 
         if (score >= beta) return beta;
         if (score > alpha) alpha = score;
+    }
+
+    if (is_check && !has_legal_move) {
+        return -MATE + ply;
     }
 
     return alpha;
@@ -118,17 +125,22 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 
     int remaining_depth = depth - ply;
     Move tt_move = Move();
+
     const TTEntry* entry = table.get(board.hash);
     if (entry) {
         tt_move = entry->best_move;
+
         if (entry->depth >= remaining_depth) {
             int score = scoreFromTT(entry->score, ply);
 
             if (entry->flag == EXACT) {
                 pv_table[ply].push(entry->best_move);
                 return score;
-            } else if (entry->flag == LOWER_BOUND) alpha = std::max(alpha, score);
-            else if (entry->flag == UPPER_BOUND) beta = std::min(beta, score);
+            } else if (entry->flag == LOWER_BOUND) {
+                alpha = std::max(alpha, score);
+            } else if (entry->flag == UPPER_BOUND) {
+                beta = std::min(beta, score);
+            }
 
             if (alpha >= beta) return score;
         }
@@ -138,16 +150,9 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
         return quiescence(alpha, beta, 0);
     }
 
-    MoveList moves = MoveGenerator::generateLegalMoves(board);
+    MoveList moves = MoveGenerator::generateMoves(board);
     scoreMoves(moves, tt_move, ply);
-
-    if (moves.size() == 0) {
-        int color = board.white_to_move ? Pieces::White : Pieces::Black;
-        if (MoveGenerator::isCheck(board, color)) {
-            return -MATE + ply;
-        }
-        return 0;
-    }
+    int color = board.white_to_move ? Pieces::White : Pieces::Black;
 
     int best_eval = -INF;
     int alpha_original = alpha;
@@ -165,6 +170,10 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
         Move& move = moves[i];
 
         board.makeMove(move);
+        if (MoveGenerator::isCheck(board, color)) {
+            board.unmakeMove();
+            continue;
+        }
         int eval = -negamax(depth, ply + 1, -beta, -alpha);
         board.unmakeMove();
 
@@ -193,6 +202,13 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 
     if (stop_search) {
         return 0; // prevents overwriting good TT entry
+    }
+
+    if (best_eval == -INF) {
+        if (MoveGenerator::isCheck(board, color)) {
+            return -MATE + ply;
+        }
+        return 0;
     }
 
     NodeFlag flag = EXACT;
@@ -260,12 +276,17 @@ SearchResult Searcher::findBestMove(int depth, int time) {
                 best_guess = i;
             }
         }
-        std::swap(initial_moves[best_guess], initial_moves[0]);
+        best_pv.push(initial_moves[best_guess]);
     }
 
     int best_score = 0;
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
+
+        uint64_t nodes_before = stats.quiescence_nodes;
+
         int score = negamax(current_depth, 0, -INF, INF);
+
+        stats.nodes += stats.quiescence_nodes - nodes_before;
 
         if (stop_search) {
             break;
@@ -318,10 +339,13 @@ void Searcher::reportInfo(int depth, int score, long time) {
     }
 
     // clang-format off
-    std::cout << "info depth " << depth 
-    << " time " << time 
+    std::cout << "info"
+    << " depth " << depth 
+    << " seldepth " << stats.quienscence_depth 
+    << " time " << time
     << " score cp " << score
     << " nodes " << stats.nodes
-    << " nps " << nps << std::endl;
+    << " nps " << nps
+    << " hashfull " << table.fillRate()<< std::endl;
     // clang-format on
 }

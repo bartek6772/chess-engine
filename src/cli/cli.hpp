@@ -5,7 +5,7 @@
 #include <string>
 #include <thread>
 
-const std::string engine_version = "v1.3";
+const std::string engine_version = "v4";
 
 struct CLI {
     Board board;

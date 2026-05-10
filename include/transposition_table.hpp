@@ -8,9 +8,9 @@
 enum NodeFlag : uint8_t { EXACT, LOWER_BOUND, UPPER_BOUND };
 
 struct TTEntry {
-    uint64_t hash;
-    int16_t depth;
-    int16_t score;
+    uint64_t hash = 0;
+    int16_t depth = 0;
+    int16_t score = 0;
     NodeFlag flag;
     Move best_move;
 };
@@ -58,7 +58,7 @@ public:
     };
 
     void clear() {
-        table.clear();
+        table.assign(size, {});
         used_entries = 0;
     }
 
