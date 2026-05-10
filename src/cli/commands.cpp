@@ -87,11 +87,9 @@ void CLI::go(stringstream& stream) {
 
     stop(stream);
 
-    constexpr int time_buffer = 50;
-    constexpr int minimal_time = 20;
-    constexpr double safety_margin = 0.95;
-
-    constexpr int one_hour = 60 * 60 * 1000;
+    constexpr int BUFFER = 50;
+    constexpr int MINIMUM = 20;
+    constexpr int ONE_HOUR = 60 * 60 * 1000;
 
     int depth = 0;
     int move_time = 0;
@@ -115,12 +113,19 @@ void CLI::go(stringstream& stream) {
     if (move_time != 0) {
         time = move_time;
     } else if (wtime != 0 || btime != 0) {
-        int remaining = board.white_to_move ? wtime : btime;
-        int inc = board.white_to_move ? winc : binc;
-        int target = (remaining / 40) + (inc * 8 / 10);
-        time = std::max(minimal_time, (int)(target * safety_margin) - time_buffer);
+        int remaining_moves = max(20, 40 - board.history_ptr);
+
+        int clock = board.white_to_move ? wtime : btime;
+        int inc = board.white_to_move ? wtime : btime;
+
+        int target = (clock + (remaining_moves - 1) * inc) / remaining_moves;
+        int hard_limit = clock / 5;
+
+        target = min(target, hard_limit) - BUFFER;
+        time = max(target, MINIMUM);
+
     } else {
-        time = one_hour;
+        time = ONE_HOUR;
     }
 
     if (depth == 0) depth = MaxSearchDepth;
