@@ -18,6 +18,7 @@ struct SearchStats {
     unsigned long long mln_nodes_per_second = 0;
     long time_ms = 0;
     int depth = 0;
+    int quienscence_depth = 0;
 };
 
 struct SearchResult {

@@ -4,3 +4,6 @@ v1.2_repetitions,v1.2
 v1.3_panic_move,v1.3
 v2_tt,v2.0,v2
 v3_captures_optimization,v3
+v3.1_better_qsearch,v3.1
+v3.2_time_managment,v3.2
+v4_pseudo_legal,v3.3

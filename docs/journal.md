@@ -99,13 +99,31 @@ Bugfixes:
 
 ---
 
-### v3.1
+### v3.1 - better q-search
 
 Scoring moves increased NPS significantly, but performance boost was consumed by improved quality of the q-search, so NPS are at simillar level than before, but engine strength has increased significantly.
 
-Reached 6 229 278 NPS after scoring moves.
+Reached 6 229 278 NPS after scoring moves, but overall the number is around the same as in previous version.
 
 New features:
 
 - scoring moves in quienscence search
 - handling checks at low depths in quienscence search
+
+---
+
+### v3.2 - time management
+
+New features:
+
+- new time managment which significantly increased time usage percent
+
+---
+
+### v4 - pseudo legal moves
+
+Nodes per second: 7,849,189
+
+New features:
+
+- pseudo legal moves in search and q-search

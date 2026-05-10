@@ -341,7 +341,11 @@ auto generateCaptures(Board& board) -> MoveList {
         }
     }
 
-    return filterLegalMoves(board, captures);
+    return captures;
+}
+
+auto generateLegalCaptures(Board& board) -> MoveList {
+    return filterLegalMoves(board, generateCaptures(board));
 }
 
 } // namespace MoveGenerator
