@@ -190,23 +190,23 @@ namespace {
 
     const std::array<const int*, MaxPiecesCount> mg_combo_pst{
         mg_pawn_table,
-        mg_rook_table,
         mg_knight_table,
         mg_bishop_table,
+        mg_rook_table,
         mg_queen_table,
         mg_king_table,
     };
 
     const std::array<const int*, MaxPiecesCount> eg_combo_pst{
         eg_pawn_table,
-        eg_rook_table,
         eg_knight_table,
         eg_bishop_table,
+        eg_rook_table,
         eg_queen_table,
         eg_king_table,
     };
 
-    const int game_phase_piece_weight[] = { 0, 0, 2, 1, 1, 4, 0 };
+    const int game_phase_piece_weight[] = { 0, 1, 1, 2, 4, 0 };
 
 } // namespace
 
@@ -236,8 +236,8 @@ int evaluate(const Board& board) {
         bitmask pieces = board.bitboards[piece];
         while (pieces) {
             int square = readBit(pieces);
-            mg_score += mg_combo_pst[piece_type - 1][square ^ flip];
-            eg_score += eg_combo_pst[piece_type - 1][square ^ flip];
+            mg_score += mg_combo_pst[piece_type][square ^ flip];
+            eg_score += eg_combo_pst[piece_type][square ^ flip];
         }
         return { mg_score, eg_score };
     };
@@ -275,7 +275,7 @@ int evaluate(const Board& board) {
 }
 
 int evaluateRelative(const Board& board) {
-    return evaluate(board) * (board.white_to_move ? 1 : -1);
+    return evaluate(board) * (board.whiteToMove() ? 1 : -1);
 }
 
 } // namespace Evaluation

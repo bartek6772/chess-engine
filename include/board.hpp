@@ -3,6 +3,7 @@
 #include "constants.hpp"
 #include "hashes.hpp"
 #include "move.hpp"
+#include "pieces.hpp"
 #include <array>
 #include <string>
 
@@ -15,8 +16,13 @@ struct Board {
     bitmask white_pieces{};
     bitmask black_pieces{};
 
-    bool white_to_move = true;
+    // bool white_to_move = true;
+    int color_to_move = Pieces::White;
     int enpassant_square = -1;
+
+    bool whiteToMove() const {
+        return color_to_move == Pieces::White;
+    }
 
     static constexpr int white_king_castle = 1;
     static constexpr int white_queen_castle = 2;
@@ -63,4 +69,5 @@ struct Board {
     int halfmove_clock = 0;
 
     bool isRepetition() const;
+    void clear();
 };

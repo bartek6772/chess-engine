@@ -21,10 +21,10 @@ inline void printBitboard(unsigned long long moves) {
 inline void printMoves(const MoveList& moves) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
-            int bit = row * BoardLength + col;
+            int square = row * BoardLength + col;
 
-            bool containing = std::ranges::find_if(moves.begin(), moves.end(), [bit](Move m) {
-                return m.to() == bit;
+            bool containing = std::ranges::find_if(moves.begin(), moves.end(), [square](Move m) {
+                return m.to() == square;
             }) != moves.end();
 
             std::cout << std::setw(2) << (containing ? "1" : "0");
@@ -36,8 +36,8 @@ inline void printMoves(const MoveList& moves) {
 inline void printBoard(const Board& board) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
-            int bit = row * BoardLength + col;
-            char symbol = Pieces::getSymbol(board.squares[bit]);
+            int square = row * BoardLength + col;
+            char symbol = Pieces::getSymbol(board.squares[square]);
             std::cout << std::setw(2) << symbol;
         }
         std::cout << std::endl;

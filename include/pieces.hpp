@@ -3,41 +3,44 @@
 #include <array>
 #include <cctype>
 #include <string>
+
 namespace Pieces {
 
-inline constexpr int None = 0;
-inline constexpr int Pawn = 1;
-inline constexpr int Rook = 2;
-inline constexpr int Knight = 3;
-inline constexpr int Bishop = 4;
-inline constexpr int Queen = 5;
-inline constexpr int King = 6;
+inline constexpr int Pawn = 0;
+inline constexpr int Knight = 1;
+inline constexpr int Bishop = 2;
+inline constexpr int Rook = 3;
+inline constexpr int Queen = 4;
+inline constexpr int King = 5;
 
 inline constexpr int White = 0;
-inline constexpr int Black = 8;
+inline constexpr int Black = 1;
 
-inline constexpr int WhitePawn = Pawn | White;
-inline constexpr int WhiteRook = Rook | White;
-inline constexpr int WhiteKnight = Knight | White;
-inline constexpr int WhiteBishop = Bishop | White;
-inline constexpr int WhiteQueen = Queen | White;
-inline constexpr int WhiteKing = King | White;
+inline constexpr auto makePiece(int type, int color) -> int {
+    return 2 * type + color;
+}
 
-inline constexpr int BlackPawn = Pawn | Black;
-inline constexpr int BlackRook = Rook | Black;
-inline constexpr int BlackKnight = Knight | Black;
-inline constexpr int BlackBishop = Bishop | Black;
-inline constexpr int BlackQueen = Queen | Black;
-inline constexpr int BlackKing = King | Black;
+inline constexpr int WhitePawn = makePiece(Pawn, White);
+inline constexpr int WhiteKnight = makePiece(Knight, White);
+inline constexpr int WhiteBishop = makePiece(Bishop, White);
+inline constexpr int WhiteRook = makePiece(Rook, White);
+inline constexpr int WhiteQueen = makePiece(Queen, White);
+inline constexpr int WhiteKing = makePiece(King, White);
 
-inline constexpr int TypeMask = 0b0111;
-inline constexpr int ColorMask = 0b1000;
+inline constexpr int BlackPawn = makePiece(Pawn, Black);
+inline constexpr int BlackKnight = makePiece(Knight, Black);
+inline constexpr int BlackBishop = makePiece(Bishop, Black);
+inline constexpr int BlackRook = makePiece(Rook, Black);
+inline constexpr int BlackQueen = makePiece(Queen, Black);
+inline constexpr int BlackKing = makePiece(King, Black);
+
+inline constexpr int None = BlackKing + 1;
 
 inline auto pieceType(int piece) -> int {
-    return piece & TypeMask;
+    return piece / 2;
 }
 inline auto pieceColor(int piece) -> int {
-    return piece & ColorMask;
+    return piece & 1;
 }
 inline auto isWhite(int piece) -> bool {
     return pieceColor(piece) == White;
@@ -45,15 +48,14 @@ inline auto isWhite(int piece) -> bool {
 inline auto isBlack(int piece) -> bool {
     return pieceColor(piece) == Black;
 }
-inline auto oppositeColor(int color) {
-    // Trick to avoid if statement
-    return Black - color;
+inline auto flipColor(int color) {
+    return color ^ 1;
 }
 
 inline auto getSymbol(int piece) -> char {
-    static std::string piece_symbols = ".PRNBQK";
+    static std::string piece_symbols = "PNBRQK.";
     char sign = piece_symbols[pieceType(piece)];
-    return pieceColor(piece) == Black ? (char)std::tolower(sign) : sign;
+    return isBlack(piece) ? (char)std::tolower(sign) : sign;
 }
 
 inline auto getPiece(char symbol) -> int {
@@ -69,7 +71,7 @@ inline auto getPiece(char symbol) -> int {
     }
 
     int color = std::islower(symbol) ? Pieces::Black : Pieces::White;
-    return type | color;
+    return makePiece(type, color);
 }
 
 // clang-format off

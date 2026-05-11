@@ -54,7 +54,7 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
         return 0;
     }
 
-    int color = board.white_to_move ? Pieces::White : Pieces::Black;
+    int color = board.color_to_move;
     bool is_check = MoveGenerator::isCheck(board, color);
 
     if (!is_check) {
@@ -152,7 +152,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 
     MoveList moves = MoveGenerator::generateMoves(board);
     scoreMoves(moves, tt_move, ply);
-    int color = board.white_to_move ? Pieces::White : Pieces::Black;
+    int color = board.color_to_move;
 
     int best_eval = -INF;
     int alpha_original = alpha;
@@ -313,7 +313,8 @@ SearchResult Searcher::findBestMove(int depth, int time) {
         stats.depth = current_depth;
 
         long used = searchTime();
-        reportInfo(current_depth, score, used);
+        int absolute_score = best_score * (board.whiteToMove() ? 1 : -1);
+        reportInfo(current_depth, absolute_score, used);
 
         if (time_limit - used <= used * 4) {
             break;
@@ -326,7 +327,7 @@ SearchResult Searcher::findBestMove(int depth, int time) {
         stats.nodes_per_second = nps;
         stats.mln_nodes_per_second = nps / 1000000;
     }
-    int absolute_score = board.white_to_move ? best_score : -best_score;
+    int absolute_score = best_score * (board.whiteToMove() ? 1 : -1);
 
     std::vector<Move> pv(best_pv.moves.begin(), best_pv.moves.begin() + best_pv.count);
 

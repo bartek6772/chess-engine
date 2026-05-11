@@ -8,16 +8,30 @@
 #include <string>
 #include <vector>
 
+namespace P = Pieces;
+
 Board::Board() {
-    castling_rights =
-        white_king_castle | white_queen_castle | black_king_castle | black_queen_castle;
+    clear();
+}
+
+void Board::clear() {
+    bitboards.fill(0);
+    squares.fill(P::None);
+    white_pieces = 0;
+    black_pieces = 0;
+    history_ptr = 0;
+    enpassant_square = -1;
+    // white_to_move = true;
+    castling_rights = 0;
+    halfmove_clock = 0;
+    hash = 0;
 }
 
 void Board::addPiece(int square, int piece) {
     squares[square] = piece;
     bitboards[piece] |= setBit(square);
 
-    if (Pieces::isWhite(piece)) {
+    if (P::isWhite(piece)) {
         white_pieces |= setBit(square);
     } else {
         black_pieces |= setBit(square);
@@ -28,10 +42,10 @@ void Board::addPiece(int square, int piece) {
 
 void Board::removePiece(int square) {
     int piece = squares[square];
-    squares[square] = Pieces::None;
+    squares[square] = P::None;
     bitboards[piece] ^= setBit(square);
 
-    if (Pieces::isWhite(piece)) {
+    if (P::isWhite(piece)) {
         white_pieces ^= setBit(square);
     } else {
         black_pieces ^= setBit(square);
@@ -44,12 +58,12 @@ void Board::removePiece(int square) {
 void Board::movePiece(int from, int to) {
     int piece = squares[from];
 
-    squares[from] = Pieces::None;
+    squares[from] = P::None;
     squares[to] = piece;
 
     bitboards[piece] ^= (setBit(from)) | (setBit(to));
 
-    if (Pieces::isWhite(piece)) {
+    if (P::isWhite(piece)) {
         white_pieces ^= (setBit(from)) | (setBit(to));
     } else {
         black_pieces ^= (setBit(from)) | (setBit(to));
@@ -63,14 +77,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
     // TODO: handle errors and invalid strings, maybe return bool as veryfication
 
-    bitboards.fill(0);
-    squares.fill(Pieces::None);
-    white_pieces = 0;
-    black_pieces = 0;
-    history_ptr = 0;
-    enpassant_square = -1;
-    white_to_move = true;
-    hash = 0;
+    clear();
 
     std::vector<std::string> parts;
     std::stringstream stream(fen);
@@ -99,7 +106,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
             } else if (std::isdigit(c) != 0) {
                 col += c - '0';
             } else {
-                int piece = Pieces::getPiece(c);
+                int piece = P::getPiece(c);
                 addPiece(makeSquare(col, row), piece);
                 col++;
             }
@@ -112,9 +119,11 @@ auto Board::loadFEN(const std::string& fen) -> bool {
         }
 
         if (parts[1] == "w") {
-            white_to_move = true;
+            // white_to_move = true;
+            color_to_move = P::White;
         } else if (parts[1] == "b") {
-            white_to_move = false;
+            // white_to_move = false;
+            color_to_move = P::Black;
         } else {
             return false;
         }
@@ -166,7 +175,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
     hash ^= hashes.castling_rights[castling_rights];
 
-    if (!white_to_move) {
+    if (!whiteToMove()) {
         hash ^= hashes.side_to_move;
     }
 
@@ -179,7 +188,6 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
 void Board::makeMove(const Move& move) {
 
-    int color = white_to_move ? Pieces::White : Pieces::Black;
     int piece = squares[move.from()];
     int capture = squares[move.to()];
 
@@ -209,20 +217,20 @@ void Board::makeMove(const Move& move) {
         case Squares::H8: castling_rights &= ~black_king_castle; break;
     }
 
-    if (capture != Pieces::None) {
+    if (capture != P::None) {
         removePiece(move.to());
     }
 
     if (move.isPromotion()) {
         removePiece(move.from());
-        if (move.type() == MoveType::PromotionBishop) {
-            addPiece(move.to(), Pieces::Bishop | color);
-        } else if (move.type() == MoveType::PromotionQueen) {
-            addPiece(move.to(), Pieces::Queen | color);
+        if (move.type() == MoveType::PromotionQueen) {
+            addPiece(move.to(), P::makePiece(P::Queen, color_to_move));
+        } else if (move.type() == MoveType::PromotionBishop) {
+            addPiece(move.to(), P::makePiece(P::Bishop, color_to_move));
         } else if (move.type() == MoveType::PromotionKnight) {
-            addPiece(move.to(), Pieces::Knight | color);
+            addPiece(move.to(), P::makePiece(P::Knight, color_to_move));
         } else if (move.type() == MoveType::PromotionRook) {
-            addPiece(move.to(), Pieces::Rook | color);
+            addPiece(move.to(), P::makePiece(P::Rook, color_to_move));
         }
         enpassant_square = -1;
     } else {
@@ -239,7 +247,7 @@ void Board::makeMove(const Move& move) {
                 rook_target_file = 3;
             }
 
-            if (white_to_move) {
+            if (whiteToMove()) {
                 castling_rights &= ~(white_queen_castle | white_king_castle);
             } else {
                 castling_rights &= ~(black_queen_castle | black_king_castle);
@@ -253,7 +261,7 @@ void Board::makeMove(const Move& move) {
 
         if (move.type() == MoveType::EnPassant) {
             int enpassant = 0;
-            if (white_to_move) {
+            if (whiteToMove()) {
                 enpassant = move.to() - BoardLength;
             } else {
                 enpassant = move.to() + BoardLength;
@@ -263,7 +271,7 @@ void Board::makeMove(const Move& move) {
         }
 
         if (move.type() == MoveType::DoublePush) {
-            if (white_to_move) {
+            if (whiteToMove()) {
                 enpassant_square = move.to() - BoardLength;
             } else {
                 enpassant_square = move.to() + BoardLength;
@@ -275,7 +283,8 @@ void Board::makeMove(const Move& move) {
         movePiece(move.from(), move.to());
     }
 
-    white_to_move = !white_to_move;
+    // white_to_move = !white_to_move;
+    color_to_move = P::flipColor(color_to_move);
 
     if (castling_rights != new_state.castling_rights) {
         hash ^= hashes.castling_rights[new_state.castling_rights];
@@ -292,7 +301,7 @@ void Board::makeMove(const Move& move) {
 
     hash ^= hashes.side_to_move;
 
-    if (Pieces::pieceType(piece) == Pieces::Pawn || capture != Pieces::None) {
+    if (P::pieceType(piece) == P::Pawn || capture != P::None) {
         halfmove_clock = 0;
     } else {
         halfmove_clock++;
@@ -304,16 +313,16 @@ void Board::unmakeMove() {
     HistoryState state = history[--history_ptr];
     Move& move = state.move;
 
-    white_to_move = !white_to_move;
+    // white_to_move = !white_to_move;
+    color_to_move = P::flipColor(color_to_move);
+
     enpassant_square = state.enpassant_square;
     castling_rights = state.castling_rights;
     halfmove_clock = state.halfmove_clock;
 
-    int color = white_to_move ? Pieces::White : Pieces::Black;
-
     if (move.isPromotion()) {
         removePiece(move.to());
-        addPiece(move.from(), Pieces::Pawn | color);
+        addPiece(move.from(), P::makePiece(P::Pawn, color_to_move));
     } else {
 
         if (move.type() == MoveType::Castling) {
@@ -336,19 +345,19 @@ void Board::unmakeMove() {
 
         if (move.type() == MoveType::EnPassant) {
             int enpassant = 0;
-            if (white_to_move) {
+            if (whiteToMove()) {
                 enpassant = move.to() - BoardLength;
             } else {
                 enpassant = move.to() + BoardLength;
             }
 
-            addPiece(enpassant, white_to_move ? Pieces::BlackPawn : Pieces::WhitePawn);
+            addPiece(enpassant, P::makePiece(P::Pawn, P::flipColor(color_to_move)));
         }
 
         movePiece(move.to(), move.from());
     }
 
-    if (state.capture != Pieces::None) {
+    if (state.capture != P::None) {
         addPiece(move.to(), state.capture);
     }
 

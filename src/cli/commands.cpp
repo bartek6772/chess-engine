@@ -53,6 +53,7 @@ void CLI::readyok(stringstream& stream) {
 }
 
 void CLI::ucinewgame(stringstream& stream) {
+    board.clear();
 }
 
 void CLI::position(stringstream& stream) {
@@ -115,8 +116,8 @@ void CLI::go(stringstream& stream) {
     } else if (wtime != 0 || btime != 0) {
         int remaining_moves = max(20, 40 - board.history_ptr);
 
-        int clock = board.white_to_move ? wtime : btime;
-        int inc = board.white_to_move ? wtime : btime;
+        int clock = board.whiteToMove() ? wtime : btime;
+        int inc = board.whiteToMove() ? wtime : btime;
 
         int target = (clock + (remaining_moves - 1) * inc) / remaining_moves;
         int hard_limit = clock / 5;
