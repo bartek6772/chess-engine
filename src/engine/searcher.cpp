@@ -229,29 +229,45 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
 
     auto isCapture = [&](Move& move) -> bool {
-        return board.squares[move.to()] != Pieces::None;
+        return board.squares[move.to()] != Pieces::None || move.type() == MoveType::EnPassant;
     };
 
-    auto mvv_lva = [&](int from, int to) -> int {
+    auto mvv_lva = [&](const Move& move) -> int {
+        int from = move.from();
+        int to = move.to();
+
         int attacker_value = Evaluation::getPieceValue(board.squares[from]);
-        int victim_value = Evaluation::getPieceValue(board.squares[to]);
+        int victim_value = 0;
+
+        if (move.type() == MoveType::EnPassant) {
+            victim_value = Evaluation::PawnValue;
+        } else {
+            victim_value = Evaluation::getPieceValue(board.squares[to]);
+        }
+
         return victim_value * 10 - attacker_value;
     };
 
-    constexpr int LAST_MOVE = 30'000;
+    constexpr int PV_MOVE = 30'000;
+    constexpr int QUEEN_PROMOTION = 29'000;
     constexpr int CAPTURE = 20'000;
+    constexpr int MINOR_PROMOTION = 15'000;
     constexpr int KILLER_1 = 10'000;
     constexpr int KILLER_2 = 9'000;
 
     for (Move& move : moves) {
         if (move == pv_move) {
-            move.score = LAST_MOVE;
+            move.score = PV_MOVE;
         } else if (isCapture(move)) {
-            move.score = CAPTURE + mvv_lva(move.from(), move.to());
+            move.score = CAPTURE + mvv_lva(move);
         } else if (move == killer_moves[ply][0]) {
             move.score = KILLER_1;
         } else if (move == killer_moves[ply][1]) {
             move.score = KILLER_2;
+        } else if (move.type() == MoveType::PromotionQueen) {
+            move.score = QUEEN_PROMOTION;
+        } else if (move.isPromotion()) {
+            move.score = MINOR_PROMOTION;
         } else {
             move.score = 0;
         }
