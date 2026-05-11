@@ -7,7 +7,6 @@
 #include "pieces.hpp"
 #include "precomputed.hpp"
 #include "utility.hpp"
-#include <bit>
 
 namespace MoveGenerator {
 namespace {
@@ -82,12 +81,6 @@ namespace {
         return false;
     }
 
-    inline int getBit(bitmask& mask) {
-        int bit = std::countr_zero(mask);
-        mask &= (mask - 1);
-        return bit;
-    }
-
     void generateKnightMoves(const Board& board, MoveList& moves, int color, bool captures) {
         bitmask pieces = board.bitboards[Pieces::Knight | color];
         bitmask friends = board.white_pieces;
@@ -98,11 +91,11 @@ namespace {
         }
 
         while (pieces) {
-            int from = getBit(pieces);
+            int from = readBit(pieces);
             bitmask mask = precomputed.knightMoves[from] & ~friends;
             if (captures) mask &= enemies;
             while (mask) {
-                int target = getBit(mask);
+                int target = readBit(mask);
                 moves.push({ from, target });
             }
         }
@@ -119,12 +112,12 @@ namespace {
         }
 
         while (pieces) {
-            int from = getBit(pieces);
+            int from = readBit(pieces);
 
             bitmask targets = getRookAttack(board, magics, from) & ~friends;
             if (captures) targets &= enemies;
             while (targets > 0) {
-                int target = getBit(targets);
+                int target = readBit(targets);
                 moves.push({ from, target });
             }
         }
@@ -141,12 +134,12 @@ namespace {
         }
 
         while (pieces) {
-            int from = getBit(pieces);
+            int from = readBit(pieces);
 
             bitmask targets = getBishopAttack(board, magics, from) & ~friends;
             if (captures) targets &= enemies;
             while (targets > 0) {
-                int target = getBit(targets);
+                int target = readBit(targets);
                 moves.push({ from, target });
             }
         }
@@ -163,7 +156,7 @@ namespace {
         }
 
         while (pieces) {
-            int from = getBit(pieces);
+            int from = readBit(pieces);
 
             bitmask targets1 = getRookAttack(board, magics, from);
             bitmask targets2 = getBishopAttack(board, magics, from);
@@ -172,7 +165,7 @@ namespace {
             if (captures) targets &= enemies;
 
             while (targets > 0) {
-                int target = getBit(targets);
+                int target = readBit(targets);
                 moves.push({ from, target });
             }
         }
@@ -205,7 +198,7 @@ namespace {
 
         auto processAttacks = [&](bitmask attacks, int offset) {
             while (attacks) {
-                int to = getBit(attacks);
+                int to = readBit(attacks);
                 int from = to - offset;
 
                 if (to == board.enpassant_square) {
@@ -266,13 +259,13 @@ namespace {
         }
 
         while (single_pushes) {
-            int target = getBit(single_pushes);
+            int target = readBit(single_pushes);
             int from = target - 8 * dir;
             movePawn(from, target);
         }
 
         while (double_pushes) {
-            int target = getBit(double_pushes);
+            int target = readBit(double_pushes);
             int from = target - 16 * dir;
             moves.push({ from, target, MoveType::DoublePush });
         }
@@ -295,7 +288,7 @@ namespace {
         if (captures) targets &= enemies;
 
         while (targets) {
-            int target = getBit(targets);
+            int target = readBit(targets);
             moves.push({ from, target });
         }
 

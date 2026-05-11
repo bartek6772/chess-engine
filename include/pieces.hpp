@@ -17,16 +17,16 @@ inline constexpr int White = 0;
 inline constexpr int Black = 8;
 
 inline constexpr int WhitePawn = Pawn | White;
+inline constexpr int WhiteRook = Rook | White;
 inline constexpr int WhiteKnight = Knight | White;
 inline constexpr int WhiteBishop = Bishop | White;
-inline constexpr int WhiteRook = Rook | White;
 inline constexpr int WhiteQueen = Queen | White;
 inline constexpr int WhiteKing = King | White;
 
 inline constexpr int BlackPawn = Pawn | Black;
+inline constexpr int BlackRook = Rook | Black;
 inline constexpr int BlackKnight = Knight | Black;
 inline constexpr int BlackBishop = Bishop | Black;
-inline constexpr int BlackRook = Rook | Black;
 inline constexpr int BlackQueen = Queen | Black;
 inline constexpr int BlackKing = King | Black;
 

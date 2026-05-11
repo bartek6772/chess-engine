@@ -29,7 +29,7 @@ TEST(Misc, ReloadingFEN) {
     Move e2e4;
     auto moves = MoveGenerator::generateLegalMoves(board);
     for (const auto& m : moves) {
-        if (m.from == 12 && m.to == 28) {
+        if (m.from() == 12 && m.to() == 28) {
             e2e4 = m;
             break;
         }
