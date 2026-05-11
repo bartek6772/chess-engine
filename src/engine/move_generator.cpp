@@ -63,17 +63,15 @@ namespace {
         bitmask rook_rays = getRookAttack(board, magics, square);
         bitmask bishop_rays = getBishopAttack(board, magics, square);
 
-        bitmask rooks_and_queens = board.bitboards[Pieces::Rook | attacker_color] |
-                                   board.bitboards[Pieces::Queen | attacker_color];
+        bitmask rooks = board.bitboards[Pieces::Rook | attacker_color];
+        bitmask bishops = board.bitboards[Pieces::Bishop | attacker_color];
+        bitmask queens = board.bitboards[Pieces::Queen | attacker_color];
 
-        bitmask bishops_and_queens = board.bitboards[Pieces::Bishop | attacker_color] |
-                                     board.bitboards[Pieces::Queen | attacker_color];
-
-        if ((rook_rays & rooks_and_queens) != 0) {
+        if ((rook_rays & (rooks | queens)) != 0) {
             return true;
         }
 
-        if ((bishop_rays & bishops_and_queens) != 0) {
+        if ((bishop_rays & (bishops | queens)) != 0) {
             return true;
         }
 
@@ -84,97 +82,113 @@ namespace {
         return false;
     }
 
-    void generateKnightMoves(const Board& board, MoveList& moves, int color) {
-        bitmask friendly_pieces =
-            (color == Pieces::White) ? board.white_pieces : board.black_pieces;
+    inline int getBit(bitmask& mask) {
+        int bit = std::countr_zero(mask);
+        mask &= (mask - 1);
+        return bit;
+    }
+
+    void generateKnightMoves(const Board& board, MoveList& moves, int color, bool captures) {
         bitmask pieces = board.bitboards[Pieces::Knight | color];
+        bitmask friends = board.white_pieces;
+        bitmask enemies = board.black_pieces;
+
+        if (color == Pieces::Black) {
+            std::swap(friends, enemies);
+        }
 
         while (pieces) {
-            int from = std::countr_zero(pieces);
-            pieces &= (pieces - 1);
-
-            bitmask mask = precomputed.knightMoves[from] & ~friendly_pieces;
-            while (mask > 0) {
-                int target = std::countr_zero(mask);
+            int from = getBit(pieces);
+            bitmask mask = precomputed.knightMoves[from] & ~friends;
+            if (captures) mask &= enemies;
+            while (mask) {
+                int target = getBit(mask);
                 moves.push({ from, target });
-                mask &= (mask - 1);
             }
         }
     }
 
-    void generateRookMoves(const Board& board, MoveList& moves, int color) {
+    void generateRookMoves(const Board& board, MoveList& moves, int color, bool captures) {
         int piece = Pieces::Rook | color;
-        bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
         bitmask pieces = board.bitboards[piece];
+        bitmask friends = board.white_pieces;
+        bitmask enemies = board.black_pieces;
+
+        if (color == Pieces::Black) {
+            std::swap(friends, enemies);
+        }
 
         while (pieces) {
-            int from = std::countr_zero(pieces);
-            pieces &= (pieces - 1);
+            int from = getBit(pieces);
 
-            bitmask targets = getRookAttack(board, magics, from) & friends_free;
+            bitmask targets = getRookAttack(board, magics, from) & ~friends;
+            if (captures) targets &= enemies;
             while (targets > 0) {
-                int target = std::countr_zero(targets);
+                int target = getBit(targets);
                 moves.push({ from, target });
-                targets &= (targets - 1);
             }
         }
     }
 
-    void generateBishopMoves(const Board& board, MoveList& moves, int color) {
+    void generateBishopMoves(const Board& board, MoveList& moves, int color, bool captures) {
         int piece = Pieces::Bishop | color;
-        bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
         bitmask pieces = board.bitboards[piece];
+        bitmask friends = board.white_pieces;
+        bitmask enemies = board.black_pieces;
+
+        if (color == Pieces::Black) {
+            std::swap(friends, enemies);
+        }
 
         while (pieces) {
-            int from = std::countr_zero(pieces);
-            pieces &= (pieces - 1);
+            int from = getBit(pieces);
 
-            bitmask targets = getBishopAttack(board, magics, from) & friends_free;
+            bitmask targets = getBishopAttack(board, magics, from) & ~friends;
+            if (captures) targets &= enemies;
             while (targets > 0) {
-                int target = std::countr_zero(targets);
+                int target = getBit(targets);
                 moves.push({ from, target });
-                targets &= (targets - 1);
             }
         }
     }
 
-    void generateQueenMoves(const Board& board, MoveList& moves, int color) {
+    void generateQueenMoves(const Board& board, MoveList& moves, int color, bool captures) {
         int piece = Pieces::Queen | color;
-        bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
         bitmask pieces = board.bitboards[piece];
+        bitmask friends = board.white_pieces;
+        bitmask enemies = board.black_pieces;
+
+        if (color == Pieces::Black) {
+            std::swap(friends, enemies);
+        }
 
         while (pieces) {
-            int from = std::countr_zero(pieces);
-            pieces &= (pieces - 1);
+            int from = getBit(pieces);
 
             bitmask targets1 = getRookAttack(board, magics, from);
             bitmask targets2 = getBishopAttack(board, magics, from);
-            bitmask targets = (targets1 | targets2) & friends_free;
+            bitmask targets = (targets1 | targets2) & ~friends;
+
+            if (captures) targets &= enemies;
 
             while (targets > 0) {
-                int target = std::countr_zero(targets);
+                int target = getBit(targets);
                 moves.push({ from, target });
-                targets &= (targets - 1);
             }
         }
     }
 
-    void generatePawnMoves(const Board& board, MoveList& moves, int color) {
+    void generatePawnCaptures(const Board& board, MoveList& moves, int color) {
         int piece = Pieces::Pawn | color;
         bool white_to_move = color == Pieces::White;
-        int dir = white_to_move ? 1 : -1;
-
-        bitmask pawns = board.bitboards[piece];
-        bitmask empty_squares = ~(board.white_pieces | board.black_pieces);
         bitmask enemies = white_to_move ? board.black_pieces : board.white_pieces;
+        bitmask pawns = board.bitboards[piece];
         bitmask promotion_rank = white_to_move ? RANK_8 : RANK_1;
 
         if (board.enpassant_square != -1) {
             enemies |= setBit(board.enpassant_square);
         }
 
-        bitmask single_pushes = 0;
-        bitmask double_pushes = 0;
         bitmask left_attacks = 0;
         bitmask right_attacks = 0;
 
@@ -191,7 +205,7 @@ namespace {
 
         auto processAttacks = [&](bitmask attacks, int offset) {
             while (attacks) {
-                int to = std::countr_zero(attacks);
+                int to = getBit(attacks);
                 int from = to - offset;
 
                 if (to == board.enpassant_square) {
@@ -199,62 +213,93 @@ namespace {
                 } else {
                     movePawn(from, to);
                 }
-
-                attacks &= (attacks - 1);
             }
         };
 
         // NOLINTBEGIN
-        if (color == Pieces::White) {
-            single_pushes = (pawns << 8) & empty_squares;
-            double_pushes = (single_pushes << 8) & empty_squares & RANK_4;
-
+        if (white_to_move) {
             left_attacks = (pawns << 7) & ~FILE_H & enemies;
             right_attacks = (pawns << 9) & ~FILE_A & enemies;
 
             processAttacks(left_attacks, 7);
             processAttacks(right_attacks, 9);
         } else {
-            single_pushes = (pawns >> 8) & empty_squares;
-            double_pushes = (single_pushes >> 8) & empty_squares & RANK_5;
-
             left_attacks = (pawns >> 9) & ~FILE_H & enemies;
             right_attacks = (pawns >> 7) & ~FILE_A & enemies;
 
             processAttacks(left_attacks, -9);
             processAttacks(right_attacks, -7);
         }
-
-        while (single_pushes) {
-            int target = std::countr_zero(single_pushes);
-            int from = target - 8 * dir;
-            movePawn(from, target);
-            single_pushes &= (single_pushes - 1);
-        }
-
-        while (double_pushes) {
-            int target = std::countr_zero(double_pushes);
-            int from = target - 16 * dir;
-            moves.push({ from, target, MoveType::DoublePush });
-            double_pushes &= (double_pushes - 1);
-        }
         // NOLINTEND
     }
 
-    void generateKingMoves(const Board& board, MoveList& moves, int color) {
+    void generatePawnMoves(const Board& board, MoveList& moves, int color) {
+        int piece = Pieces::Pawn | color;
+        bool white_to_move = color == Pieces::White;
+        int dir = white_to_move ? 1 : -1;
 
-        int piece = Pieces::King | color;
-        bitmask friends_free = ~(Pieces::isWhite(piece) ? board.white_pieces : board.black_pieces);
+        bitmask pawns = board.bitboards[piece];
+        bitmask empty_squares = ~(board.white_pieces | board.black_pieces);
+        bitmask promotion_rank = white_to_move ? RANK_8 : RANK_1;
 
-        bitmask pieces = board.bitboards[piece];
-        int from = std::countr_zero(pieces);
-        bitmask targets = precomputed.kingMoves[from] & friends_free;
+        bitmask single_pushes = 0;
+        bitmask double_pushes = 0;
+
+        auto movePawn = [&](int from, int to, MoveType type = MoveType::Normal) {
+            if ((setBit(to) & promotion_rank) != 0) {
+                moves.push({ from, to, MoveType::PromotionBishop });
+                moves.push({ from, to, MoveType::PromotionKnight });
+                moves.push({ from, to, MoveType::PromotionRook });
+                moves.push({ from, to, MoveType::PromotionQueen });
+            } else {
+                moves.push({ from, to, type });
+            }
+        };
+
+        // NOLINTBEGIN
+        if (white_to_move) {
+            single_pushes = (pawns << 8) & empty_squares;
+            double_pushes = (single_pushes << 8) & empty_squares & RANK_4;
+        } else {
+            single_pushes = (pawns >> 8) & empty_squares;
+            double_pushes = (single_pushes >> 8) & empty_squares & RANK_5;
+        }
+
+        while (single_pushes) {
+            int target = getBit(single_pushes);
+            int from = target - 8 * dir;
+            movePawn(from, target);
+        }
+
+        while (double_pushes) {
+            int target = getBit(double_pushes);
+            int from = target - 16 * dir;
+            moves.push({ from, target, MoveType::DoublePush });
+        }
+        // NOLINTEND
+
+        generatePawnCaptures(board, moves, color);
+    }
+
+    void generateKingMoves(const Board& board, MoveList& moves, int color, bool captures) {
+        bitmask friends = board.white_pieces;
+        bitmask enemies = board.black_pieces;
+
+        if (color == Pieces::Black) {
+            std::swap(friends, enemies);
+        }
+
+        int from = std::countr_zero(board.bitboards[Pieces::King | color]);
+
+        bitmask targets = precomputed.kingMoves[from] & ~friends;
+        if (captures) targets &= enemies;
 
         while (targets) {
-            int target = std::countr_zero(targets);
+            int target = getBit(targets);
             moves.push({ from, target });
-            targets &= (targets - 1);
         }
+
+        if (captures) return;
 
         int enemy = Pieces::oppositeColor(color);
         auto checkSquares = [&](int sq1, int sq2) {
@@ -294,11 +339,9 @@ namespace {
 
         for (const Move& move : moves) {
             board.makeMove(move);
-
             if (!isCheck(board, color)) {
                 legal_moves.push(move);
             }
-
             board.unmakeMove();
         }
 
@@ -316,32 +359,33 @@ auto generateMoves(const Board& board) -> MoveList {
     MoveList moves;
 
     int color = board.white_to_move ? Pieces::White : Pieces::Black;
-    generateKnightMoves(board, moves, color);
-    generateRookMoves(board, moves, color);
-    generateBishopMoves(board, moves, color);
-    generateQueenMoves(board, moves, color);
+    generateKnightMoves(board, moves, color, false);
+    generateRookMoves(board, moves, color, false);
+    generateBishopMoves(board, moves, color, false);
+    generateQueenMoves(board, moves, color, false);
     generatePawnMoves(board, moves, color);
-    generateKingMoves(board, moves, color);
+    generateKingMoves(board, moves, color, false);
 
     return moves;
+}
+
+auto generateCaptures(Board& board) -> MoveList {
+    MoveList captures;
+    int color = board.white_to_move ? Pieces::White : Pieces::Black;
+
+    generateKnightMoves(board, captures, color, true);
+    generateRookMoves(board, captures, color, true);
+    generateBishopMoves(board, captures, color, true);
+    generateQueenMoves(board, captures, color, true);
+    generatePawnCaptures(board, captures, color);
+    generateKingMoves(board, captures, color, true);
+
+    return captures;
 }
 
 auto generateLegalMoves(Board& board) -> MoveList {
     MoveList moves = generateMoves(board);
     return filterLegalMoves(board, moves);
-}
-
-auto generateCaptures(Board& board) -> MoveList {
-    MoveList moves = generateMoves(board);
-    MoveList captures;
-
-    for (const Move& move : moves) {
-        if (board.squares[move.to()] != Pieces::None) {
-            captures.push(move);
-        }
-    }
-
-    return captures;
 }
 
 auto generateLegalCaptures(Board& board) -> MoveList {
