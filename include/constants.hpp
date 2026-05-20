@@ -3,7 +3,7 @@
 constexpr int BoardLength = 8;
 constexpr int BoardSize = BoardLength * BoardLength;
 
-constexpr int MaxPiecesCount = 16;
+constexpr int MaxPiecesCount = 12;
 constexpr int MaxSearchDepth = 64;
 
 using bitmask = unsigned long long;

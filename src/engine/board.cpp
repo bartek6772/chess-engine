@@ -21,7 +21,6 @@ void Board::clear() {
     black_pieces = 0;
     history_ptr = 0;
     enpassant_square = -1;
-    // white_to_move = true;
     castling_rights = 0;
     halfmove_clock = 0;
     hash = 0;
@@ -119,10 +118,8 @@ auto Board::loadFEN(const std::string& fen) -> bool {
         }
 
         if (parts[1] == "w") {
-            // white_to_move = true;
             color_to_move = P::White;
         } else if (parts[1] == "b") {
-            // white_to_move = false;
             color_to_move = P::Black;
         } else {
             return false;
@@ -283,7 +280,6 @@ void Board::makeMove(const Move& move) {
         movePiece(move.from(), move.to());
     }
 
-    // white_to_move = !white_to_move;
     color_to_move = P::flipColor(color_to_move);
 
     if (castling_rights != new_state.castling_rights) {
@@ -313,9 +309,7 @@ void Board::unmakeMove() {
     HistoryState state = history[--history_ptr];
     Move& move = state.move;
 
-    // white_to_move = !white_to_move;
     color_to_move = P::flipColor(color_to_move);
-
     enpassant_square = state.enpassant_square;
     castling_rights = state.castling_rights;
     halfmove_clock = state.halfmove_clock;

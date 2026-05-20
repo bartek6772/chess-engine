@@ -127,3 +127,16 @@ Nodes per second: 7,849,189
 New features:
 
 - pseudo legal moves in search and q-search
+
+---
+
+### v4.1 - PeSTO evaluation
+
+New features:
+
+- captures are generated independently of normal moves
+- use PeSTO evaluation method
+
+Internal improvements:
+
+- new pieces codes

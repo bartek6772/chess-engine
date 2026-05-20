@@ -16,9 +16,9 @@ struct Board {
     bitmask white_pieces{};
     bitmask black_pieces{};
 
-    // bool white_to_move = true;
     int color_to_move = Pieces::White;
     int enpassant_square = -1;
+    int halfmove_clock = 0;
 
     bool whiteToMove() const {
         return color_to_move == Pieces::White;
@@ -35,17 +35,13 @@ struct Board {
     void movePiece(int from, int to);
 
     auto loadFEN(const std::string& fen) -> bool;
-
     void makeMove(const Move& move);
     void unmakeMove();
 
-    inline bool canCastle(int castle_type) const {
-        return (castling_rights & castle_type) != 0;
-    }
+    bool isRepetition() const;
+    void clear();
 
-    inline void loadStartPos() {
-        loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    }
+    Board();
 
     struct HistoryState {
         Move move;
@@ -58,16 +54,17 @@ struct Board {
         unsigned long long hash{};
     };
 
-    Board();
-
     std::array<HistoryState, MAX_GAME_MOVES> history;
     int history_ptr = 0;
 
     inline static const Hashes hashes;
     unsigned long long hash;
 
-    int halfmove_clock = 0;
+    inline bool canCastle(int castle_type) const {
+        return (castling_rights & castle_type) != 0;
+    }
 
-    bool isRepetition() const;
-    void clear();
+    inline void loadStartPos() {
+        loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    }
 };
