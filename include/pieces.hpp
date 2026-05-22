@@ -37,7 +37,7 @@ inline constexpr int BlackKing = makePiece(King, Black);
 inline constexpr int None = BlackKing + 1;
 
 inline auto pieceType(int piece) -> int {
-    return piece / 2;
+    return piece >> 1;
 }
 inline auto pieceColor(int piece) -> int {
     return piece & 1;
@@ -75,16 +75,16 @@ inline auto getPiece(char symbol) -> int {
 }
 
 // clang-format off
-static constexpr std::array<int, 12> all_pieces{ 
+inline constexpr std::array<int, 12> all_pieces{ 
     WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing, 
     BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing 
 };
 
-static constexpr std::array<int, 6> white_pieces{ 
+inline constexpr std::array<int, 6> white_pieces{ 
     WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing, 
 };
 
-static constexpr std::array<int, 6> black_pieces{ 
+inline constexpr std::array<int, 6> black_pieces{ 
     BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing 
 };
 // clang-format on

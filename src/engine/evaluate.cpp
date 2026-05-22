@@ -6,12 +6,14 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <cstdint>
+#include <utility>
 
 namespace Evaluation {
 namespace {
 
     // clang-format off
-    const int mg_pawn_table[64] = {
+   constexpr std::array<int, 64> mg_pawn_table = {
         0,   0,   0,   0,   0,   0,  0,   0,
         98, 134,  61,  95,  68, 126, 34, -11,
         -6,   7,  26,  31,  65,  56, 25, -20,
@@ -22,7 +24,7 @@ namespace {
         0,   0,   0,   0,   0,   0,  0,   0,
     };
 
-    const int eg_pawn_table[64] = {
+   constexpr std::array<int, 64> eg_pawn_table = {
         0,   0,   0,   0,   0,   0,   0,   0,
         178, 173, 158, 134, 147, 132, 165, 187,
         94, 100,  85,  67,  56,  53,  82,  84,
@@ -33,7 +35,7 @@ namespace {
         0,   0,   0,   0,   0,   0,   0,   0,
     };
 
-    const int mg_knight_table[64] = {
+   constexpr std::array<int, 64> mg_knight_table = {
         -167, -89, -34, -49,  61, -97, -15, -107,
         -73, -41,  72,  36,  23,  62,   7,  -17,
         -47,  60,  37,  65,  84, 129,  73,   44,
@@ -44,7 +46,7 @@ namespace {
         -105, -21, -58, -33, -17, -28, -19,  -23,
     };
 
-    const int eg_knight_table[64] = {
+   constexpr std::array<int, 64> eg_knight_table = {
         -58, -38, -13, -28, -31, -27, -63, -99,
         -25,  -8, -25,  -2,  -9, -25, -24, -52,
         -24, -20,  10,   9,  -1,  -9, -19, -41,
@@ -55,7 +57,7 @@ namespace {
         -29, -51, -23, -15, -22, -18, -50, -64,
     };
 
-    const int mg_bishop_table[64] = {
+   constexpr std::array<int, 64> mg_bishop_table = {
         -29,   4, -82, -37, -25, -42,   7,  -8,
         -26,  16, -18, -13,  30,  59,  18, -47,
         -16,  37,  43,  40,  35,  50,  37,  -2,
@@ -66,7 +68,7 @@ namespace {
         -33,  -3, -14, -21, -13, -12, -39, -21,
     };
 
-    const int eg_bishop_table[64] = {
+   constexpr std::array<int, 64> eg_bishop_table = {
         -14, -21, -11,  -8, -7,  -9, -17, -24,
         -8,  -4,   7, -12, -3, -13,  -4, -14,
         2,  -8,   0,  -1, -2,   6,   0,   4,
@@ -77,7 +79,7 @@ namespace {
         -23,  -9, -23,  -5, -9, -16,  -5, -17,
     };
 
-    const int mg_rook_table[64] = {
+   constexpr std::array<int, 64> mg_rook_table = {
         32,  42,  32,  51, 63,  9,  31,  43,
         27,  32,  58,  62, 80, 67,  26,  44,
         -5,  19,  26,  36, 17, 45,  61,  16,
@@ -88,7 +90,7 @@ namespace {
         -19, -13,   1,  17, 16,  7, -37, -26,
     };
 
-    const int eg_rook_table[64] = {
+   constexpr std::array<int, 64> eg_rook_table = {
         13, 10, 18, 15, 12,  12,   8,   5,
         11, 13, 13, 11, -3,   3,   8,   3,
         7,  7,  7,  5,  4,  -3,  -5,  -3,
@@ -99,7 +101,7 @@ namespace {
         -9,  2,  3, -1, -5, -13,   4, -20,
     };
 
-    const int mg_queen_table[64] = {
+   constexpr std::array<int, 64> mg_queen_table = {
         -28,   0,  29,  12,  59,  44,  43,  45,
         -24, -39,  -5,   1, -16,  57,  28,  54,
         -13, -17,   7,   8,  29,  56,  47,  57,
@@ -110,7 +112,7 @@ namespace {
         -1, -18,  -9,  10, -15, -25, -31, -50,
     };
 
-    const int eg_queen_table[64] = {
+   constexpr std::array<int, 64> eg_queen_table = {
         -9,  22,  22,  27,  27,  19,  10,  20,
         -17,  20,  32,  41,  58,  25,  30,   0,
         -20,   6,   9,  49,  47,  35,  19,   9,
@@ -121,7 +123,7 @@ namespace {
         -33, -28, -22, -43,  -5, -32, -20, -41,
     };
 
-    const int mg_king_table[64] = {
+   constexpr std::array<int, 64> mg_king_table = {
         -65,  23,  16, -15, -56, -34,   2,  13,
         29,  -1, -20,  -7,  -8,  -4, -38, -29,
         -9,  24,   2, -16, -20,   6,  22, -22,
@@ -132,7 +134,7 @@ namespace {
         -15,  36,  12, -54,   8, -28,  24,  14,
     };
 
-    const int eg_king_table[64] = {
+   constexpr std::array<int, 64> eg_king_table = {
         -74, -35, -18, -18, -11,  15,   4, -17,
         -12,  17,  14,  17,  17,  38,  23,  11,
         10,  17,  23,  15,  20,  45,  44,  13,
@@ -144,88 +146,177 @@ namespace {
     };
     // clang-format on
 
-    const std::array<const int*, 6> mg_combo_pst{
-        mg_pawn_table,
-        mg_knight_table,
-        mg_bishop_table,
-        mg_rook_table,
-        mg_queen_table,
-        mg_king_table,
+    constexpr std::array<const int*, 6> mg_combo_pst{
+        mg_pawn_table.begin(),
+        mg_knight_table.begin(),
+        mg_bishop_table.begin(),
+        mg_rook_table.begin(),
+        mg_queen_table.begin(),
+        mg_king_table.begin(),
     };
 
-    const std::array<const int*, 6> eg_combo_pst{
-        eg_pawn_table,
-        eg_knight_table,
-        eg_bishop_table,
-        eg_rook_table,
-        eg_queen_table,
-        eg_king_table,
+    constexpr std::array<const int*, 6> eg_combo_pst{
+        eg_pawn_table.begin(),
+        eg_knight_table.begin(),
+        eg_bishop_table.begin(),
+        eg_rook_table.begin(),
+        eg_queen_table.begin(),
+        eg_king_table.begin(),
     };
 
-    const int game_phase_piece_weight[] = { 0, 1, 1, 2, 4, 0 };
+    constexpr std::array<int, 6> game_phase_piece_weight = { 0, 1, 1, 2, 4, 0 };
+    constexpr std::array<int, 6> piece_value = { 100, 320, 350, 500, 900, 0 };
+
+    // TODO: See if these methods can also be useful somewhere else
+    constexpr bitmask getFileMask(int file) {
+        return FILE_A << file;
+    }
+
+    constexpr bitmask getRankMask(int rank) {
+        return RANK_1 << (rank * 8);
+    }
+
+    constexpr bitmask getNeighbourFilesMask(int file) {
+        bitmask mask = 0;
+        if (file > 0) mask |= getFileMask(file - 1);
+        if (file < 7) mask |= getFileMask(file + 1);
+        return mask;
+    }
+
+    struct PawnMasks {
+        std::array<std::array<bitmask, 64>, 2> passed_masks{};
+        std::array<bitmask, 8> neighbours{};
+        std::array<bitmask, 8> files{};
+
+        constexpr PawnMasks() {
+            for (int square = 0; square < 64; square++) {
+                int file = fileOf(square);
+                bitmask files = getFileMask(file) | getNeighbourFilesMask(file);
+
+                for (int rank = rankOf(square) + 1; rank < 8; rank++) {
+                    passed_masks[0][square] |= files & getRankMask(rank);
+                }
+
+                for (int rank = rankOf(square) - 1; rank >= 0; rank--) {
+                    passed_masks[1][square] |= files & getRankMask(rank);
+                }
+            }
+
+            for (int file = 0; file < 8; file++) {
+                neighbours[file] = getNeighbourFilesMask(file);
+                files[file] = getFileMask(file);
+            }
+        }
+    };
+
+    constexpr PawnMasks precomputed_masks{};
+
+    constexpr std::pair<int, int> doubled_pawn = { 10, 60 };
+    constexpr std::pair<int, int> isolated_pawn = { 5, 15 };
+
+    constexpr std::pair<int, int> passed_pawn_bonus[8]{
+        { 0, 0 },
+        { 5, 15 },
+        { 5, 15 },
+        { 15, 30 },
+        { 30, 60 },
+        { 80, 160 },
+        { 110, 220 },
+        { 0, 0 },
+    };
+
+    std::pair<int, int> sideEval(const Board& board, int color) {
+
+        using namespace Pieces;
+
+        constexpr int FLIP_RANK = 56;
+        constexpr int TOTAL_PHASE = 24;
+
+        int flip = (color == White) ? FLIP_RANK : 0;
+
+        int mg_eval = 0;
+        int eg_eval = 0;
+
+        for (int type = Pawn; type <= King; type++) {
+            int piece = Pieces::makePiece(type, color);
+
+            bitmask pieces = board.bitboards[piece];
+            int count = std::popcount(pieces);
+
+            // Positional Value
+            while (pieces) {
+                int square = readBit(pieces);
+                mg_eval += mg_combo_pst[type][square ^ flip];
+                eg_eval += eg_combo_pst[type][square ^ flip];
+            }
+
+            // Material Value
+            mg_eval += count * piece_value[type];
+            eg_eval += count * piece_value[type];
+        }
+
+        bitmask pawns = board.bitboards[makePiece(Pawn, color)];
+        bitmask enemy_pawns = board.bitboards[makePiece(Pawn, flipColor(color))];
+        bitmask pawns_original = pawns;
+
+        while (pawns) {
+            int square = readBit(pawns);
+
+            bitmask friends = pawns_original ^ setBit(square);
+
+            // Passed Pawns
+            if ((precomputed_masks.passed_masks[color][square] & enemy_pawns) == 0) {
+                int relative_rank = (color == Black) ? 7 - rankOf(square) : rankOf(square);
+                mg_eval += passed_pawn_bonus[relative_rank].first;
+                eg_eval += passed_pawn_bonus[relative_rank].second;
+            }
+
+            // Doubled Pawns
+            if ((precomputed_masks.files[fileOf(square)] & friends) != 0) {
+                mg_eval -= doubled_pawn.first;
+                eg_eval -= doubled_pawn.second;
+            }
+
+            // Isolated Pawns
+            if ((precomputed_masks.neighbours[fileOf(square)] & friends) == 0) {
+                mg_eval -= isolated_pawn.first;
+                eg_eval -= isolated_pawn.second;
+            }
+        }
+
+        return { mg_eval, eg_eval };
+    }
 
 } // namespace
 
 int getPieceValue(int piece) {
-    switch (Pieces::pieceType(piece)) {
-        case Pieces::Pawn: return PawnValue;
-        case Pieces::Knight: return KnightValue;
-        case Pieces::Bishop: return BishopValue;
-        case Pieces::Rook: return RookValue;
-        case Pieces::Queen: return QueenValue;
-    }
-    return 0;
+    return piece_value[Pieces::pieceType(piece)];
 }
 
 int evaluate(const Board& board) {
+    constexpr int TOTAL_PHASE = 24;
 
-    auto getPieceCount = [&](int piece) -> int {
-        return std::popcount(board.bitboards[piece]);
-    };
+    using Pieces::makePiece, Pieces::White, Pieces::Black;
 
     int game_phase = 0;
-
-    auto getPositionValue = [&](int piece, int flip) -> std::pair<int, int> {
-        int mg_score = 0;
-        int eg_score = 0;
-        int piece_type = Pieces::pieceType(piece);
-        bitmask pieces = board.bitboards[piece];
-        while (pieces) {
-            int square = readBit(pieces);
-            mg_score += mg_combo_pst[piece_type][square ^ flip];
-            eg_score += eg_combo_pst[piece_type][square ^ flip];
-        }
-        return { mg_score, eg_score };
-    };
-
-    int evaluation = 0;
-    constexpr int flip_rank = 56;
-
-    int mg = 0;
-    int eg = 0;
-
-    for (int piece : Pieces::white_pieces) {
-        int count = getPieceCount(piece);
-        evaluation += count * getPieceValue(piece);
-        game_phase += count * game_phase_piece_weight[Pieces::pieceType(piece)];
-        auto [mg_score, eg_score] = getPositionValue(piece, flip_rank);
-        mg += mg_score;
-        eg += eg_score;
+    for (int type = Pieces::Pawn; type < Pieces::King; type++) {
+        int weight = game_phase_piece_weight[type];
+        game_phase += std::popcount(board.bitboards[makePiece(type, White)]) * weight;
+        game_phase += std::popcount(board.bitboards[makePiece(type, Black)]) * weight;
     }
 
-    for (int piece : Pieces::black_pieces) {
-        int count = getPieceCount(piece);
-        evaluation -= count * getPieceValue(piece);
-        game_phase += count * game_phase_piece_weight[Pieces::pieceType(piece)];
-        auto [mg_score, eg_score] = getPositionValue(piece, 0);
-        mg -= mg_score;
-        eg -= eg_score;
-    }
+    int mg_eval = 0;
+    int eg_eval = 0;
 
-    int mg_phase = std::clamp(game_phase, 0, 24);
-    int eg_phase = 24 - mg_phase;
+    auto [white_mg, white_eg] = sideEval(board, White);
+    auto [black_mg, black_eg] = sideEval(board, Black);
 
-    evaluation += (mg * mg_phase + eg * eg_phase) / 24;
+    mg_eval = white_mg - black_mg;
+    eg_eval = white_eg - black_eg;
+
+    int mg_phase = std::clamp(game_phase, 0, TOTAL_PHASE);
+    int eg_phase = TOTAL_PHASE - mg_phase;
+    int evaluation = (mg_eval * mg_phase + eg_eval * eg_phase) / TOTAL_PHASE;
 
     return evaluation;
 }

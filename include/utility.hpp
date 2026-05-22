@@ -3,19 +3,19 @@
 #include "constants.hpp"
 #include <bit>
 
-inline bitmask setBit(int bit) {
+inline constexpr bitmask setBit(int bit) {
     return 1ULL << bit;
 }
 
-inline int rankOf(int square) {
+inline constexpr int rankOf(int square) {
     return square >> 3;
 }
 
-inline int fileOf(int square) {
+inline constexpr int fileOf(int square) {
     return square & 7;
 }
 
-inline int makeSquare(int file, int rank) {
+inline constexpr int makeSquare(int file, int rank) {
     return file + rank * BoardLength;
 }
 
