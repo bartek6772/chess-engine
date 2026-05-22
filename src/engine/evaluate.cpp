@@ -166,66 +166,10 @@ namespace {
 
     constexpr std::array<int, 6> game_phase_piece_weight = { 0, 1, 1, 2, 4, 0 };
     constexpr std::array<int, 6> piece_value = { 100, 320, 350, 500, 900, 0 };
+    constexpr std::array<int, 6> mg_piece_value = { 82, 337, 365, 477, 1025, 0 };
+    constexpr std::array<int, 6> eg_piece_value = { 94, 281, 297, 512, 936, 0 };
 
-    // TODO: See if these methods can also be useful somewhere else
-    constexpr bitmask getFileMask(int file) {
-        return FILE_A << file;
-    }
-
-    constexpr bitmask getRankMask(int rank) {
-        return RANK_1 << (rank * 8);
-    }
-
-    constexpr bitmask getNeighbourFilesMask(int file) {
-        bitmask mask = 0;
-        if (file > 0) mask |= getFileMask(file - 1);
-        if (file < 7) mask |= getFileMask(file + 1);
-        return mask;
-    }
-
-    struct PawnMasks {
-        std::array<std::array<bitmask, 64>, 2> passed_masks{};
-        std::array<bitmask, 8> neighbours{};
-        std::array<bitmask, 8> files{};
-
-        constexpr PawnMasks() {
-            for (int square = 0; square < 64; square++) {
-                int file = fileOf(square);
-                bitmask files = getFileMask(file) | getNeighbourFilesMask(file);
-
-                for (int rank = rankOf(square) + 1; rank < 8; rank++) {
-                    passed_masks[0][square] |= files & getRankMask(rank);
-                }
-
-                for (int rank = rankOf(square) - 1; rank >= 0; rank--) {
-                    passed_masks[1][square] |= files & getRankMask(rank);
-                }
-            }
-
-            for (int file = 0; file < 8; file++) {
-                neighbours[file] = getNeighbourFilesMask(file);
-                files[file] = getFileMask(file);
-            }
-        }
-    };
-
-    constexpr PawnMasks precomputed_masks{};
-
-    constexpr std::pair<int, int> doubled_pawn = { 10, 60 };
-    constexpr std::pair<int, int> isolated_pawn = { 5, 15 };
-
-    constexpr std::pair<int, int> passed_pawn_bonus[8]{
-        { 0, 0 },
-        { 5, 15 },
-        { 5, 15 },
-        { 15, 30 },
-        { 30, 60 },
-        { 80, 160 },
-        { 110, 220 },
-        { 0, 0 },
-    };
-
-    std::pair<int, int> sideEval(const Board& board, int color) {
+    std::pair<int, int> evaluateSide(const Board& board, int color) {
 
         using namespace Pieces;
 
@@ -243,44 +187,10 @@ namespace {
             bitmask pieces = board.bitboards[piece];
             int count = std::popcount(pieces);
 
-            // Positional Value
             while (pieces) {
                 int square = readBit(pieces);
-                mg_eval += mg_combo_pst[type][square ^ flip];
-                eg_eval += eg_combo_pst[type][square ^ flip];
-            }
-
-            // Material Value
-            mg_eval += count * piece_value[type];
-            eg_eval += count * piece_value[type];
-        }
-
-        bitmask pawns = board.bitboards[makePiece(Pawn, color)];
-        bitmask enemy_pawns = board.bitboards[makePiece(Pawn, flipColor(color))];
-        bitmask pawns_original = pawns;
-
-        while (pawns) {
-            int square = readBit(pawns);
-
-            bitmask friends = pawns_original ^ setBit(square);
-
-            // Passed Pawns
-            if ((precomputed_masks.passed_masks[color][square] & enemy_pawns) == 0) {
-                int relative_rank = (color == Black) ? 7 - rankOf(square) : rankOf(square);
-                mg_eval += passed_pawn_bonus[relative_rank].first;
-                eg_eval += passed_pawn_bonus[relative_rank].second;
-            }
-
-            // Doubled Pawns
-            if ((precomputed_masks.files[fileOf(square)] & friends) != 0) {
-                mg_eval -= doubled_pawn.first;
-                eg_eval -= doubled_pawn.second;
-            }
-
-            // Isolated Pawns
-            if ((precomputed_masks.neighbours[fileOf(square)] & friends) == 0) {
-                mg_eval -= isolated_pawn.first;
-                eg_eval -= isolated_pawn.second;
+                mg_eval += mg_combo_pst[type][square ^ flip] + mg_piece_value[type];
+                eg_eval += eg_combo_pst[type][square ^ flip] + eg_piece_value[type];
             }
         }
 
@@ -308,8 +218,8 @@ int evaluate(const Board& board) {
     int mg_eval = 0;
     int eg_eval = 0;
 
-    auto [white_mg, white_eg] = sideEval(board, White);
-    auto [black_mg, black_eg] = sideEval(board, Black);
+    auto [white_mg, white_eg] = evaluateSide(board, White);
+    auto [black_mg, black_eg] = evaluateSide(board, Black);
 
     mg_eval = white_mg - black_mg;
     eg_eval = white_eg - black_eg;
