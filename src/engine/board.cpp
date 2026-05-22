@@ -3,6 +3,7 @@
 #include "move.hpp"
 #include "pieces.hpp"
 #include "utility.hpp"
+#include <cassert>
 #include <cctype>
 #include <sstream>
 #include <string>
@@ -185,6 +186,8 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 
 void Board::makeMove(const Move& move) {
 
+    assert(!move.isNull());
+
     int piece = squares[move.from()];
     int capture = squares[move.to()];
 
@@ -305,6 +308,8 @@ void Board::makeMove(const Move& move) {
 }
 
 void Board::unmakeMove() {
+
+    assert(history_ptr > 0);
 
     HistoryState state = history[--history_ptr];
     Move& move = state.move;

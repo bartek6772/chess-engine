@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 constexpr int BoardLength = 8;
 constexpr int BoardSize = BoardLength * BoardLength;
 
@@ -9,10 +10,12 @@ constexpr int MaxSearchDepth = 64;
 using bitmask = unsigned long long;
 
 inline constexpr bitmask getFileMask(int file) {
+    assert(file >= 0 && file <= 7);
     return 0x0101010101010101ULL << file;
 }
 
 inline constexpr bitmask getRankMask(int rank) {
+    assert(file >= 0 && file <= 7);
     return 0x00000000000000FFULL << (rank * 8);
 }
 
