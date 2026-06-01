@@ -41,6 +41,17 @@ bool Searcher::shouldStop() {
     return searchTime() >= time_limit;
 }
 
+Move partialSort(int index, MoveList& moves) {
+    int best_index = index;
+    for (int j = index + 1; j < moves.size(); j++) {
+        if (moves[j] > moves[best_index]) {
+            best_index = j;
+        }
+    }
+    std::swap(moves[best_index], moves[index]);
+    return moves[index];
+}
+
 int Searcher::quiescence(int alpha, int beta, int ply) {
     // stats.nodes++;
     stats.quiescence_nodes++;
@@ -77,14 +88,17 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
     for (int i = 0; i < moves.size(); i++) {
         if (stop_search) return 0;
 
-        int best_index = i;
-        for (int j = i + 1; j < moves.size(); j++) {
-            if (moves[j].score > moves[best_index].score) {
-                best_index = j;
-            }
-        }
-        std::swap(moves[best_index], moves[i]);
-        Move& move = moves[i];
+        // int best_index = i;
+        // for (int j = i + 1; j < moves.size(); j++) {
+        //     // TIP: moves can be compared just by value, probably - score is the most significant
+        //     // part
+        //     if (moves[j].score() > moves[best_index].score()) {
+        //         best_index = j;
+        //     }
+        // }
+        // std::swap(moves[best_index], moves[i]);
+        // Move& move = moves[i];
+        Move move = partialSort(i, moves);
 
         board.makeMove(move);
         if (MoveGenerator::isCheck(board, color)) {
@@ -160,14 +174,15 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
     for (int i = 0; i < moves.size(); i++) {
         if (stop_search) return 0;
 
-        int best_index = i;
-        for (int j = i + 1; j < moves.size(); j++) {
-            if (moves[j].score > moves[best_index].score) {
-                best_index = j;
-            }
-        }
-        std::swap(moves[best_index], moves[i]);
-        Move& move = moves[i];
+        // int best_index = i;
+        // for (int j = i + 1; j < moves.size(); j++) {
+        //     if (moves[j].score() > moves[best_index].score()) {
+        //         best_index = j;
+        //     }
+        // }
+        // std::swap(moves[best_index], moves[i]);
+        // Move& move = moves[i];
+        Move move = partialSort(i, moves);
 
         board.makeMove(move);
         if (MoveGenerator::isCheck(board, color)) {
@@ -257,19 +272,19 @@ void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
 
     for (Move& move : moves) {
         if (move == pv_move) {
-            move.score = PV_MOVE;
+            move.setScore(PV_MOVE);
         } else if (isCapture(move)) {
-            move.score = CAPTURE + mvv_lva(move);
+            move.setScore(CAPTURE + mvv_lva(move));
         } else if (move == killer_moves[ply][0]) {
-            move.score = KILLER_1;
+            move.setScore(KILLER_1);
         } else if (move == killer_moves[ply][1]) {
-            move.score = KILLER_2;
+            move.setScore(KILLER_2);
         } else if (move.type() == MoveType::PromotionQueen) {
-            move.score = QUEEN_PROMOTION;
+            move.setScore(QUEEN_PROMOTION);
         } else if (move.isPromotion()) {
-            move.score = MINOR_PROMOTION;
+            move.setScore(MINOR_PROMOTION);
         } else {
-            move.score = 0;
+            move.setScore(0);
         }
     }
 }
@@ -288,7 +303,7 @@ SearchResult Searcher::findBestMove(int depth, int time) {
 
         int best_guess = 0;
         for (int i = 0; i < initial_moves.size(); i++) {
-            if (initial_moves[i].score > initial_moves[best_guess].score) {
+            if (initial_moves[i].score() > initial_moves[best_guess].score()) {
                 best_guess = i;
             }
         }

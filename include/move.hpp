@@ -1,38 +1,46 @@
 #pragma once
 
 #include "square.hpp"
-#include <cstdint>
+#include <cassert>
 #include <string>
+
+// +-----------------+------+--------+--------+
+// |      Score      | Type |   To   |  From  |
+// |       16b       |  4b  |   6b   |   6b   |
+// +-----------------+------+--------+--------+
 
 enum class MoveType : int {
     Normal,
     DoublePush,
     Castling,
     EnPassant,
-    PromotionRook,
-    PromotionBishop,
     PromotionKnight,
+    PromotionBishop,
+    PromotionRook,
     PromotionQueen,
 };
 
 struct Move {
-    uint16_t data;
-    uint16_t score;
+    unsigned int data;
 
-    static const int from_mask = 0b0000000000111111;
-    static const int to_mask = 0b0000111111000000;
-    static const int flag_mask = 0b1111000000000000;
+    static constexpr int square_mask = 0x3F;
+    static constexpr int type_mask = 0xF;
+    static constexpr int half_mask = 0xFFFF;
 
     inline Square from() const {
-        return Square(data & from_mask);
+        return Square(data & square_mask);
     }
 
     inline Square to() const {
-        return Square((data & to_mask) >> 6);
+        return Square((data >> 6) & square_mask);
     }
 
     inline MoveType type() const {
-        return static_cast<MoveType>((data & flag_mask) >> 12);
+        return static_cast<MoveType>((data >> 12) & type_mask);
+    }
+
+    inline int score() const {
+        return (data >> 16) & half_mask;
     }
 
     [[nodiscard]] auto toString() const -> std::string {
@@ -45,28 +53,37 @@ struct Move {
 
         if (isPromotion()) {
             switch (type()) {
+                case MoveType::PromotionQueen: move += 'q'; break;
                 case MoveType::PromotionRook: move += 'r'; break;
                 case MoveType::PromotionBishop: move += 'b'; break;
                 case MoveType::PromotionKnight: move += 'n'; break;
-                case MoveType::PromotionQueen: move += 'q'; break;
                 default: break;
             }
         }
         return move;
     }
 
-    Move() : data(0){};
+    Move() : data(0) {}
 
     Move(Square from, Square to, MoveType type = MoveType::Normal) {
         data = (from) | (to << 6) | ((int)type << 12);
     }
 
-    auto operator==(const Move& other) const -> bool {
-        return data == other.data;
+    void setScore(int score) {
+        assert(score < (1 << 17 - 1));
+        data = (score << 16) | (data & half_mask);
     }
 
-    auto operator!=(const Move& other) const -> bool {
-        return data != other.data;
+    auto operator==(const Move other) const -> bool {
+        return (data & half_mask) == (other.data & half_mask);
+    }
+
+    auto operator!=(const Move other) const -> bool {
+        return (data & half_mask) != (other.data & half_mask);
+    }
+
+    auto operator>(const Move other) const -> bool {
+        return data > other.data;
     }
 
     bool isNull() const {
@@ -74,7 +91,12 @@ struct Move {
     }
 
     bool isPromotion() const {
-        return type() == MoveType::PromotionBishop || type() == MoveType::PromotionKnight ||
-               type() == MoveType::PromotionQueen || type() == MoveType::PromotionRook;
+        switch (type()) {
+            case MoveType::PromotionQueen:
+            case MoveType::PromotionRook:
+            case MoveType::PromotionBishop:
+            case MoveType::PromotionKnight: return true;
+            default: return false;
+        }
     }
 };
