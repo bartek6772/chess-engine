@@ -45,5 +45,5 @@ Update leaderboard:
 ```
 
 ```bash
-./tools/ordo -a 0 -A "v1_base" -Q -o results/leaderboard.txt --aliases=aliases.txt -- $(find results -name "*.pgn" ! -name "tmp.pgn")
+./tools/ordo -a 0 -A "v1_base" -Q -o results/leaderboard.txt --aliases=aliases.txt -- $(find results -name "*_gauntlet.pgn" ! -name "tmp.pgn")
 ```

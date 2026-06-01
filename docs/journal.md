@@ -130,7 +130,7 @@ New features:
 
 ---
 
-### v4.1 - PeSTO evaluation
+### v5 - PeSTO evaluation
 
 New features:
 
@@ -140,3 +140,4 @@ New features:
 Internal improvements:
 
 - new pieces codes
+- started using asserts

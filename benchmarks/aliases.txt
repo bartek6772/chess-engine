@@ -7,3 +7,4 @@ v3_captures_optimization,v3
 v3.1_better_qsearch,v3.1
 v3.2_time_managment,v3.2
 v4_pseudo_legal,v3.3,v4
+v5_evaluation,v5
