@@ -10,7 +10,7 @@ PointerAlignment: Left
 AccessModifierOffset: -4
 
 # Functions
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: Empty
 AlwaysBreakTemplateDeclarations: Yes
 
 # Switch

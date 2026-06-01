@@ -10,18 +10,18 @@
 constexpr int MAX_GAME_MOVES = 1024;
 
 struct Board {
-    std::array<int, BoardSize> squares{};
+    std::array<Piece, BoardSize> squares{};
     std::array<bitmask, MaxPiecesCount> bitboards{};
 
     bitmask white_pieces{};
     bitmask black_pieces{};
 
-    int color_to_move = Pieces::White;
+    Piece::Color color_to_move = Piece::White;
     int enpassant_square = -1;
     int halfmove_clock = 0;
 
     bool whiteToMove() const {
-        return color_to_move == Pieces::White;
+        return color_to_move == Piece::White;
     }
 
     static constexpr int white_king_castle = 1;
@@ -30,7 +30,7 @@ struct Board {
     static constexpr int black_queen_castle = 8;
     int castling_rights;
 
-    void addPiece(int square, int piece);
+    void addPiece(int square, Piece piece);
     void removePiece(int square);
     void movePiece(int from, int to);
 
@@ -45,10 +45,10 @@ struct Board {
 
     struct HistoryState {
         Move move;
-        int capture{};
+        Piece capture;
 
         // State before that move
-        int halfmove_clock;
+        int halfmove_clock{};
         int enpassant_square{};
         int castling_rights{};
         unsigned long long hash{};

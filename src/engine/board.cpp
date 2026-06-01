@@ -9,15 +9,13 @@
 #include <string>
 #include <vector>
 
-namespace P = Pieces;
-
 Board::Board() {
     clear();
 }
 
 void Board::clear() {
     bitboards.fill(0);
-    squares.fill(P::None);
+    squares.fill(Piece());
     white_pieces = 0;
     black_pieces = 0;
     history_ptr = 0;
@@ -27,50 +25,50 @@ void Board::clear() {
     hash = 0;
 }
 
-void Board::addPiece(int square, int piece) {
+void Board::addPiece(int square, Piece piece) {
     squares[square] = piece;
-    bitboards[piece] |= setBit(square);
+    bitboards[piece.value] |= setBit(square);
 
-    if (P::isWhite(piece)) {
+    if (piece.isWhite()) {
         white_pieces |= setBit(square);
     } else {
         black_pieces |= setBit(square);
     }
 
-    hash ^= hashes.piece_square[piece][square];
+    hash ^= hashes.piece_square[piece.value][square];
 }
 
 void Board::removePiece(int square) {
-    int piece = squares[square];
-    squares[square] = P::None;
-    bitboards[piece] ^= setBit(square);
+    Piece piece = squares[square];
+    squares[square] = Pieces::None;
+    bitboards[piece.value] ^= setBit(square);
 
-    if (P::isWhite(piece)) {
+    if (piece.isWhite()) {
         white_pieces ^= setBit(square);
     } else {
         black_pieces ^= setBit(square);
     }
 
-    hash ^= hashes.piece_square[piece][square];
+    hash ^= hashes.piece_square[piece.value][square];
 }
 
 // does not handle captures
 void Board::movePiece(int from, int to) {
-    int piece = squares[from];
+    Piece piece = squares[from];
 
-    squares[from] = P::None;
+    squares[from] = Pieces::None;
     squares[to] = piece;
 
-    bitboards[piece] ^= (setBit(from)) | (setBit(to));
+    bitboards[piece.value] ^= (setBit(from)) | (setBit(to));
 
-    if (P::isWhite(piece)) {
+    if (piece.isWhite()) {
         white_pieces ^= (setBit(from)) | (setBit(to));
     } else {
         black_pieces ^= (setBit(from)) | (setBit(to));
     }
 
-    hash ^= hashes.piece_square[piece][from];
-    hash ^= hashes.piece_square[piece][to];
+    hash ^= hashes.piece_square[piece.value][from];
+    hash ^= hashes.piece_square[piece.value][to];
 }
 
 auto Board::loadFEN(const std::string& fen) -> bool {
@@ -106,7 +104,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
             } else if (std::isdigit(c) != 0) {
                 col += c - '0';
             } else {
-                int piece = P::getPiece(c);
+                Piece piece = Piece::getPiece(c);
                 addPiece(makeSquare(col, row), piece);
                 col++;
             }
@@ -119,9 +117,9 @@ auto Board::loadFEN(const std::string& fen) -> bool {
         }
 
         if (parts[1] == "w") {
-            color_to_move = P::White;
+            color_to_move = Piece::White;
         } else if (parts[1] == "b") {
-            color_to_move = P::Black;
+            color_to_move = Piece::Black;
         } else {
             return false;
         }
@@ -188,8 +186,8 @@ void Board::makeMove(const Move& move) {
 
     assert(!move.isNull());
 
-    int piece = squares[move.from()];
-    int capture = squares[move.to()];
+    Piece piece = squares[move.from()];
+    Piece capture = squares[move.to()];
 
     HistoryState new_state{
         move,
@@ -217,20 +215,20 @@ void Board::makeMove(const Move& move) {
         case Squares::H8: castling_rights &= ~black_king_castle; break;
     }
 
-    if (capture != P::None) {
+    if (capture != Pieces::None) {
         removePiece(move.to());
     }
 
     if (move.isPromotion()) {
         removePiece(move.from());
         if (move.type() == MoveType::PromotionQueen) {
-            addPiece(move.to(), P::makePiece(P::Queen, color_to_move));
+            addPiece(move.to(), Piece{ Piece::Queen, color_to_move });
         } else if (move.type() == MoveType::PromotionBishop) {
-            addPiece(move.to(), P::makePiece(P::Bishop, color_to_move));
+            addPiece(move.to(), Piece{ Piece::Bishop, color_to_move });
         } else if (move.type() == MoveType::PromotionKnight) {
-            addPiece(move.to(), P::makePiece(P::Knight, color_to_move));
+            addPiece(move.to(), Piece{ Piece::Knight, color_to_move });
         } else if (move.type() == MoveType::PromotionRook) {
-            addPiece(move.to(), P::makePiece(P::Rook, color_to_move));
+            addPiece(move.to(), Piece{ Piece::Rook, color_to_move });
         }
         enpassant_square = -1;
     } else {
@@ -283,7 +281,7 @@ void Board::makeMove(const Move& move) {
         movePiece(move.from(), move.to());
     }
 
-    color_to_move = P::flipColor(color_to_move);
+    color_to_move = Piece::flipColor(color_to_move);
 
     if (castling_rights != new_state.castling_rights) {
         hash ^= hashes.castling_rights[new_state.castling_rights];
@@ -300,7 +298,7 @@ void Board::makeMove(const Move& move) {
 
     hash ^= hashes.side_to_move;
 
-    if (P::pieceType(piece) == P::Pawn || capture != P::None) {
+    if (piece.type() == Piece::Pawn || capture != Pieces::None) {
         halfmove_clock = 0;
     } else {
         halfmove_clock++;
@@ -314,14 +312,14 @@ void Board::unmakeMove() {
     HistoryState state = history[--history_ptr];
     Move& move = state.move;
 
-    color_to_move = P::flipColor(color_to_move);
+    color_to_move = Piece::flipColor(color_to_move);
     enpassant_square = state.enpassant_square;
     castling_rights = state.castling_rights;
     halfmove_clock = state.halfmove_clock;
 
     if (move.isPromotion()) {
         removePiece(move.to());
-        addPiece(move.from(), P::makePiece(P::Pawn, color_to_move));
+        addPiece(move.from(), Piece(Piece::Pawn, color_to_move));
     } else {
 
         if (move.type() == MoveType::Castling) {
@@ -350,13 +348,13 @@ void Board::unmakeMove() {
                 enpassant = move.to() + BoardLength;
             }
 
-            addPiece(enpassant, P::makePiece(P::Pawn, P::flipColor(color_to_move)));
+            addPiece(enpassant, Piece(Piece::Pawn, Piece::flipColor(color_to_move)));
         }
 
         movePiece(move.to(), move.from());
     }
 
-    if (state.capture != P::None) {
+    if (state.capture != Pieces::None) {
         addPiece(move.to(), state.capture);
     }
 

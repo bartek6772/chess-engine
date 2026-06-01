@@ -37,7 +37,7 @@ inline void printBoard(const Board& board) {
     for (int row = BoardLength - 1; row >= 0; row--) {
         for (int col = 0; col < BoardLength; col++) {
             int square = row * BoardLength + col;
-            char symbol = Pieces::getSymbol(board.squares[square]);
+            char symbol = board.squares[square].getSymbol();
             std::cout << std::setw(2) << symbol;
         }
         std::cout << std::endl;

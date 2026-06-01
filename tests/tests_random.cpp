@@ -8,8 +8,8 @@ TEST(Misc, CheckmateDetection_Rh8) {
     Board board;
     board.loadFEN("k6R/p2Q1K2/p4N2/2B5/1P6/8/8/1r6 b - - 0 1");
 
-    EXPECT_EQ(MoveGenerator::isCheck(board, Pieces::White), false);
-    EXPECT_EQ(MoveGenerator::isCheck(board, Pieces::Black), true);
+    EXPECT_EQ(MoveGenerator::isCheck(board, Piece::White), false);
+    EXPECT_EQ(MoveGenerator::isCheck(board, Piece::Black), true);
 
     auto legalMoves = MoveGenerator::generateLegalMoves(board);
     EXPECT_EQ(legalMoves.size(), 0)

@@ -1,92 +1,96 @@
 #pragma once
 
-#include <array>
 #include <cctype>
-#include <string>
+#include <cstdint>
+
+struct Piece {
+
+    enum Type : uint8_t {
+        Pawn = 0,
+        Knight = 1,
+        Bishop = 2,
+        Rook = 3,
+        Queen = 4,
+        King = 5,
+        None = 6
+    };
+
+    enum Color : uint8_t {
+        White = 0,
+        Black = 1,
+    };
+
+    uint8_t value;
+    constexpr Piece() : value(2 * None + White) {}
+    constexpr Piece(Type type, Color color) : value(2 * type + color) {}
+
+    inline Type type() const {
+        return static_cast<Type>(value >> 1);
+    }
+
+    inline Color color() const {
+        return static_cast<Color>(value & 1);
+    }
+
+    inline bool isWhite() const {
+        return color() == Color::White;
+    }
+
+    inline bool isBlack() const {
+        return color() == Color::Black;
+    }
+
+    inline char getSymbol() const {
+        static constexpr char piece_symbols[] = "PNBRQK.";
+        char sign = piece_symbols[type()];
+        return isBlack() ? static_cast<char>(std::tolower(sign)) : sign;
+    }
+
+    inline static Color flipColor(Color color) {
+        return static_cast<Color>(color ^ 1);
+    }
+
+    inline static Piece getPiece(char symbol) {
+        Type type = None;
+
+        switch ((char)std::toupper(symbol)) {
+            case 'P': type = Pawn; break;
+            case 'R': type = Rook; break;
+            case 'N': type = Knight; break;
+            case 'B': type = Bishop; break;
+            case 'Q': type = Queen; break;
+            case 'K': type = King; break;
+        }
+
+        Color color = std::islower(symbol) ? Black : White;
+        return { type, color };
+    }
+
+    inline bool operator==(const Piece other) const {
+        return value == other.value;
+    }
+
+    inline bool operator!=(const Piece other) const {
+        return value != other.value;
+    }
+};
 
 namespace Pieces {
 
-inline constexpr int Pawn = 0;
-inline constexpr int Knight = 1;
-inline constexpr int Bishop = 2;
-inline constexpr int Rook = 3;
-inline constexpr int Queen = 4;
-inline constexpr int King = 5;
+inline constexpr Piece WhitePawn = { Piece::Pawn, Piece::White };
+inline constexpr Piece WhiteKnight = { Piece::Knight, Piece::White };
+inline constexpr Piece WhiteBishop = { Piece::Bishop, Piece::White };
+inline constexpr Piece WhiteRook = { Piece::Rook, Piece::White };
+inline constexpr Piece WhiteQueen = { Piece::Queen, Piece::White };
+inline constexpr Piece WhiteKing = { Piece::King, Piece::White };
 
-inline constexpr int White = 0;
-inline constexpr int Black = 1;
+inline constexpr Piece BlackPawn = { Piece::Pawn, Piece::Black };
+inline constexpr Piece BlackKnight = { Piece::Knight, Piece::Black };
+inline constexpr Piece BlackBishop = { Piece::Bishop, Piece::Black };
+inline constexpr Piece BlackRook = { Piece::Rook, Piece::Black };
+inline constexpr Piece BlackQueen = { Piece::Queen, Piece::Black };
+inline constexpr Piece BlackKing = { Piece::King, Piece::Black };
 
-inline constexpr auto makePiece(int type, int color) -> int {
-    return 2 * type + color;
-}
-
-inline constexpr int WhitePawn = makePiece(Pawn, White);
-inline constexpr int WhiteKnight = makePiece(Knight, White);
-inline constexpr int WhiteBishop = makePiece(Bishop, White);
-inline constexpr int WhiteRook = makePiece(Rook, White);
-inline constexpr int WhiteQueen = makePiece(Queen, White);
-inline constexpr int WhiteKing = makePiece(King, White);
-
-inline constexpr int BlackPawn = makePiece(Pawn, Black);
-inline constexpr int BlackKnight = makePiece(Knight, Black);
-inline constexpr int BlackBishop = makePiece(Bishop, Black);
-inline constexpr int BlackRook = makePiece(Rook, Black);
-inline constexpr int BlackQueen = makePiece(Queen, Black);
-inline constexpr int BlackKing = makePiece(King, Black);
-
-inline constexpr int None = BlackKing + 1;
-
-inline auto pieceType(int piece) -> int {
-    return piece >> 1;
-}
-inline auto pieceColor(int piece) -> int {
-    return piece & 1;
-}
-inline auto isWhite(int piece) -> bool {
-    return pieceColor(piece) == White;
-}
-inline auto isBlack(int piece) -> bool {
-    return pieceColor(piece) == Black;
-}
-inline auto flipColor(int color) {
-    return color ^ 1;
-}
-
-inline auto getSymbol(int piece) -> char {
-    static std::string piece_symbols = "PNBRQK.";
-    char sign = piece_symbols[pieceType(piece)];
-    return isBlack(piece) ? (char)std::tolower(sign) : sign;
-}
-
-inline auto getPiece(char symbol) -> int {
-    int type = Pieces::None;
-
-    switch ((char)std::toupper(symbol)) {
-        case 'P': type = Pieces::Pawn; break;
-        case 'R': type = Pieces::Rook; break;
-        case 'N': type = Pieces::Knight; break;
-        case 'B': type = Pieces::Bishop; break;
-        case 'Q': type = Pieces::Queen; break;
-        case 'K': type = Pieces::King; break;
-    }
-
-    int color = std::islower(symbol) ? Pieces::Black : Pieces::White;
-    return makePiece(type, color);
-}
-
-// clang-format off
-inline constexpr std::array<int, 12> all_pieces{ 
-    WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing, 
-    BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing 
-};
-
-inline constexpr std::array<int, 6> white_pieces{ 
-    WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing, 
-};
-
-inline constexpr std::array<int, 6> black_pieces{ 
-    BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing 
-};
-// clang-format on
+inline constexpr Piece None = { Piece::None, Piece::White };
 
 } // namespace Pieces

@@ -54,7 +54,7 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
         return 0;
     }
 
-    int color = board.color_to_move;
+    Piece::Color color = board.color_to_move;
     bool is_check = MoveGenerator::isCheck(board, color);
 
     if (!is_check) {
@@ -152,7 +152,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 
     MoveList moves = MoveGenerator::generateMoves(board);
     scoreMoves(moves, tt_move, ply);
-    int color = board.color_to_move;
+    Piece::Color color = board.color_to_move;
 
     int best_eval = -INF;
     int alpha_original = alpha;

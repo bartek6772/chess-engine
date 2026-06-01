@@ -10,7 +10,7 @@ constexpr int BishopValue = 350;
 constexpr int RookValue = 500;
 constexpr int QueenValue = 900;
 
-int getPieceValue(int piece);
+int getPieceValue(Piece piece);
 int evaluate(const Board& board);
 int evaluateRelative(const Board& board);
 

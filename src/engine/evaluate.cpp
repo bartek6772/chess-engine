@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <array>
 #include <bit>
-#include <cstdint>
 #include <utility>
 
 namespace Evaluation {
@@ -169,22 +168,20 @@ namespace {
     constexpr std::array<int, 6> mg_piece_value = { 82, 337, 365, 477, 1025, 0 };
     constexpr std::array<int, 6> eg_piece_value = { 94, 281, 297, 512, 936, 0 };
 
-    std::pair<int, int> evaluateSide(const Board& board, int color) {
-
-        using namespace Pieces;
+    std::pair<int, int> evaluateSide(const Board& board, Piece::Color color) {
 
         constexpr int FLIP_RANK = 56;
         constexpr int TOTAL_PHASE = 24;
 
-        int flip = (color == White) ? FLIP_RANK : 0;
+        int flip = (color == Piece::White) ? FLIP_RANK : 0;
 
         int mg_eval = 0;
         int eg_eval = 0;
 
-        for (int type = Pawn; type <= King; type++) {
-            int piece = Pieces::makePiece(type, color);
+        for (int type = Piece::Pawn; type != Piece::None; type++) {
+            Piece piece = Piece(static_cast<Piece::Type>(type), color);
 
-            bitmask pieces = board.bitboards[piece];
+            bitmask pieces = board.bitboards[piece.value];
             int count = std::popcount(pieces);
 
             while (pieces) {
@@ -199,20 +196,21 @@ namespace {
 
 } // namespace
 
-int getPieceValue(int piece) {
-    return piece_value[Pieces::pieceType(piece)];
+int getPieceValue(Piece piece) {
+    return piece_value[piece.type()];
 }
 
 int evaluate(const Board& board) {
     constexpr int TOTAL_PHASE = 24;
 
-    using Pieces::makePiece, Pieces::White, Pieces::Black;
+    using Piece::White, Piece::Black;
 
     int game_phase = 0;
-    for (int type = Pieces::Pawn; type < Pieces::King; type++) {
+    for (int type = Piece::Pawn; type != Piece::King; type++) {
         int weight = game_phase_piece_weight[type];
-        game_phase += std::popcount(board.bitboards[makePiece(type, White)]) * weight;
-        game_phase += std::popcount(board.bitboards[makePiece(type, Black)]) * weight;
+        auto real_type = static_cast<Piece::Type>(type);
+        game_phase += std::popcount(board.bitboards[Piece(real_type, White).value]) * weight;
+        game_phase += std::popcount(board.bitboards[Piece(real_type, Black).value]) * weight;
     }
 
     int mg_eval = 0;
