@@ -202,7 +202,6 @@ int getPieceValue(Piece piece) {
 
 int evaluate(const Board& board) {
     constexpr int TOTAL_PHASE = 24;
-
     using Piece::White, Piece::Black;
 
     int game_phase = 0;

@@ -4,6 +4,7 @@
 #include "hashes.hpp"
 #include "move.hpp"
 #include "pieces.hpp"
+#include "square.hpp"
 #include <array>
 #include <string>
 
@@ -17,7 +18,7 @@ struct Board {
     bitmask black_pieces{};
 
     Piece::Color color_to_move = Piece::White;
-    int enpassant_square = -1;
+    Square enpassant_square = Squares::None;
     int halfmove_clock = 0;
 
     bool whiteToMove() const {
@@ -30,9 +31,9 @@ struct Board {
     static constexpr int black_queen_castle = 8;
     int castling_rights;
 
-    void addPiece(int square, Piece piece);
-    void removePiece(int square);
-    void movePiece(int from, int to);
+    void addPiece(Square square, Piece piece);
+    void removePiece(Square square);
+    void movePiece(Square from, Square to);
 
     auto loadFEN(const std::string& fen) -> bool;
     void makeMove(const Move& move);
@@ -48,8 +49,8 @@ struct Board {
         Piece capture;
 
         // State before that move
+        Square enpassant_square;
         int halfmove_clock{};
-        int enpassant_square{};
         int castling_rights{};
         unsigned long long hash{};
     };

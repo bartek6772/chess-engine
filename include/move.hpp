@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utility.hpp"
+#include "square.hpp"
 #include <cstdint>
 #include <string>
 
@@ -23,12 +23,12 @@ struct Move {
     static const int to_mask = 0b0000111111000000;
     static const int flag_mask = 0b1111000000000000;
 
-    inline int from() const {
-        return data & from_mask;
+    inline Square from() const {
+        return Square(data & from_mask);
     }
 
-    inline int to() const {
-        return (data & to_mask) >> 6;
+    inline Square to() const {
+        return Square((data & to_mask) >> 6);
     }
 
     inline MoveType type() const {
@@ -37,11 +37,11 @@ struct Move {
 
     [[nodiscard]] auto toString() const -> std::string {
         std::string move{};
-        move += (char)(fileOf(from()) + 'a');
-        move += (char)(rankOf(from()) + '1');
+        move += (char)(from().file() + 'a');
+        move += (char)(from().rank() + '1');
 
-        move += (char)(fileOf(to()) + 'a');
-        move += (char)(rankOf(to()) + '1');
+        move += (char)(to().file() + 'a');
+        move += (char)(to().rank() + '1');
 
         if (isPromotion()) {
             switch (type()) {
@@ -57,7 +57,7 @@ struct Move {
 
     Move() : data(0){};
 
-    Move(int from, int to, MoveType type = MoveType::Normal) {
+    Move(Square from, Square to, MoveType type = MoveType::Normal) {
         data = (from) | (to << 6) | ((int)type << 12);
     }
 

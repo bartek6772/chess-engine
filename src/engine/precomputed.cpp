@@ -1,5 +1,6 @@
 #include "precomputed.hpp"
 #include "constants.hpp"
+#include "square.hpp"
 #include "utility.hpp"
 #include <array>
 
@@ -17,12 +18,11 @@ void precomputeKnightMoves(std::array<bitmask, BoardSize>& knightMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= setBit(makeSquare(c, r));
+                    moves |= setBit(Square(c, r));
                 }
             }
 
-            int square = makeSquare(col, row);
-            knightMoves[square] = moves;
+            knightMoves[Square(col, row)] = moves;
         }
     }
 }
@@ -41,12 +41,11 @@ void precomputeKingMoves(std::array<bitmask, BoardSize>& kingMoves) {
                 int c = col + move_col[i];
 
                 if (r >= 0 && r < BoardLength && c >= 0 && c < BoardLength) {
-                    moves |= setBit(makeSquare(c, r));
+                    moves |= setBit(Square(c, r));
                 }
             }
 
-            int square = makeSquare(col, row);
-            kingMoves[square] = moves;
+            kingMoves[Square(col, row)] = moves;
         }
     }
 }

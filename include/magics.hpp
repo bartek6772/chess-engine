@@ -1,23 +1,24 @@
 #pragma once
 
 #include "constants.hpp"
+#include "square.hpp"
 #include <array>
 
 class Magics {
 public:
-    inline bitmask getRookAttacks(int square, bitmask blockers) const {
+    inline bitmask getRookAttacks(Square square, bitmask blockers) const {
         return rook_attacks[square][(blockers * rook_magics[square]) >> (64 - RBits[square])];
     }
 
-    inline bitmask getBishopAttacks(int square, bitmask blockers) const {
+    inline bitmask getBishopAttacks(Square square, bitmask blockers) const {
         return bishop_attacks[square][(blockers * bishop_magics[square]) >> (64 - BBits[square])];
     }
 
-    inline bitmask getRookMask(int square) const {
+    inline bitmask getRookMask(Square square) const {
         return rook_masks[square];
     }
 
-    inline bitmask getBishopMask(int square) const {
+    inline bitmask getBishopMask(Square square) const {
         return bishop_masks[square];
     }
 

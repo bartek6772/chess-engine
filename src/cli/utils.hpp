@@ -2,7 +2,6 @@
 #include "board.hpp"
 #include "constants.hpp"
 #include "move_list.hpp"
-#include "pieces.hpp"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>

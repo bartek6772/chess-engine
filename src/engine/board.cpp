@@ -2,6 +2,7 @@
 #include "constants.hpp"
 #include "move.hpp"
 #include "pieces.hpp"
+#include "square.hpp"
 #include "utility.hpp"
 #include <cassert>
 #include <cctype>
@@ -19,13 +20,13 @@ void Board::clear() {
     white_pieces = 0;
     black_pieces = 0;
     history_ptr = 0;
-    enpassant_square = -1;
+    enpassant_square = Squares::None;
     castling_rights = 0;
     halfmove_clock = 0;
     hash = 0;
 }
 
-void Board::addPiece(int square, Piece piece) {
+void Board::addPiece(Square square, Piece piece) {
     squares[square] = piece;
     bitboards[piece.value] |= setBit(square);
 
@@ -38,7 +39,7 @@ void Board::addPiece(int square, Piece piece) {
     hash ^= hashes.piece_square[piece.value][square];
 }
 
-void Board::removePiece(int square) {
+void Board::removePiece(Square square) {
     Piece piece = squares[square];
     squares[square] = Pieces::None;
     bitboards[piece.value] ^= setBit(square);
@@ -53,7 +54,7 @@ void Board::removePiece(int square) {
 }
 
 // does not handle captures
-void Board::movePiece(int from, int to) {
+void Board::movePiece(Square from, Square to) {
     Piece piece = squares[from];
 
     squares[from] = Pieces::None;
@@ -105,7 +106,7 @@ auto Board::loadFEN(const std::string& fen) -> bool {
                 col += c - '0';
             } else {
                 Piece piece = Piece::getPiece(c);
-                addPiece(makeSquare(col, row), piece);
+                addPiece(Square(col, row), piece);
                 col++;
             }
         }
@@ -149,9 +150,9 @@ auto Board::loadFEN(const std::string& fen) -> bool {
         if (parts[3] != "-") {
             int file = parts[3][0] - 'a';
             int rank = parts[3][1] - '1';
-            enpassant_square = makeSquare(file, rank);
+            enpassant_square = Square(file, rank);
         } else {
-            enpassant_square = -1;
+            enpassant_square = Squares::None;
         }
     }
 
@@ -175,8 +176,8 @@ auto Board::loadFEN(const std::string& fen) -> bool {
         hash ^= hashes.side_to_move;
     }
 
-    if (enpassant_square != -1) {
-        hash ^= hashes.enpassant_file[fileOf(enpassant_square)];
+    if (enpassant_square != Squares::None) {
+        hash ^= hashes.enpassant_file[enpassant_square.file()];
     }
 
     return true;
@@ -192,8 +193,8 @@ void Board::makeMove(const Move& move) {
     HistoryState new_state{
         move,
         capture,
-        halfmove_clock,
         enpassant_square,
+        halfmove_clock,
         castling_rights,
         hash,
     };
@@ -230,7 +231,7 @@ void Board::makeMove(const Move& move) {
         } else if (move.type() == MoveType::PromotionRook) {
             addPiece(move.to(), Piece{ Piece::Rook, color_to_move });
         }
-        enpassant_square = -1;
+        enpassant_square = Squares::None;
     } else {
 
         if (move.type() == MoveType::Castling) {
@@ -251,31 +252,30 @@ void Board::makeMove(const Move& move) {
                 castling_rights &= ~(black_queen_castle | black_king_castle);
             }
 
-            int rank = rankOf(move.to());
-            int rook_start = makeSquare(rook_start_file, rank);
-            int rook_target = makeSquare(rook_target_file, rank);
+            int rank = move.to().rank();
+            Square rook_start = Square(rook_start_file, rank);
+            Square rook_target = Square(rook_target_file, rank);
             movePiece(rook_start, rook_target);
         }
 
         if (move.type() == MoveType::EnPassant) {
-            int enpassant = 0;
+            Square enpassant;
             if (whiteToMove()) {
-                enpassant = move.to() - BoardLength;
+                enpassant = Square(move.to() - BoardLength);
             } else {
-                enpassant = move.to() + BoardLength;
+                enpassant = Square(move.to() + BoardLength);
             }
-
             removePiece(enpassant);
         }
 
         if (move.type() == MoveType::DoublePush) {
             if (whiteToMove()) {
-                enpassant_square = move.to() - BoardLength;
+                enpassant_square = Square(move.to() - BoardLength);
             } else {
-                enpassant_square = move.to() + BoardLength;
+                enpassant_square = Square(move.to() + BoardLength);
             }
         } else {
-            enpassant_square = -1;
+            enpassant_square = Squares::None;
         }
 
         movePiece(move.from(), move.to());
@@ -288,12 +288,12 @@ void Board::makeMove(const Move& move) {
         hash ^= hashes.castling_rights[castling_rights];
     }
 
-    if (new_state.enpassant_square != -1) {
-        hash ^= hashes.enpassant_file[fileOf(new_state.enpassant_square)];
+    if (new_state.enpassant_square != Squares::None) {
+        hash ^= hashes.enpassant_file[new_state.enpassant_square.file()];
     }
 
-    if (enpassant_square != -1) {
-        hash ^= hashes.enpassant_file[fileOf(enpassant_square)];
+    if (enpassant_square != Squares::None) {
+        hash ^= hashes.enpassant_file[enpassant_square.file()];
     }
 
     hash ^= hashes.side_to_move;
@@ -326,7 +326,7 @@ void Board::unmakeMove() {
             int rook_start_file = 0;
             int rook_target_file = 0;
 
-            if (fileOf(move.to()) == 6) {
+            if (move.to().file() == 6) {
                 rook_start_file = 7;
                 rook_target_file = 5;
             } else {
@@ -334,18 +334,18 @@ void Board::unmakeMove() {
                 rook_target_file = 3;
             }
 
-            int rank = rankOf(move.to());
-            int rook_start = makeSquare(rook_start_file, rank);
-            int rook_target = makeSquare(rook_target_file, rank);
+            int rank = move.to().rank();
+            Square rook_start = Square(rook_start_file, rank);
+            Square rook_target = Square(rook_target_file, rank);
             movePiece(rook_target, rook_start);
         }
 
         if (move.type() == MoveType::EnPassant) {
-            int enpassant = 0;
+            Square enpassant;
             if (whiteToMove()) {
-                enpassant = move.to() - BoardLength;
+                enpassant = Square(move.to() - BoardLength);
             } else {
-                enpassant = move.to() + BoardLength;
+                enpassant = Square(move.to() + BoardLength);
             }
 
             addPiece(enpassant, Piece(Piece::Pawn, Piece::flipColor(color_to_move)));

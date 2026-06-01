@@ -1,14 +1,15 @@
 #include "magics.hpp"
 #include "constants.hpp"
+#include "square.hpp"
 #include "utility.hpp"
 #include <array>
 #include <bit>
 #include <random>
 
-bitmask calculate_rook_mask(int square) {
+bitmask calculate_rook_mask(Square square) {
     bitmask mask = 0;
-    int file = fileOf(square);
-    int rank = rankOf(square);
+    int file = square.file();
+    int rank = square.rank();
 
     for (int f = file + 1; f <= 6; f++) mask |= setBit(rank * 8 + f);
     for (int f = file - 1; f >= 1; f--) mask |= setBit(rank * 8 + f);
@@ -33,10 +34,10 @@ bitmask set_blocker_bits(int index, bitmask mask) {
     return result;
 }
 
-bitmask calculate_rook_attacks(int square, bitmask blockers) {
+bitmask calculate_rook_attacks(Square square, bitmask blockers) {
     bitmask attacks = 0ULL;
-    int file = fileOf(square);
-    int rank = rankOf(square);
+    int file = square.file();
+    int rank = square.rank();
 
     // RIGHT
     for (int f = file + 1; f < 8; f++) {
@@ -69,10 +70,10 @@ bitmask calculate_rook_attacks(int square, bitmask blockers) {
     return attacks;
 }
 
-bitmask calculate_bishop_mask(int square) {
+bitmask calculate_bishop_mask(Square square) {
     bitmask mask = 0ULL;
-    int file = fileOf(square);
-    int rank = rankOf(square);
+    int file = square.file();
+    int rank = square.rank();
 
     int r, f;
     for (r = rank + 1, f = file + 1; r <= 6 && f <= 6; r++, f++) mask |= setBit(r * 8 + f);
@@ -84,10 +85,10 @@ bitmask calculate_bishop_mask(int square) {
     return mask;
 }
 
-bitmask calculate_bishop_attack(int square, bitmask blockers) {
+bitmask calculate_bishop_attack(Square square, bitmask blockers) {
     bitmask attack = 0ULL;
-    int file = fileOf(square);
-    int rank = rankOf(square);
+    int file = square.file();
+    int rank = square.rank();
     int r, f;
 
     for (r = rank + 1, f = file + 1; r <= 7 && f <= 7; r++, f++) {
@@ -141,7 +142,7 @@ bool is_magic_valid(bitmask magic, int relevant_bits, std::vector<bitmask>& bloc
     return true;
 }
 
-bitmask find_magic(int square, int relevant_bits, std::vector<bitmask>& blockers,
+bitmask find_magic(Square square, int relevant_bits, std::vector<bitmask>& blockers,
     std::array<bitmask, 4096>& attacks) {
     std::mt19937_64 rng(square + 2026);
 
@@ -161,7 +162,9 @@ void Magics::generate() {
     std::vector<bitmask> blockers(4096);
 
     // Rook
-    for (int square = 0; square < BoardSize; square++) {
+    for (int sq = 0; sq < BoardSize; sq++) {
+        Square square(sq);
+
         // Mask
         bitmask mask = calculate_rook_mask(square);
 
@@ -174,20 +177,21 @@ void Magics::generate() {
             bitmask att = calculate_rook_attacks(square, blo);
 
             blockers[index] = blo;
-            rook_attacks[square][index] = att;
+            rook_attacks[sq][index] = att;
         }
 
         // Magic
-        bitmask magic = find_magic(square, std::popcount(mask), blockers, rook_attacks[square]);
+        bitmask magic = find_magic(square, std::popcount(mask), blockers, rook_attacks[sq]);
 
-        rook_magics[square] = magic;
-        rook_masks[square] = mask;
+        rook_magics[sq] = magic;
+        rook_masks[sq] = mask;
     }
 
     blockers.clear();
 
     // Bishop
-    for (int square = 0; square < BoardSize; square++) {
+    for (int sq = 0; sq < BoardSize; sq++) {
+        Square square(sq);
         // Mask
         bitmask mask = calculate_bishop_mask(square);
 
@@ -204,10 +208,10 @@ void Magics::generate() {
         }
 
         // Magic
-        bitmask magic = find_magic(square, std::popcount(mask), blockers, bishop_attacks[square]);
+        bitmask magic = find_magic(square, std::popcount(mask), blockers, bishop_attacks[sq]);
 
-        bishop_magics[square] = magic;
-        bishop_masks[square] = mask;
+        bishop_magics[sq] = magic;
+        bishop_masks[sq] = mask;
     }
 }
 

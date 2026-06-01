@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+
 constexpr int BoardLength = 8;
 constexpr int BoardSize = BoardLength * BoardLength;
 
@@ -30,25 +31,3 @@ constexpr bitmask RANK_5 = getRankMask(4);
 constexpr bitmask RANK_6 = getRankMask(5);
 constexpr bitmask RANK_7 = getRankMask(6);
 constexpr bitmask RANK_8 = getRankMask(7);
-
-// NOLINTBEGIN
-namespace Squares {
-constexpr bitmask A1 = 0;
-constexpr bitmask B1 = 1;
-constexpr bitmask C1 = 2;
-constexpr bitmask D1 = 3;
-constexpr bitmask E1 = 4;
-constexpr bitmask F1 = 5;
-constexpr bitmask G1 = 6;
-constexpr bitmask H1 = 7;
-
-constexpr bitmask A8 = 56;
-constexpr bitmask B8 = 57;
-constexpr bitmask C8 = 58;
-constexpr bitmask D8 = 59;
-constexpr bitmask E8 = 60;
-constexpr bitmask F8 = 61;
-constexpr bitmask G8 = 62;
-constexpr bitmask H8 = 63;
-} // namespace Squares
-// NOLINTEND
