@@ -1,6 +1,8 @@
+#include "bitboard.hpp"
 #include "board.hpp"
 #include "move_generator.hpp"
 #include "pieces.hpp"
+#include "square.hpp"
 #include <gtest/gtest.h>
 
 TEST(Misc, CheckmateDetection_Rh8) {
@@ -39,7 +41,7 @@ TEST(Misc, ReloadingFEN) {
     board.makeMove(e2e4);
     board.loadStartPos();
 
-    uint64_t e4_bit = 1ULL << 28;
-    EXPECT_EQ(board.white_pieces & e4_bit, 0ULL)
+    // uint64_t e4_bit = 1ULL << 28;
+    EXPECT_EQ(board.white_pieces & Bitboard(Square(28)), Bitboard())
         << "White pieces should not have e4 set after reloading startpos";
 }

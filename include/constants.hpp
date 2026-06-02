@@ -9,15 +9,13 @@ constexpr int BoardSize = BoardLength * BoardLength;
 constexpr int MaxPiecesCount = 12;
 constexpr int MaxSearchDepth = 64;
 
-// using bitmask = unsigned long long;
-
 inline constexpr Bitboard getFileMask(int file) {
     assert(file >= 0 && file <= 7);
     return Bitboard(0x0101010101010101ULL << file);
 }
 
 inline constexpr Bitboard getRankMask(int rank) {
-    assert(file >= 0 && file <= 7);
+    assert(rank >= 0 && rank <= 7);
     return Bitboard(0x00000000000000FFULL << (rank * 8));
 }
 

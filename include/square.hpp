@@ -24,6 +24,14 @@ struct Square {
     }
 };
 
+inline Square operator+(Square square, int offset) {
+    return Square(square.value + offset);
+}
+
+inline Square operator-(Square square, int offset) {
+    return Square(square.value - offset);
+}
+
 // NOLINTBEGIN
 namespace Squares {
 

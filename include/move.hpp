@@ -70,7 +70,7 @@ struct Move {
     }
 
     void setScore(int score) {
-        assert(score < (1 << 17 - 1));
+        assert(score < ((1 << 17) - 1));
         data = (score << 16) | (data & half_mask);
     }
 

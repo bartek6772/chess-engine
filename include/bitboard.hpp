@@ -3,6 +3,7 @@
 #include "square.hpp"
 #include <bit>
 #include <cstdint>
+#include <sys/types.h>
 
 struct Bitboard {
     uint64_t value;
@@ -18,6 +19,15 @@ struct Bitboard {
 
     constexpr Bitboard operator~() const { return Bitboard(~value); }
     explicit operator bool() const { return value != 0; }
+
+    // TODO: Try to come up with and idea how to use constants to represent mask - circular dependency issue
+    constexpr Bitboard shift_north() const { return Bitboard(value << 8); }
+    constexpr Bitboard shift_south() const { return Bitboard(value >> 8); }
+    constexpr Bitboard shift_north_east() const { return Bitboard((value << 9) & 0xfefefefefefefefe); }
+    constexpr Bitboard shift_north_west() const { return Bitboard((value << 7) & 0x7f7f7f7f7f7f7f7f); }
+    constexpr Bitboard shift_south_east() const { return Bitboard((value >> 7) & 0xfefefefefefefefe); }
+    constexpr Bitboard shift_south_west() const { return Bitboard((value >> 9) & 0x7f7f7f7f7f7f7f7f); }
+
     // clang-format on
 
     inline void clear() {
@@ -33,6 +43,10 @@ struct Bitboard {
 
     inline int count() const {
         return std::popcount(value);
+    }
+
+    inline bool test(Square square) const {
+        return (value & (1ULL << square)) != 0;
     }
 };
 

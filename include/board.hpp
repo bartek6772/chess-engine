@@ -69,4 +69,12 @@ struct Board {
     inline void loadStartPos() {
         loadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     }
+
+    inline Bitboard pieces(Piece::Type type, Piece::Color color) const {
+        return bitboards[Piece(type, color).value];
+    }
+
+    inline Bitboard pieces(Piece piece) const {
+        return bitboards[piece.value];
+    }
 };
