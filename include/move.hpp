@@ -40,7 +40,7 @@ struct Move {
     }
 
     inline int score() const {
-        return (data >> 16) & half_mask;
+        return data >> 16;
     }
 
     [[nodiscard]] auto toString() const -> std::string {
@@ -80,10 +80,6 @@ struct Move {
 
     auto operator!=(const Move other) const -> bool {
         return (data & half_mask) != (other.data & half_mask);
-    }
-
-    auto operator>(const Move other) const -> bool {
-        return data > other.data;
     }
 
     bool isNull() const {

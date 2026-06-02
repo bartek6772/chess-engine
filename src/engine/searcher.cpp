@@ -44,7 +44,7 @@ bool Searcher::shouldStop() {
 Move partialSort(int index, MoveList& moves) {
     int best_index = index;
     for (int j = index + 1; j < moves.size(); j++) {
-        if (moves[j] > moves[best_index]) {
+        if (moves[j].score() > moves[best_index].score()) {
             best_index = j;
         }
     }
@@ -87,17 +87,6 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
 
     for (int i = 0; i < moves.size(); i++) {
         if (stop_search) return 0;
-
-        // int best_index = i;
-        // for (int j = i + 1; j < moves.size(); j++) {
-        //     // TIP: moves can be compared just by value, probably - score is the most significant
-        //     // part
-        //     if (moves[j].score() > moves[best_index].score()) {
-        //         best_index = j;
-        //     }
-        // }
-        // std::swap(moves[best_index], moves[i]);
-        // Move& move = moves[i];
         Move move = partialSort(i, moves);
 
         board.makeMove(move);
@@ -173,15 +162,6 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 
     for (int i = 0; i < moves.size(); i++) {
         if (stop_search) return 0;
-
-        // int best_index = i;
-        // for (int j = i + 1; j < moves.size(); j++) {
-        //     if (moves[j].score() > moves[best_index].score()) {
-        //         best_index = j;
-        //     }
-        // }
-        // std::swap(moves[best_index], moves[i]);
-        // Move& move = moves[i];
         Move move = partialSort(i, moves);
 
         board.makeMove(move);
