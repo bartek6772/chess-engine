@@ -4,10 +4,15 @@
 #include "utility.hpp"
 #include <array>
 #include <bit>
+#include <cstdint>
 #include <random>
 
-bitmask calculate_rook_mask(Square square) {
-    bitmask mask = 0;
+inline uint64_t setBit(int bit) {
+    return 1ULL << bit;
+}
+
+uint64_t calculate_rook_mask(Square square) {
+    uint64_t mask = 0;
     int file = square.file();
     int rank = square.rank();
 
@@ -20,8 +25,8 @@ bitmask calculate_rook_mask(Square square) {
     return mask;
 }
 
-bitmask set_blocker_bits(int index, bitmask mask) {
-    bitmask result = 0;
+uint64_t set_blocker_bits(int index, uint64_t mask) {
+    uint64_t result = 0;
     int bit = 0;
     for (int i = 0; i < 64; i++) {
         if (mask & setBit(i)) {
@@ -34,8 +39,8 @@ bitmask set_blocker_bits(int index, bitmask mask) {
     return result;
 }
 
-bitmask calculate_rook_attacks(Square square, bitmask blockers) {
-    bitmask attacks = 0ULL;
+uint64_t calculate_rook_attacks(Square square, uint64_t blockers) {
+    uint64_t attacks = 0ULL;
     int file = square.file();
     int rank = square.rank();
 
@@ -70,8 +75,8 @@ bitmask calculate_rook_attacks(Square square, bitmask blockers) {
     return attacks;
 }
 
-bitmask calculate_bishop_mask(Square square) {
-    bitmask mask = 0ULL;
+uint64_t calculate_bishop_mask(Square square) {
+    uint64_t mask = 0ULL;
     int file = square.file();
     int rank = square.rank();
 
@@ -85,8 +90,8 @@ bitmask calculate_bishop_mask(Square square) {
     return mask;
 }
 
-bitmask calculate_bishop_attack(Square square, bitmask blockers) {
-    bitmask attack = 0ULL;
+uint64_t calculate_bishop_attack(Square square, uint64_t blockers) {
+    uint64_t attack = 0ULL;
     int file = square.file();
     int rank = square.rank();
     int r, f;
@@ -116,21 +121,21 @@ bitmask calculate_bishop_attack(Square square, bitmask blockers) {
     return attack;
 }
 
-bitmask random_u64(std::mt19937_64& rng) {
-    bitmask r1 = rng();
-    bitmask r2 = rng();
+uint64_t random_u64(std::mt19937_64& rng) {
+    uint64_t r1 = rng();
+    uint64_t r2 = rng();
     return (r1 & 0xFFFF'FFFF) | (r2 << 32);
 }
 
-bool is_magic_valid(bitmask magic, int relevant_bits, std::vector<bitmask>& blockers,
-    std::array<bitmask, 4096>& attacks) {
+bool is_magic_valid(uint64_t magic, int relevant_bits, std::vector<uint64_t>& blockers,
+    std::array<uint64_t, 4096>& attacks) {
 
     int size = 1 << relevant_bits;
-    static std::array<bitmask, 4096> used;
+    static std::array<uint64_t, 4096> used;
     used.fill(0);
 
     for (int i = 0; i < size; i++) {
-        bitmask index = (blockers[i] * magic) >> (BoardSize - relevant_bits);
+        uint64_t index = (blockers[i] * magic) >> (BoardSize - relevant_bits);
 
         if (used[index] != 0 && used[index] != attacks[i]) {
             return false;
@@ -142,12 +147,12 @@ bool is_magic_valid(bitmask magic, int relevant_bits, std::vector<bitmask>& bloc
     return true;
 }
 
-bitmask find_magic(Square square, int relevant_bits, std::vector<bitmask>& blockers,
-    std::array<bitmask, 4096>& attacks) {
+uint64_t find_magic(Square square, int relevant_bits, std::vector<uint64_t>& blockers,
+    std::array<uint64_t, 4096>& attacks) {
     std::mt19937_64 rng(square + 2026);
 
     for (int attempts = 0; attempts < 1'000'000; attempts++) {
-        bitmask magic = random_u64(rng) & random_u64(rng) & random_u64(rng);
+        uint64_t magic = random_u64(rng) & random_u64(rng) & random_u64(rng);
 
         if (is_magic_valid(magic, relevant_bits, blockers, attacks)) {
             return magic;
@@ -159,29 +164,29 @@ bitmask find_magic(Square square, int relevant_bits, std::vector<bitmask>& block
 
 void Magics::generate() {
 
-    std::vector<bitmask> blockers(4096);
+    std::vector<uint64_t> blockers(4096);
 
     // Rook
     for (int sq = 0; sq < BoardSize; sq++) {
         Square square(sq);
 
         // Mask
-        bitmask mask = calculate_rook_mask(square);
+        uint64_t mask = calculate_rook_mask(square);
 
         // Attacks, blockers
         int bits = std::popcount(mask);
         int total = 1 << bits;
 
         for (int index = 0; index < total; index++) {
-            bitmask blo = set_blocker_bits(index, mask);
-            bitmask att = calculate_rook_attacks(square, blo);
+            uint64_t blo = set_blocker_bits(index, mask);
+            uint64_t att = calculate_rook_attacks(square, blo);
 
             blockers[index] = blo;
             rook_attacks[sq][index] = att;
         }
 
         // Magic
-        bitmask magic = find_magic(square, std::popcount(mask), blockers, rook_attacks[sq]);
+        uint64_t magic = find_magic(square, std::popcount(mask), blockers, rook_attacks[sq]);
 
         rook_magics[sq] = magic;
         rook_masks[sq] = mask;
@@ -193,22 +198,22 @@ void Magics::generate() {
     for (int sq = 0; sq < BoardSize; sq++) {
         Square square(sq);
         // Mask
-        bitmask mask = calculate_bishop_mask(square);
+        uint64_t mask = calculate_bishop_mask(square);
 
         // Attacks, blockers
         int bits = std::popcount(mask);
         int total = 1 << bits;
 
         for (int index = 0; index < total; index++) {
-            bitmask blo = set_blocker_bits(index, mask);
-            bitmask att = calculate_bishop_attack(square, blo);
+            uint64_t blo = set_blocker_bits(index, mask);
+            uint64_t att = calculate_bishop_attack(square, blo);
 
             blockers[index] = blo;
             bishop_attacks[square][index] = att;
         }
 
         // Magic
-        bitmask magic = find_magic(square, std::popcount(mask), blockers, bishop_attacks[sq]);
+        uint64_t magic = find_magic(square, std::popcount(mask), blockers, bishop_attacks[sq]);
 
         bishop_magics[sq] = magic;
         bishop_masks[sq] = mask;

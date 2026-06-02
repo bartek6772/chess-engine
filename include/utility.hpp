@@ -4,10 +4,10 @@
 #include <bit>
 #include <cassert>
 
-inline constexpr bitmask setBit(int bit) {
-    assert(bit >= 0 && bit < 64);
-    return 1ULL << bit;
-}
+// inline constexpr bitmask setBit(int bit) {
+//     assert(bit >= 0 && bit < 64);
+//     return 1ULL << bit;
+// }
 
 // inline constexpr int rankOf(int square) {
 //     assert(bit >= 0 && bit < 64);
@@ -24,9 +24,9 @@ inline constexpr bitmask setBit(int bit) {
 //     return file + rank * BoardLength;
 // }
 
-inline int readBit(bitmask& mask) {
-    assert(mask != 0);
-    int bit = std::countr_zero(mask);
-    mask &= (mask - 1);
-    return bit;
-}
+// inline int readBit(bitmask& mask) {
+//     assert(mask != 0);
+//     int bit = std::countr_zero(mask);
+//     mask &= (mask - 1);
+//     return bit;
+// }

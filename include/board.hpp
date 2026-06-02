@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bitboard.hpp"
 #include "constants.hpp"
 #include "hashes.hpp"
 #include "move.hpp"
@@ -12,10 +13,10 @@ constexpr int MAX_GAME_MOVES = 1024;
 
 struct Board {
     std::array<Piece, BoardSize> squares{};
-    std::array<bitmask, MaxPiecesCount> bitboards{};
+    std::array<Bitboard, MaxPiecesCount> bitboards{};
 
-    bitmask white_pieces{};
-    bitmask black_pieces{};
+    Bitboard white_pieces;
+    Bitboard black_pieces;
 
     Piece::Color color_to_move = Piece::White;
     Square enpassant_square = Squares::None;

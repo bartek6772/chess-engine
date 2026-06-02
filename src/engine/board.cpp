@@ -1,4 +1,5 @@
 #include "board.hpp"
+#include "bitboard.hpp"
 #include "constants.hpp"
 #include "move.hpp"
 #include "pieces.hpp"
@@ -15,10 +16,10 @@ Board::Board() {
 }
 
 void Board::clear() {
-    bitboards.fill(0);
+    bitboards.fill({});
     squares.fill(Piece());
-    white_pieces = 0;
-    black_pieces = 0;
+    white_pieces.clear();
+    black_pieces.clear();
     history_ptr = 0;
     enpassant_square = Squares::None;
     castling_rights = 0;
@@ -28,12 +29,12 @@ void Board::clear() {
 
 void Board::addPiece(Square square, Piece piece) {
     squares[square] = piece;
-    bitboards[piece.value] |= setBit(square);
+    bitboards[piece.value] |= Bitboard(square);
 
     if (piece.isWhite()) {
-        white_pieces |= setBit(square);
+        white_pieces |= Bitboard(square);
     } else {
-        black_pieces |= setBit(square);
+        black_pieces |= Bitboard(square);
     }
 
     hash ^= hashes.piece_square[piece.value][square];
@@ -42,12 +43,12 @@ void Board::addPiece(Square square, Piece piece) {
 void Board::removePiece(Square square) {
     Piece piece = squares[square];
     squares[square] = Pieces::None;
-    bitboards[piece.value] ^= setBit(square);
+    bitboards[piece.value] ^= Bitboard(square);
 
     if (piece.isWhite()) {
-        white_pieces ^= setBit(square);
+        white_pieces ^= Bitboard(square);
     } else {
-        black_pieces ^= setBit(square);
+        black_pieces ^= Bitboard(square);
     }
 
     hash ^= hashes.piece_square[piece.value][square];
@@ -60,12 +61,12 @@ void Board::movePiece(Square from, Square to) {
     squares[from] = Pieces::None;
     squares[to] = piece;
 
-    bitboards[piece.value] ^= (setBit(from)) | (setBit(to));
+    bitboards[piece.value] ^= (Bitboard(from)) | (Bitboard(to));
 
     if (piece.isWhite()) {
-        white_pieces ^= (setBit(from)) | (setBit(to));
+        white_pieces ^= (Bitboard(from)) | (Bitboard(to));
     } else {
-        black_pieces ^= (setBit(from)) | (setBit(to));
+        black_pieces ^= (Bitboard(from)) | (Bitboard(to));
     }
 
     hash ^= hashes.piece_square[piece.value][from];

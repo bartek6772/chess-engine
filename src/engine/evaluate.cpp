@@ -1,3 +1,4 @@
+#include "bitboard.hpp"
 #include "board.hpp"
 #include "constants.hpp"
 #include "evaluation.hpp"
@@ -181,11 +182,11 @@ namespace {
         for (int type = Piece::Pawn; type != Piece::None; type++) {
             Piece piece = Piece(static_cast<Piece::Type>(type), color);
 
-            bitmask pieces = board.bitboards[piece.value];
-            int count = std::popcount(pieces);
+            Bitboard pieces = board.bitboards[piece.value];
+            // int count = std::popcount(pieces);
 
             while (pieces) {
-                int square = readBit(pieces);
+                int square = pieces.readBit();
                 mg_eval += mg_combo_pst[type][square ^ flip] + mg_piece_value[type];
                 eg_eval += eg_combo_pst[type][square ^ flip] + eg_piece_value[type];
             }
@@ -208,8 +209,8 @@ int evaluate(const Board& board) {
     for (int type = Piece::Pawn; type != Piece::King; type++) {
         int weight = game_phase_piece_weight[type];
         auto real_type = static_cast<Piece::Type>(type);
-        game_phase += std::popcount(board.bitboards[Piece(real_type, White).value]) * weight;
-        game_phase += std::popcount(board.bitboards[Piece(real_type, Black).value]) * weight;
+        game_phase += board.bitboards[Piece(real_type, White).value].count() * weight;
+        game_phase += board.bitboards[Piece(real_type, Black).value].count() * weight;
     }
 
     int mg_eval = 0;

@@ -1,25 +1,31 @@
 #pragma once
 
+#include "bitboard.hpp"
 #include "constants.hpp"
 #include "square.hpp"
 #include <array>
+#include <cstdint>
 
 class Magics {
 public:
-    inline bitmask getRookAttacks(Square square, bitmask blockers) const {
-        return rook_attacks[square][(blockers * rook_magics[square]) >> (64 - RBits[square])];
+    inline Bitboard getRookAttacks(Square square, uint64_t blockers) const {
+        uint64_t tmp =
+            rook_attacks[square][(blockers * rook_magics[square]) >> (64 - RBits[square])];
+        return Bitboard(tmp);
     }
 
-    inline bitmask getBishopAttacks(Square square, bitmask blockers) const {
-        return bishop_attacks[square][(blockers * bishop_magics[square]) >> (64 - BBits[square])];
+    inline Bitboard getBishopAttacks(Square square, uint64_t blockers) const {
+        uint64_t tmp =
+            bishop_attacks[square][(blockers * bishop_magics[square]) >> (64 - BBits[square])];
+        return Bitboard(tmp);
     }
 
-    inline bitmask getRookMask(Square square) const {
-        return rook_masks[square];
+    inline Bitboard getRookMask(Square square) const {
+        return Bitboard(rook_masks[square]);
     }
 
-    inline bitmask getBishopMask(Square square) const {
-        return bishop_masks[square];
+    inline Bitboard getBishopMask(Square square) const {
+        return Bitboard(bishop_masks[square]);
     }
 
     Magics();
@@ -28,13 +34,13 @@ private:
     void load();
     void generate();
 
-    std::array<bitmask, BoardSize> rook_magics{};
-    std::array<bitmask, BoardSize> rook_masks{};
-    std::array<std::array<bitmask, 4096>, BoardSize> rook_attacks{};
+    std::array<uint64_t, BoardSize> rook_magics{};
+    std::array<uint64_t, BoardSize> rook_masks{};
+    std::array<std::array<uint64_t, 4096>, BoardSize> rook_attacks{};
 
-    std::array<bitmask, BoardSize> bishop_magics{};
-    std::array<bitmask, BoardSize> bishop_masks{};
-    std::array<std::array<bitmask, 4096>, BoardSize> bishop_attacks{};
+    std::array<uint64_t, BoardSize> bishop_magics{};
+    std::array<uint64_t, BoardSize> bishop_masks{};
+    std::array<std::array<uint64_t, 4096>, BoardSize> bishop_attacks{};
 
     // clang-format off
     inline static constexpr int RBits[64] = {
