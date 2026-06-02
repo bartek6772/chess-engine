@@ -4,7 +4,6 @@
 #include "move.hpp"
 #include "pieces.hpp"
 #include "square.hpp"
-#include "utility.hpp"
 #include <cassert>
 #include <cctype>
 #include <sstream>

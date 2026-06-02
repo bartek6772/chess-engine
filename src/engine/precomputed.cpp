@@ -2,7 +2,6 @@
 #include "bitboard.hpp"
 #include "constants.hpp"
 #include "square.hpp"
-#include "utility.hpp"
 #include <array>
 
 void precomputeKnightMoves(std::array<Bitboard, BoardSize>& knightMoves) {

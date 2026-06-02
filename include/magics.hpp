@@ -9,15 +9,13 @@
 class Magics {
 public:
     inline Bitboard getRookAttacks(Square square, uint64_t blockers) const {
-        uint64_t tmp =
-            rook_attacks[square][(blockers * rook_magics[square]) >> (64 - RBits[square])];
-        return Bitboard(tmp);
+        int index = (blockers * rook_magics[square]) >> (64 - RBits[square]);
+        return Bitboard(rook_attacks[square][index]);
     }
 
     inline Bitboard getBishopAttacks(Square square, uint64_t blockers) const {
-        uint64_t tmp =
-            bishop_attacks[square][(blockers * bishop_magics[square]) >> (64 - BBits[square])];
-        return Bitboard(tmp);
+        int index = (blockers * bishop_magics[square]) >> (64 - BBits[square]);
+        return Bitboard(bishop_attacks[square][index]);
     }
 
     inline Bitboard getRookMask(Square square) const {

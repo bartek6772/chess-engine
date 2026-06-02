@@ -8,7 +8,6 @@
 #include "pieces.hpp"
 #include "precomputed.hpp"
 #include "square.hpp"
-#include "utility.hpp"
 #include <bit>
 #include <optional>
 
@@ -43,31 +42,16 @@ namespace {
 
     Bitboard getRookAttack(const Board& board, const Magics& magics, Square from) {
         Bitboard all_pieces = board.white_pieces | board.black_pieces;
-        // Bitboard blockers = all_pieces & magics.getRookMask(from);
-        // return magics.getRookAttacks(from, blockers.value);
         return getRookAttack(all_pieces, magics, from);
     }
 
     Bitboard getBishopAttack(const Board& board, const Magics& magics, Square from) {
         Bitboard all_pieces = board.white_pieces | board.black_pieces;
-        // Bitboard blockers = all_pieces & magics.getBishopMask(from);
-        // return magics.getBishopAttacks(from, blockers.value);
         return getBishopAttack(all_pieces, magics, from);
     }
 
     Bitboard getPawnsAttacks(const Board& board, Piece::Color color) {
-        // Bitboard attacks;
         Bitboard pawns = board.bitboards[Piece(Piece::Pawn, color).value];
-
-        // if (color == Piece::White) {
-        //     attacks |= Bitboard{ (pawns & ~FILE_A).value << 7 };
-        //     attacks |= Bitboard{ (pawns & ~FILE_H).value << 9 };
-        // } else {
-        //     attacks |= Bitboard{ (pawns & ~FILE_A).value >> 9 };
-        //     attacks |= Bitboard{ (pawns & ~FILE_H).value >> 7 };
-        // }
-
-        // return attacks;
         return getPawnsAttacks(pawns, color);
     }
 
@@ -117,11 +101,11 @@ namespace {
         }
 
         while (pieces) {
-            int from = pieces.readBit();
+            Square from = pieces.readBit();
             Bitboard mask = precomputed.knightMoves[from] & ~friends;
             if (captures) mask &= enemies;
             while (mask) {
-                int target = mask.readBit();
+                Square target = mask.readBit();
                 moves.push({ Square(from), Square(target) });
             }
         }
@@ -138,12 +122,12 @@ namespace {
         }
 
         while (pieces) {
-            Square from{ pieces.readBit() };
+            Square from = pieces.readBit();
 
             Bitboard targets = getRookAttack(board, magics, from) & ~friends;
             if (captures) targets &= enemies;
             while (targets) {
-                Square target{ targets.readBit() };
+                Square target = targets.readBit();
                 moves.push({ from, target });
             }
         }
@@ -160,12 +144,12 @@ namespace {
         }
 
         while (pieces) {
-            Square from{ pieces.readBit() };
+            Square from = pieces.readBit();
 
             Bitboard targets = getBishopAttack(board, magics, from) & ~friends;
             if (captures) targets &= enemies;
             while (targets) {
-                Square target{ targets.readBit() };
+                Square target = targets.readBit();
                 moves.push({ from, target });
             }
         }
@@ -182,7 +166,7 @@ namespace {
         }
 
         while (pieces) {
-            Square from{ pieces.readBit() };
+            Square from = pieces.readBit();
 
             Bitboard targets1 = getRookAttack(board, magics, from);
             Bitboard targets2 = getBishopAttack(board, magics, from);
@@ -191,7 +175,7 @@ namespace {
             if (captures) targets &= enemies;
 
             while (targets) {
-                Square target{ targets.readBit() };
+                Square target = targets.readBit();
                 moves.push({ from, target });
             }
         }
@@ -224,8 +208,8 @@ namespace {
 
         auto processAttacks = [&](Bitboard attacks, int offset) {
             while (attacks) {
-                Square to{ attacks.readBit() };
-                Square from{ to - offset };
+                Square to = attacks.readBit();
+                Square from = Square{ to - offset };
 
                 if (to == board.enpassant_square) {
                     moves.push({ from, to, MoveType::EnPassant });
@@ -285,15 +269,15 @@ namespace {
         }
 
         while (single_pushes) {
-            int target = single_pushes.readBit();
-            int from = target - 8 * dir;
-            movePawn(Square(from), Square(target));
+            Square target = single_pushes.readBit();
+            Square from = Square(target - 8 * dir);
+            movePawn(from, target);
         }
 
         while (double_pushes) {
-            int target = double_pushes.readBit();
-            int from = target - 16 * dir;
-            moves.push({ Square(from), Square(target), MoveType::DoublePush });
+            Square target = double_pushes.readBit();
+            Square from = Square(target - 16 * dir);
+            moves.push({ from, target, MoveType::DoublePush });
         }
         // NOLINTEND
 

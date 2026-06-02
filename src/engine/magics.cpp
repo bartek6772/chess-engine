@@ -1,7 +1,6 @@
 #include "magics.hpp"
 #include "constants.hpp"
 #include "square.hpp"
-#include "utility.hpp"
 #include <array>
 #include <bit>
 #include <cstdint>
@@ -186,7 +185,7 @@ void Magics::generate() {
         }
 
         // Magic
-        uint64_t magic = find_magic(square, std::popcount(mask), blockers, rook_attacks[sq]);
+        uint64_t magic = find_magic(square, bits, blockers, rook_attacks[sq]);
 
         rook_magics[sq] = magic;
         rook_masks[sq] = mask;
@@ -213,7 +212,7 @@ void Magics::generate() {
         }
 
         // Magic
-        uint64_t magic = find_magic(square, std::popcount(mask), blockers, bishop_attacks[sq]);
+        uint64_t magic = find_magic(square, bits, blockers, bishop_attacks[sq]);
 
         bishop_magics[sq] = magic;
         bishop_masks[sq] = mask;

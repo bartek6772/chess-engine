@@ -1,12 +1,10 @@
 #include "bitboard.hpp"
 #include "board.hpp"
-#include "constants.hpp"
 #include "evaluation.hpp"
 #include "pieces.hpp"
-#include "utility.hpp"
+#include "square.hpp"
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <utility>
 
 namespace Evaluation {
@@ -186,7 +184,7 @@ namespace {
             // int count = std::popcount(pieces);
 
             while (pieces) {
-                int square = pieces.readBit();
+                Square square = pieces.readBit();
                 mg_eval += mg_combo_pst[type][square ^ flip] + mg_piece_value[type];
                 eg_eval += eg_combo_pst[type][square ^ flip] + eg_piece_value[type];
             }

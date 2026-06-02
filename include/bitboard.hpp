@@ -24,11 +24,11 @@ struct Bitboard {
         value = 0ULL;
     }
 
-    inline int readBit() {
-        // assert(value != 0);
+    inline Square readBit() {
+        assert(value != 0);
         int bit = std::countr_zero(value);
         value &= (value - 1);
-        return bit;
+        return Square(bit);
     }
 
     inline int count() const {
