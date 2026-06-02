@@ -348,12 +348,12 @@ bool isCheck(const Board& board, Piece::Color color) {
 auto generateMoves(const Board& board) -> MoveList {
     MoveList moves;
 
-    // TODO: try changing order
-    generateKnightMoves(board, moves, false);
-    generateRookMoves(board, moves, false);
-    generateBishopMoves(board, moves, false);
+    // Ordered by mobility - how often you would move that in game
     generateQueenMoves(board, moves, false);
+    generateKnightMoves(board, moves, false);
     generatePawnMoves(board, moves);
+    generateBishopMoves(board, moves, false);
+    generateRookMoves(board, moves, false);
     generateKingMoves(board, moves, false);
 
     return moves;
@@ -362,11 +362,12 @@ auto generateMoves(const Board& board) -> MoveList {
 auto generateCaptures(Board& board) -> MoveList {
     MoveList captures;
 
-    generateKnightMoves(board, captures, true);
-    generateRookMoves(board, captures, true);
-    generateBishopMoves(board, captures, true);
-    generateQueenMoves(board, captures, true);
+    // Ordered by value
     generatePawnCaptures(board, captures);
+    generateKnightMoves(board, captures, true);
+    generateBishopMoves(board, captures, true);
+    generateRookMoves(board, captures, true);
+    generateQueenMoves(board, captures, true);
     generateKingMoves(board, captures, true);
 
     return captures;

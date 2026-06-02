@@ -53,7 +53,6 @@ Move partialSort(int index, MoveList& moves) {
 }
 
 int Searcher::quiescence(int alpha, int beta, int ply) {
-    // stats.nodes++;
     stats.quiescence_nodes++;
     stats.quienscence_depth = std::max(stats.quienscence_depth, ply);
 
@@ -75,7 +74,6 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
     }
 
     MoveList moves;
-
     if (ply < 2 && is_check) {
         moves = MoveGenerator::generateMoves(board);
     } else {
@@ -125,7 +123,6 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
     }
 
     pv_table[ply].clear();
-
     int remaining_depth = depth - ply;
     Move tt_move = Move();
 
@@ -294,14 +291,10 @@ SearchResult Searcher::findBestMove(int depth, int time) {
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
 
         uint64_t nodes_before = stats.quiescence_nodes;
-
         int score = negamax(current_depth, 0, -INF, INF);
-
         stats.nodes += stats.quiescence_nodes - nodes_before;
 
-        if (stop_search) {
-            break;
-        }
+        if (stop_search) break;
 
         best_pv = pv_table[0];
         best_score = score;
@@ -325,7 +318,6 @@ SearchResult Searcher::findBestMove(int depth, int time) {
     int absolute_score = best_score * (board.whiteToMove() ? 1 : -1);
 
     std::vector<Move> pv(best_pv.moves.begin(), best_pv.moves.begin() + best_pv.count);
-
     return {
         .best_move = pv.empty() ? initial_moves[0] : best_pv.moves[0],
         .pv = pv,
