@@ -50,11 +50,14 @@ private:
     std::atomic<bool> stop_search = false;
     bool info = false;
 
-    std::array<std::array<Move, 2>, MaxSearchDepth + 1> killer_moves{};
+    std::array<std::array<Move, 2>, MaxEnginePLY + 1> killer_moves{};
     std::chrono::time_point<std::chrono::steady_clock> start_point;
     int time_limit = 0;
 
+    enum NodeType { ROOT, PV, NON_PV };
+
     int quiescence(int alpha, int beta, int ply);
+    template <NodeType>
     int negamax(int depth, int ply, int alpha, int beta);
     void scoreMoves(MoveList& moves, Move pv_move, int ply);
 
@@ -66,7 +69,7 @@ private:
 
     struct PVLine {
         int count = 0;
-        std::array<Move, MaxSearchDepth + 1> moves;
+        std::array<Move, MaxEnginePLY + 1> moves;
 
         void push(const Move& move) {
             moves[count++] = move;
@@ -81,5 +84,5 @@ private:
         }
     };
 
-    std::array<PVLine, MaxSearchDepth + 1> pv_table;
+    std::array<PVLine, MaxEnginePLY + 1> pv_table;
 };

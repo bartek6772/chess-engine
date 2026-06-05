@@ -8,6 +8,7 @@ constexpr int BoardSize = BoardLength * BoardLength;
 
 constexpr int MaxPiecesCount = 12;
 constexpr int MaxSearchDepth = 64;
+constexpr int MaxEnginePLY = 2 * MaxSearchDepth;
 
 inline constexpr Bitboard getFileMask(int file) {
     assert(file >= 0 && file <= 7);

@@ -1,5 +1,6 @@
 #include "searcher.hpp"
 #include "board.hpp"
+#include "constants.hpp"
 #include "evaluation.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
@@ -19,15 +20,17 @@ constexpr int MATE = 30'000;
 constexpr int INF = 100'000;
 constexpr int STOP_INTERVAL = 1024;
 
+constexpr int MATE_THRESHOLD = MATE - MaxEnginePLY;
+
 int scoreToTT(int score, int ply) {
-    if (score > 90000) return score + ply;
-    if (score < -90000) return score - ply;
+    if (score > MATE_THRESHOLD) return score + ply;
+    if (score < -MATE_THRESHOLD) return score - ply;
     return score;
 }
 
 int scoreFromTT(int score, int ply) {
-    if (score > 90000) return score - ply;
-    if (score < -90000) return score + ply;
+    if (score > MATE_THRESHOLD) return score - ply;
+    if (score < -MATE_THRESHOLD) return score + ply;
     return score;
 }
 
@@ -80,7 +83,7 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
     } else {
         moves = MoveGenerator::generateCaptures(board);
     }
-    scoreMoves(moves, Move(), MaxSearchDepth);
+    scoreMoves(moves, Move(), MaxEnginePLY);
 
     bool has_legal_move = false;
 
@@ -109,6 +112,7 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
     return alpha;
 }
 
+template <Searcher::NodeType node_type>
 int Searcher::negamax(int depth, int ply, int alpha, int beta) {
     stats.nodes++;
 
@@ -173,12 +177,12 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
         int eval = 0;
         if (first_legal_move) {
             first_legal_move = false;
-            eval = -negamax(depth, ply + 1, -beta, -alpha);
+            eval = -negamax<PV>(depth, ply + 1, -beta, -alpha);
         } else {
-            eval = -negamax(depth, ply + 1, -alpha - 1, -alpha);
+            eval = -negamax<NON_PV>(depth, ply + 1, -alpha - 1, -alpha);
 
             if (eval > alpha && eval < beta) {
-                eval = -negamax(depth, ply + 1, -beta, -alpha);
+                eval = -negamax<PV>(depth, ply + 1, -beta, -alpha);
             }
         }
 
@@ -286,18 +290,19 @@ SearchResult Searcher::findBestMove(int depth, int time) {
     stats = SearchStats();
     stop_search = false;
     time_limit = time;
-
     PVLine best_pv;
 
     MoveList initial_moves = MoveGenerator::generateLegalMoves(board);
     scoreMoves(initial_moves, Move(), 0);
-    best_pv.push(partialSort(0, initial_moves));
+    partialSort(0, initial_moves);
+
+    depth = std::min(depth, MaxSearchDepth);
 
     int best_score = 0;
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
 
         uint64_t nodes_before = stats.quiescence_nodes;
-        int score = negamax(current_depth, 0, -INF, INF);
+        int score = negamax<ROOT>(current_depth, 0, -INF, INF);
         stats.nodes += stats.quiescence_nodes - nodes_before;
 
         if (stop_search) break;

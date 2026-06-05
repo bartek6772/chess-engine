@@ -141,3 +141,31 @@ Internal improvements:
 
 - new pieces codes
 - started using asserts
+
+---
+
+### v5.1 - Codebase refactor
+
+Internal improvements:
+
+- Square is zero cost abstraction
+- Piece is zero cost abstraction
+- Bitboard is zero cost abstraction
+- Packed Move into single 32 bit int
+
+---
+
+### v5.2 - Principle Variation Search
+
+NPS: 9'438'14
+
+New features:
+- Principle Variation Search (PVS)
+
+Internal improvements:
+- Refactored Board
+- Optimize size of board history
+- Optimize size of transposition table
+
+> [!Note]
+> Implemented Static Exchange Evaluation but can not use it effectively
