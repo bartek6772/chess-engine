@@ -1,6 +1,5 @@
 #include "searcher.hpp"
 #include "board.hpp"
-#include "constants.hpp"
 #include "evaluation.hpp"
 #include "move.hpp"
 #include "move_generator.hpp"
@@ -8,14 +7,16 @@
 #include "pieces.hpp"
 #include "transposition_table.hpp"
 #include <algorithm>
+#include <array>
 #include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <ostream>
 #include <utility>
 #include <vector>
 
-constexpr int MATE = 99999;
-constexpr int INF = 100'000'000;
+constexpr int MATE = 30'000;
+constexpr int INF = 100'000;
 constexpr int STOP_INTERVAL = 1024;
 
 int scoreToTT(int score, int ply) {
@@ -56,7 +57,7 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
     stats.quiescence_nodes++;
     stats.quienscence_depth = std::max(stats.quienscence_depth, ply);
 
-    if (stats.nodes % STOP_INTERVAL == 0 && shouldStop()) {
+    if (stats.quiescence_nodes % STOP_INTERVAL == 0 && shouldStop()) {
         stop_search = true;
     }
 
@@ -79,8 +80,8 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
     } else {
         moves = MoveGenerator::generateCaptures(board);
     }
-
     scoreMoves(moves, Move(), MaxSearchDepth);
+
     bool has_legal_move = false;
 
     for (int i = 0; i < moves.size(); i++) {
@@ -101,7 +102,8 @@ int Searcher::quiescence(int alpha, int beta, int ply) {
     }
 
     if (is_check && !has_legal_move) {
-        return -MATE + ply;
+        int current_depth = stats.depth + 1;
+        return -MATE + (ply + current_depth);
     }
 
     return alpha;
@@ -156,6 +158,7 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 
     int best_eval = -INF;
     int alpha_original = alpha;
+    bool first_legal_move = true;
 
     for (int i = 0; i < moves.size(); i++) {
         if (stop_search) return 0;
@@ -166,7 +169,19 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
             board.unmakeMove();
             continue;
         }
-        int eval = -negamax(depth, ply + 1, -beta, -alpha);
+
+        int eval = 0;
+        if (first_legal_move) {
+            first_legal_move = false;
+            eval = -negamax(depth, ply + 1, -beta, -alpha);
+        } else {
+            eval = -negamax(depth, ply + 1, -alpha - 1, -alpha);
+
+            if (eval > alpha && eval < beta) {
+                eval = -negamax(depth, ply + 1, -beta, -alpha);
+            }
+        }
+
         board.unmakeMove();
 
         if (eval > best_eval) {
@@ -244,25 +259,25 @@ void Searcher::scoreMoves(MoveList& moves, Move pv_move, int ply) {
     constexpr int QUEEN_PROMOTION = 29'000;
     constexpr int CAPTURE = 20'000;
     constexpr int MINOR_PROMOTION = 15'000;
-    constexpr int KILLER_1 = 10'000;
-    constexpr int KILLER_2 = 9'000;
+    constexpr int KILLER_1 = 9'000;
+    constexpr int KILLER_2 = 7'000;
+
+    using MoveType::PromotionQueen;
 
     for (Move& move : moves) {
-        if (move == pv_move) {
-            move.setScore(PV_MOVE);
-        } else if (isCapture(move)) {
-            move.setScore(CAPTURE + mvv_lva(move));
-        } else if (move == killer_moves[ply][0]) {
-            move.setScore(KILLER_1);
-        } else if (move == killer_moves[ply][1]) {
-            move.setScore(KILLER_2);
-        } else if (move.type() == MoveType::PromotionQueen) {
-            move.setScore(QUEEN_PROMOTION);
-        } else if (move.isPromotion()) {
-            move.setScore(MINOR_PROMOTION);
-        } else {
-            move.setScore(0);
-        }
+        int score = [&]() {
+            // clang-format off
+            if (move == pv_move)               return PV_MOVE;
+            if (isCapture(move))               return CAPTURE + mvv_lva(move);
+            if (move == killer_moves[ply][0])  return KILLER_1;
+            if (move == killer_moves[ply][1])  return KILLER_2;
+            if (move.type() == PromotionQueen) return QUEEN_PROMOTION;
+            if (move.isPromotion())            return MINOR_PROMOTION;
+            return 0;
+            // clang-format on
+        }();
+
+        move.setScore(score);
     }
 }
 
@@ -275,17 +290,8 @@ SearchResult Searcher::findBestMove(int depth, int time) {
     PVLine best_pv;
 
     MoveList initial_moves = MoveGenerator::generateLegalMoves(board);
-    if (initial_moves.size() > 0) {
-        scoreMoves(initial_moves, Move(), 0);
-
-        int best_guess = 0;
-        for (int i = 0; i < initial_moves.size(); i++) {
-            if (initial_moves[i].score() > initial_moves[best_guess].score()) {
-                best_guess = i;
-            }
-        }
-        best_pv.push(initial_moves[best_guess]);
-    }
+    scoreMoves(initial_moves, Move(), 0);
+    best_pv.push(partialSort(0, initial_moves));
 
     int best_score = 0;
     for (int current_depth = 1; current_depth <= depth; current_depth++) {
