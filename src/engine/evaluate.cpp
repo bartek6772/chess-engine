@@ -5,6 +5,7 @@
 #include "square.hpp"
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <utility>
 
 namespace Evaluation {
@@ -163,7 +164,7 @@ namespace {
     };
 
     constexpr std::array<int, 6> game_phase_piece_weight = { 0, 1, 1, 2, 4, 0 };
-    constexpr std::array<int, 6> piece_value = { 100, 320, 350, 500, 900, 0 };
+    constexpr std::array<int, 6> piece_value = { 100, 320, 350, 500, 900, 10000 };
     constexpr std::array<int, 6> mg_piece_value = { 82, 337, 365, 477, 1025, 0 };
     constexpr std::array<int, 6> eg_piece_value = { 94, 281, 297, 512, 936, 0 };
 
@@ -193,6 +194,7 @@ namespace {
 } // namespace
 
 int getPieceValue(Piece piece) {
+    assert(piece != Pieces::None);
     return piece_value[piece.type()];
 }
 

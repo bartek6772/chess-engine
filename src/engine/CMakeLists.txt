@@ -6,6 +6,7 @@ add_library(engine STATIC
     diagnostics.cpp
     evaluate.cpp
     searcher.cpp
+    static_exchange.cpp
 )
 
 target_include_directories(engine 

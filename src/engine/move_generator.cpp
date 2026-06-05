@@ -347,46 +347,52 @@ auto generateLegalCaptures(Board& board) -> MoveList {
     return filterLegalMoves(board, generateCaptures(board));
 }
 
-// std::optional<Square> squareAttackedFrom(const std::array<bitmask, MaxPiecesCount>& bitboards,
-//     bitmask all_pieces, Square square, Piece::Color attacker_color) {
+Bitboard getAttackers(Square square, const Board& board) {
+    Bitboard attackers;
+    Bitboard all_pieces = board.pieces();
 
-//     bitmask pawns = bitboards[Piece(Piece::Pawn, attacker_color).value];
-//     bitmask pawn_attacks = getPawnsAttacks(pawns, attacker_color);
-//     if (pawn_attacks & setBit(square)) {
-//         return square;
-//     }
+    // Pawns
+    Bitboard pawns = board.pieces(Piece::Pawn);
+    Bitboard pawn_attacks = getPawnsAttacks(Bitboard(square), Piece::White) |
+                            getPawnsAttacks(Bitboard(square), Piece::Black);
+    attackers |= (pawn_attacks & pawns);
 
-//     if (precomputed.knightMoves[square] & bitboards[Piece(Piece::Knight, attacker_color).value])
-//     {
-//         return square;
-//     }
+    // Knights
+    attackers |= board.pieces(Piece::Knight) & precomputed.knightMoves[square];
 
-//     bitmask rook_rays = getRookAttack(all_pieces, magics, square);
-//     bitmask bishop_rays = getBishopAttack(all_pieces, magics, square);
-//     bitmask queen_rays = rook_rays | bishop_rays;
+    // Bishops, Rooks, Queens
+    Bitboard rook_rays = getRookAttack(all_pieces, square);
+    Bitboard bishop_rays = getBishopAttack(all_pieces, square);
 
-//     bitmask rooks = bitboards[Piece(Piece::Rook, attacker_color).value];
-//     bitmask bishops = bitboards[Piece(Piece::Bishop, attacker_color).value];
-//     bitmask queens = bitboards[Piece(Piece::Queen, attacker_color).value];
+    Bitboard rooks = board.pieces(Piece::Rook);
+    Bitboard bishops = board.pieces(Piece::Bishop);
+    Bitboard queens = board.pieces(Piece::Queen);
 
-//     if ((bishop_rays & bishops) != 0) {
-//         return Square(std::countr_zero(bishop_rays & bishops));
-//     }
+    attackers |= bishop_rays & (bishops | queens);
+    attackers |= rook_rays & (rooks | queens);
 
-//     if ((rook_rays & rooks) != 0) {
-//         return Square(std::countr_zero(rook_rays & rooks));
-//     }
+    // King
+    attackers |= board.pieces(Piece::King) & precomputed.kingMoves[square];
 
-//     if ((queen_rays & queens) != 0) {
-//         return Square(std::countr_zero(queen_rays & queens));
-//     }
+    return attackers;
+}
 
-//     // if (precomputed.kingMoves[square] & board.bitboards[Piece(Piece::King,
-//     // attacker_color).value]) {
-//     //     return true;
-//     // }
+Bitboard getXrayAttackers(
+    Square square, Square cleared_attacker, Bitboard occupied, const Board& board) {
 
-//     return std::nullopt;
-// }
+    Bitboard attackers;
+
+    if (magics.getRookMask(square) & Bitboard(cleared_attacker)) {
+        Bitboard pieces = board.pieces(Piece::Rook) | board.pieces(Piece::Queen);
+        attackers |= getRookAttack(occupied, square) & pieces;
+    }
+
+    else if (magics.getBishopMask(square) & Bitboard(cleared_attacker)) {
+        Bitboard pieces = board.pieces(Piece::Bishop) | board.pieces(Piece::Queen);
+        attackers |= getBishopAttack(occupied, square) & pieces;
+    }
+
+    return attackers;
+}
 
 } // namespace MoveGenerator
