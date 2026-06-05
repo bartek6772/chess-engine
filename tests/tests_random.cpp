@@ -42,6 +42,6 @@ TEST(Misc, ReloadingFEN) {
     board.loadStartPos();
 
     // uint64_t e4_bit = 1ULL << 28;
-    EXPECT_EQ(board.white_pieces & Bitboard(Square(28)), Bitboard())
+    EXPECT_EQ(board.pieces(Piece::White) & Bitboard(Square(28)), Bitboard())
         << "White pieces should not have e4 set after reloading startpos";
 }

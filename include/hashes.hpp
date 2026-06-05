@@ -5,10 +5,10 @@
 #include <random>
 
 struct Hashes {
-    std::array<std::array<unsigned long long, BoardSize>, MaxPiecesCount> piece_square{};
-    std::array<unsigned long long, BoardLength> enpassant_file{};
-    std::array<unsigned long long, 16> castling_rights{};
-    unsigned long long side_to_move;
+    std::array<std::array<uint64_t, BoardSize>, MaxPiecesCount> piece_square{};
+    std::array<uint64_t, BoardLength> enpassant_file{};
+    std::array<uint64_t, 16> castling_rights{};
+    uint64_t side_to_move;
 
     Hashes() {
         std::mt19937_64 rng(2026);

@@ -8,19 +8,18 @@
 #include "pieces.hpp"
 #include "precomputed.hpp"
 #include "square.hpp"
-#include <optional>
 
 namespace MoveGenerator {
 namespace {
     const Precomputed precomputed{};
     const Magics magics{};
 
-    Bitboard getRookAttack(Bitboard all_pieces, const Magics& magics, Square from) {
+    Bitboard getRookAttack(Bitboard all_pieces, Square from) {
         Bitboard blockers = all_pieces & magics.getRookMask(from);
         return magics.getRookAttacks(from, blockers.value);
     }
 
-    Bitboard getBishopAttack(Bitboard all_pieces, const Magics& magics, Square from) {
+    Bitboard getBishopAttack(Bitboard all_pieces, Square from) {
         Bitboard blockers = all_pieces & magics.getBishopMask(from);
         return magics.getBishopAttacks(from, blockers.value);
     }
@@ -39,14 +38,12 @@ namespace {
         return attacks;
     }
 
-    Bitboard getRookAttack(const Board& board, const Magics& magics, Square from) {
-        Bitboard all_pieces = board.white_pieces | board.black_pieces;
-        return getRookAttack(all_pieces, magics, from);
+    Bitboard getRookAttack(const Board& board, Square from) {
+        return getRookAttack(board.pieces(), from);
     }
 
-    Bitboard getBishopAttack(const Board& board, const Magics& magics, Square from) {
-        Bitboard all_pieces = board.white_pieces | board.black_pieces;
-        return getBishopAttack(all_pieces, magics, from);
+    Bitboard getBishopAttack(const Board& board, Square from) {
+        return getBishopAttack(board.pieces(), from);
     }
 
     Bitboard getPawnsAttacks(const Board& board, Piece::Color color) {
@@ -55,22 +52,22 @@ namespace {
     }
 
     bool isSquareAttackedBy(const Board& board, Square square, Piece::Color attacker_color) {
+        using enum Piece::Type;
 
-        if (precomputed.knightMoves[square] & board.pieces(Piece::Knight, attacker_color)) {
+        if (precomputed.knightMoves[square] & board.pieces(Knight, attacker_color)) {
             return true;
         }
 
-        // Consider shifting king instead of pawns, maybe can get rid of unnecessary method
         if (getPawnsAttacks(board, attacker_color).test(square)) {
             return true;
         }
 
-        Bitboard rook_rays = getRookAttack(board, magics, square);
-        Bitboard bishop_rays = getBishopAttack(board, magics, square);
+        Bitboard rook_rays = getRookAttack(board, square);
+        Bitboard bishop_rays = getBishopAttack(board, square);
 
-        Bitboard rooks = board.pieces(Piece::Rook, attacker_color);
-        Bitboard bishops = board.pieces(Piece::Bishop, attacker_color);
-        Bitboard queens = board.pieces(Piece::Queen, attacker_color);
+        Bitboard rooks = board.pieces(Rook, attacker_color);
+        Bitboard bishops = board.pieces(Bishop, attacker_color);
+        Bitboard queens = board.pieces(Queen, attacker_color);
 
         if (rook_rays & (rooks | queens)) {
             return true;
@@ -80,7 +77,7 @@ namespace {
             return true;
         }
 
-        if (precomputed.kingMoves[square] & board.pieces(Piece::King, attacker_color)) {
+        if (precomputed.kingMoves[square] & board.pieces(King, attacker_color)) {
             return true;
         }
 
@@ -90,12 +87,8 @@ namespace {
     void generateKnightMoves(const Board& board, MoveList& moves, bool captures) {
         Piece::Color color = board.color_to_move;
         Bitboard pieces = board.pieces(Piece::Knight, color);
-        Bitboard friends = board.white_pieces;
-        Bitboard enemies = board.black_pieces;
-
-        if (color == Piece::Black) {
-            std::swap(friends, enemies);
-        }
+        Bitboard friends = board.pieces(color);
+        Bitboard enemies = board.pieces(Piece::flipColor(color));
 
         while (pieces) {
             Square from = pieces.readBit();
@@ -111,17 +104,13 @@ namespace {
     void generateRookMoves(const Board& board, MoveList& moves, bool captures) {
         Piece::Color color = board.color_to_move;
         Bitboard pieces = board.pieces(Piece::Rook, color);
-        Bitboard friends = board.white_pieces;
-        Bitboard enemies = board.black_pieces;
-
-        if (color == Piece::Black) {
-            std::swap(friends, enemies);
-        }
+        Bitboard friends = board.pieces(color);
+        Bitboard enemies = board.pieces(Piece::flipColor(color));
 
         while (pieces) {
             Square from = pieces.readBit();
 
-            Bitboard targets = getRookAttack(board, magics, from) & ~friends;
+            Bitboard targets = getRookAttack(board, from) & ~friends;
             if (captures) targets &= enemies;
             while (targets) {
                 Square target = targets.readBit();
@@ -133,17 +122,13 @@ namespace {
     void generateBishopMoves(const Board& board, MoveList& moves, bool captures) {
         Piece::Color color = board.color_to_move;
         Bitboard pieces = board.pieces(Piece::Bishop, color);
-        Bitboard friends = board.white_pieces;
-        Bitboard enemies = board.black_pieces;
-
-        if (color == Piece::Black) {
-            std::swap(friends, enemies);
-        }
+        Bitboard friends = board.pieces(color);
+        Bitboard enemies = board.pieces(Piece::flipColor(color));
 
         while (pieces) {
             Square from = pieces.readBit();
 
-            Bitboard targets = getBishopAttack(board, magics, from) & ~friends;
+            Bitboard targets = getBishopAttack(board, from) & ~friends;
             if (captures) targets &= enemies;
             while (targets) {
                 Square target = targets.readBit();
@@ -155,18 +140,14 @@ namespace {
     void generateQueenMoves(const Board& board, MoveList& moves, bool captures) {
         Piece::Color color = board.color_to_move;
         Bitboard pieces = board.pieces(Piece::Queen, color);
-        Bitboard friends = board.white_pieces;
-        Bitboard enemies = board.black_pieces;
-
-        if (color == Piece::Black) {
-            std::swap(friends, enemies);
-        }
+        Bitboard friends = board.pieces(color);
+        Bitboard enemies = board.pieces(Piece::flipColor(color));
 
         while (pieces) {
             Square from = pieces.readBit();
 
-            Bitboard targets1 = getRookAttack(board, magics, from);
-            Bitboard targets2 = getBishopAttack(board, magics, from);
+            Bitboard targets1 = getRookAttack(board, from);
+            Bitboard targets2 = getBishopAttack(board, from);
             Bitboard targets = (targets1 | targets2) & ~friends;
 
             if (captures) targets &= enemies;
@@ -178,10 +159,21 @@ namespace {
         }
     }
 
+    void addPawnMove(MoveList& moves, int promotion_rank, Square from, Square to) {
+        if (to.rank() == promotion_rank) {
+            moves.push({ from, to, MoveType::PromotionBishop });
+            moves.push({ from, to, MoveType::PromotionKnight });
+            moves.push({ from, to, MoveType::PromotionRook });
+            moves.push({ from, to, MoveType::PromotionQueen });
+        } else {
+            moves.push({ from, to, MoveType::Normal });
+        }
+    }
+
     void generatePawnCaptures(const Board& board, MoveList& moves) {
-        Bitboard enemies = board.whiteToMove() ? board.black_pieces : board.white_pieces;
+        Bitboard enemies = board.pieces(Piece::flipColor(board.color_to_move));
         Bitboard pawns = board.pieces(Piece::Pawn, board.color_to_move);
-        Bitboard promotion_rank = board.whiteToMove() ? RANK_8 : RANK_1;
+        int promotion_rank = board.whiteToMove() ? 7 : 0;
 
         if (board.enpassant_square != Squares::None) {
             enemies |= Bitboard(board.enpassant_square);
@@ -189,17 +181,6 @@ namespace {
 
         Bitboard left_attacks;
         Bitboard right_attacks;
-
-        auto movePawn = [&](Square from, Square to, MoveType type = MoveType::Normal) {
-            if (Bitboard(to) & promotion_rank) {
-                moves.push({ from, to, MoveType::PromotionBishop });
-                moves.push({ from, to, MoveType::PromotionKnight });
-                moves.push({ from, to, MoveType::PromotionRook });
-                moves.push({ from, to, MoveType::PromotionQueen });
-            } else {
-                moves.push({ from, to, type });
-            }
-        };
 
         auto processAttacks = [&](Bitboard attacks, int offset) {
             while (attacks) {
@@ -209,12 +190,11 @@ namespace {
                 if (to == board.enpassant_square) {
                     moves.push({ from, to, MoveType::EnPassant });
                 } else {
-                    movePawn(from, to);
+                    addPawnMove(moves, promotion_rank, from, to);
                 }
             }
         };
 
-        // NOLINTBEGIN
         if (board.whiteToMove()) {
             left_attacks = pawns.shift_north_west() & enemies;
             right_attacks = pawns.shift_north_east() & enemies;
@@ -228,28 +208,16 @@ namespace {
             processAttacks(left_attacks, -9);
             processAttacks(right_attacks, -7);
         }
-        // NOLINTEND
     }
 
     void generatePawnMoves(const Board& board, MoveList& moves) {
         int dir = board.whiteToMove() ? 1 : -1;
         Bitboard pawns = board.pieces(Piece::Pawn, board.color_to_move);
-        Bitboard empty_squares = ~(board.white_pieces | board.black_pieces);
-        Bitboard promotion_rank = board.whiteToMove() ? RANK_8 : RANK_1;
+        Bitboard empty_squares = ~board.pieces();
+        int promotion_rank = board.whiteToMove() ? 7 : 0;
 
         Bitboard single_pushes;
         Bitboard double_pushes;
-
-        auto movePawn = [&](Square from, Square to, MoveType type = MoveType::Normal) {
-            if (Bitboard(to) & promotion_rank) {
-                moves.push({ from, to, MoveType::PromotionBishop });
-                moves.push({ from, to, MoveType::PromotionKnight });
-                moves.push({ from, to, MoveType::PromotionRook });
-                moves.push({ from, to, MoveType::PromotionQueen });
-            } else {
-                moves.push({ from, to, type });
-            }
-        };
 
         if (board.whiteToMove()) {
             single_pushes = pawns.shift_north() & empty_squares;
@@ -262,7 +230,7 @@ namespace {
         while (single_pushes) {
             Square target = single_pushes.readBit();
             Square from = target - (8 * dir);
-            movePawn(from, target);
+            addPawnMove(moves, promotion_rank, from, target);
         }
 
         while (double_pushes) {
@@ -276,12 +244,8 @@ namespace {
 
     void generateKingMoves(const Board& board, MoveList& moves, bool captures) {
         Piece::Color color = board.color_to_move;
-        Bitboard friends = board.white_pieces;
-        Bitboard enemies = board.black_pieces;
-
-        if (color == Piece::Black) {
-            std::swap(friends, enemies);
-        }
+        Bitboard friends = board.pieces(color);
+        Bitboard enemies = board.pieces(Piece::flipColor(color));
 
         Bitboard king_bitboard = board.pieces(Piece::King, color);
         Square from = king_bitboard.readBit();
@@ -309,8 +273,9 @@ namespace {
 
         if (isSquareAttackedBy(board, base, enemy)) return;
 
-        int k_right = board.whiteToMove() ? Board::white_king_castle : Board::black_king_castle;
-        int q_right = board.whiteToMove() ? Board::white_queen_castle : Board::black_queen_castle;
+        bool white = board.whiteToMove();
+        Board::Castle k_right = white ? Board::white_king_castle : Board::black_king_castle;
+        Board::Castle q_right = white ? Board::white_queen_castle : Board::black_queen_castle;
 
         if (board.canCastle(k_right) && canCastleThrough(F1 + offset, G1 + offset)) {
             moves.push({ base, G1 + offset, MoveType::Castling });

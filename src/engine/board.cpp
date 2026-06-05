@@ -17,8 +17,7 @@ Board::Board() {
 void Board::clear() {
     bitboards.fill({});
     squares.fill(Piece());
-    white_pieces.clear();
-    black_pieces.clear();
+    pieces_by_color.fill({});
     history_ptr = 0;
     enpassant_square = Squares::None;
     castling_rights = 0;
@@ -29,26 +28,17 @@ void Board::clear() {
 void Board::addPiece(Square square, Piece piece) {
     squares[square] = piece;
     bitboards[piece.value] |= Bitboard(square);
-
-    if (piece.isWhite()) {
-        white_pieces |= Bitboard(square);
-    } else {
-        black_pieces |= Bitboard(square);
-    }
+    pieces_by_color[piece.color()] |= Bitboard(square);
 
     hash ^= hashes.piece_square[piece.value][square];
 }
 
 void Board::removePiece(Square square) {
     Piece piece = squares[square];
+
     squares[square] = Pieces::None;
     bitboards[piece.value] ^= Bitboard(square);
-
-    if (piece.isWhite()) {
-        white_pieces ^= Bitboard(square);
-    } else {
-        black_pieces ^= Bitboard(square);
-    }
+    pieces_by_color[piece.color()] ^= Bitboard(square);
 
     hash ^= hashes.piece_square[piece.value][square];
 }
@@ -61,19 +51,13 @@ void Board::movePiece(Square from, Square to) {
     squares[to] = piece;
 
     bitboards[piece.value] ^= (Bitboard(from)) | (Bitboard(to));
-
-    if (piece.isWhite()) {
-        white_pieces ^= (Bitboard(from)) | (Bitboard(to));
-    } else {
-        black_pieces ^= (Bitboard(from)) | (Bitboard(to));
-    }
+    pieces_by_color[piece.color()] ^= (Bitboard(from)) | (Bitboard(to));
 
     hash ^= hashes.piece_square[piece.value][from];
     hash ^= hashes.piece_square[piece.value][to];
 }
 
 auto Board::loadFEN(const std::string& fen) -> bool {
-
     // TODO: handle errors and invalid strings, maybe return bool as veryfication
 
     clear();
@@ -184,19 +168,19 @@ auto Board::loadFEN(const std::string& fen) -> bool {
 }
 
 void Board::makeMove(const Move& move) {
-
     assert(!move.isNull());
+    assert(history_ptr < MAX_GAME_MOVES);
 
     Piece piece = squares[move.from()];
     Piece capture = squares[move.to()];
 
     HistoryState new_state{
+        hash,
         move,
-        capture,
         enpassant_square,
+        capture,
         halfmove_clock,
         castling_rights,
-        hash,
     };
     history[history_ptr++] = new_state;
 
@@ -222,28 +206,31 @@ void Board::makeMove(const Move& move) {
 
     if (move.isPromotion()) {
         removePiece(move.from());
-        if (move.type() == MoveType::PromotionQueen) {
-            addPiece(move.to(), Piece{ Piece::Queen, color_to_move });
-        } else if (move.type() == MoveType::PromotionBishop) {
-            addPiece(move.to(), Piece{ Piece::Bishop, color_to_move });
-        } else if (move.type() == MoveType::PromotionKnight) {
-            addPiece(move.to(), Piece{ Piece::Knight, color_to_move });
-        } else if (move.type() == MoveType::PromotionRook) {
-            addPiece(move.to(), Piece{ Piece::Rook, color_to_move });
-        }
+
+        const Piece::Type type = [&]() {
+            switch (move.type()) {
+                case MoveType::PromotionRook: return Piece::Rook;
+                case MoveType::PromotionKnight: return Piece::Knight;
+                case MoveType::PromotionBishop: return Piece::Bishop;
+                default: return Piece::Queen;
+            }
+        }();
+
+        addPiece(move.to(), Piece(type, color_to_move));
         enpassant_square = Squares::None;
     } else {
 
         if (move.type() == MoveType::Castling) {
-            int rook_start_file = 0;
-            int rook_target_file = 0;
+            Square rook_start;
+            Square rook_target;
+            int rank = move.to().rank();
 
             if (move.to() == Squares::G1 || move.to() == Squares::G8) {
-                rook_start_file = 7;
-                rook_target_file = 5;
+                rook_start = Square(7, rank);
+                rook_target = Square(5, rank);
             } else {
-                rook_start_file = 0;
-                rook_target_file = 3;
+                rook_start = Square(0, rank);
+                rook_target = Square(3, rank);
             }
 
             if (whiteToMove()) {
@@ -252,27 +239,25 @@ void Board::makeMove(const Move& move) {
                 castling_rights &= ~(black_queen_castle | black_king_castle);
             }
 
-            int rank = move.to().rank();
-            Square rook_start = Square(rook_start_file, rank);
-            Square rook_target = Square(rook_target_file, rank);
             movePiece(rook_start, rook_target);
         }
 
         if (move.type() == MoveType::EnPassant) {
-            Square enpassant;
-            if (whiteToMove()) {
-                enpassant = Square(move.to() - BoardLength);
-            } else {
-                enpassant = Square(move.to() + BoardLength);
-            }
+            const Square enpassant = [&]() {
+                if (whiteToMove()) {
+                    return move.to() - BoardLength;
+                } else {
+                    return move.to() + BoardLength;
+                }
+            }();
             removePiece(enpassant);
         }
 
         if (move.type() == MoveType::DoublePush) {
             if (whiteToMove()) {
-                enpassant_square = Square(move.to() - BoardLength);
+                enpassant_square = move.to() - BoardLength;
             } else {
-                enpassant_square = Square(move.to() + BoardLength);
+                enpassant_square = move.to() + BoardLength;
             }
         } else {
             enpassant_square = Squares::None;
@@ -306,7 +291,6 @@ void Board::makeMove(const Move& move) {
 }
 
 void Board::unmakeMove() {
-
     assert(history_ptr > 0);
 
     HistoryState state = history[--history_ptr];
@@ -323,31 +307,29 @@ void Board::unmakeMove() {
     } else {
 
         if (move.type() == MoveType::Castling) {
-            int rook_start_file = 0;
-            int rook_target_file = 0;
+            Square rook_start;
+            Square rook_target;
+            int rank = move.to().rank();
 
-            if (move.to().file() == 6) {
-                rook_start_file = 7;
-                rook_target_file = 5;
+            if (move.to() == Squares::G1 || move.to() == Squares::G8) {
+                rook_start = Square(7, rank);
+                rook_target = Square(5, rank);
             } else {
-                rook_start_file = 0;
-                rook_target_file = 3;
+                rook_start = Square(0, rank);
+                rook_target = Square(3, rank);
             }
 
-            int rank = move.to().rank();
-            Square rook_start = Square(rook_start_file, rank);
-            Square rook_target = Square(rook_target_file, rank);
             movePiece(rook_target, rook_start);
         }
 
         if (move.type() == MoveType::EnPassant) {
-            Square enpassant;
-            if (whiteToMove()) {
-                enpassant = Square(move.to() - BoardLength);
-            } else {
-                enpassant = Square(move.to() + BoardLength);
-            }
-
+            const Square enpassant = [&]() {
+                if (whiteToMove()) {
+                    return move.to() - BoardLength;
+                } else {
+                    return move.to() + BoardLength;
+                }
+            }();
             addPiece(enpassant, Piece(Piece::Pawn, Piece::flipColor(color_to_move)));
         }
 

@@ -178,10 +178,7 @@ namespace {
         int eg_eval = 0;
 
         for (int type = Piece::Pawn; type != Piece::None; type++) {
-            Piece piece = Piece(static_cast<Piece::Type>(type), color);
-
-            Bitboard pieces = board.bitboards[piece.value];
-            // int count = std::popcount(pieces);
+            Bitboard pieces = board.pieces(static_cast<Piece::Type>(type), color);
 
             while (pieces) {
                 Square square = pieces.readBit();
@@ -207,8 +204,8 @@ int evaluate(const Board& board) {
     for (int type = Piece::Pawn; type != Piece::King; type++) {
         int weight = game_phase_piece_weight[type];
         auto real_type = static_cast<Piece::Type>(type);
-        game_phase += board.bitboards[Piece(real_type, White).value].count() * weight;
-        game_phase += board.bitboards[Piece(real_type, Black).value].count() * weight;
+        game_phase += board.pieces(real_type, White).count() * weight;
+        game_phase += board.pieces(real_type, Black).count() * weight;
     }
 
     int mg_eval = 0;

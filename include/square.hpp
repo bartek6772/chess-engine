@@ -1,9 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 
 struct Square {
-    int value;
+    uint8_t value;
 
     constexpr Square() : value(){};
     constexpr Square(int file, int rank) : value(rank * 8 + file) {}
