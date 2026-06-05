@@ -209,8 +209,8 @@ int Searcher::negamax(int depth, int ply, int alpha, int beta) {
 
     table.store({
         board.hash,
-        static_cast<int16_t>(remaining_depth),
         static_cast<int16_t>(scoreToTT(best_eval, ply)),
+        static_cast<uint8_t>(remaining_depth),
         flag,
         (pv_table[ply].count == 0 ? Move() : pv_table[ply].moves[0]),
     });
