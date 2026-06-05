@@ -143,16 +143,17 @@ void CLI::go(stringstream& stream) {
 }
 
 void CLI::stop(stringstream& stream) {
-    if (current_search) {
-        current_search->stop();
-    }
-
     if (search_thread.joinable()) {
         search_thread.join();
+    }
+
+    if (current_search) {
+        current_search->stop();
     }
 }
 
 void CLI::quit(stringstream& stream) {
+    stop(stream);
     exit(0);
 }
 
@@ -176,6 +177,7 @@ void CLI::bench(stringstream& stream) {
 
     unsigned long long nodes_total = 0;
     long time_total = 0;
+    int peak_TT_usage = 0;
 
     for (const string& fen : positions) {
         cout << "Position: " << fen << endl;
@@ -190,9 +192,12 @@ void CLI::bench(stringstream& stream) {
             time_total += results.stats.time_ms;
         }
 
-        cout << "Depth: " << depth << ", Nodes: " << results.stats.nodes
-             << ", Time: " << results.stats.time_ms << ", NPS: " << results.stats.nodes_per_second
-             << ", TT usage: " << Searcher::tableFillRate() << endl;
+        int tt_usage = Searcher::tableFillRate();
+
+        cout << "Depth: " << depth << ", Nodes: " << readableNumber(results.stats.nodes)
+             << ", Time: " << results.stats.time_ms
+             << ", NPS: " << readableNumber(results.stats.nodes_per_second)
+             << ", TT usage: " << tt_usage << "%" << endl;
         cout << endl;
 
         Searcher::clearTable();

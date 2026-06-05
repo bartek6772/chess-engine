@@ -54,7 +54,7 @@ inline std::string readableNumber(unsigned long long number) {
 
         if (counter >= 3) {
             counter = 0;
-            result += ",";
+            result += "'";
         }
 
         result += ('0' + digit);
